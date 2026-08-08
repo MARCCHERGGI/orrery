@@ -37,6 +37,10 @@
     overflow: hidden; -webkit-font-smoothing: antialiased;
   }
   #sky { position: fixed; inset: 0; display: block; touch-action: none; }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 4;
+    background: radial-gradient(ellipse 130% 105% at 50% 42%, transparent 52%, rgba(8,10,24,.5) 100%);
+  }
 
   #intro {
     position: fixed; inset: 0; display: grid; place-items: center; text-align: center;
@@ -253,6 +257,7 @@
 
 <script type="module">
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 /* ============================== data ============================== */
 const SAMPLE = {
@@ -289,10 +294,14 @@ let selected = null, focusIdx = -1, query = '', entered = false, reel = false, t
 /* ============================== three scene ============================== */
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.02;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x14172b);
 scene.fog = new THREE.Fog(0x14172b, 1300, 3200);
-const camera = new THREE.PerspectiveCamera(54, 1, 1, 4000);
+const camera = new THREE.PerspectiveCamera(60, 1, 1, 4000);
 camera.position.set(0, 260, 1500);
 
 /* the diorama rig — the camera lives INSIDE the room; mouse parallax sells the depth */
@@ -313,9 +322,16 @@ addEventListener('wheel', e => {
 }, { passive: true });
 function flyTo(px, py, pz, tx, ty, tz) { camGoal.pos.set(px, py, pz); camGoal.tgt.set(tx, ty, tz); camGoal.active = true; }
 
-scene.add(new THREE.AmbientLight(0x8a8fc0, .6));
-const key = new THREE.DirectionalLight(0xf0eeff, .8); key.position.set(200, 600, 500); scene.add(key);
-const rim = new THREE.DirectionalLight(0x8be2b9, .25); rim.position.set(-400, 300, -500); scene.add(rim);
+/* image-based lighting — materials get real specular response */
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .06).texture;
+scene.environmentIntensity = .16;
+scene.add(new THREE.AmbientLight(0x8a8fc0, .3));
+const key = new THREE.DirectionalLight(0xf0eeff, 1.05); key.position.set(120, 900, 240); scene.add(key);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -760, right: 760, top: 980, bottom: -980, near: 1, far: 2200 });
+key.shadow.bias = -.0004;
+const rim = new THREE.DirectionalLight(0x8be2b9, .3); rim.position.set(-400, 300, -500); scene.add(rim);
 
 /* THE ROOM — the screen is the open face of a box; everything lives inside it */
 const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-depth, open front at z=+depth
@@ -341,18 +357,20 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   const floorT = gridTex(false); floorT.repeat.set(8, 11);
   const wallT = gridTex(true); wallT.repeat.set(8, 3);
   const backT = gridTex(true); backT.repeat.set(6, 3);
-  const mat = (t) => new THREE.MeshStandardMaterial({ map: t, color: 0xffffff, roughness: .88, metalness: .18 });
+  const mat = (t) => new THREE.MeshStandardMaterial({ map: t, color: 0x8286ad, roughness: .82, metalness: .2 });
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2), mat(floorT));
-  floor.rotation.x = -Math.PI / 2; scene.add(floor);
+  /* glossy floor — env reflections + received shadows anchor everything to it */
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2),
+    new THREE.MeshStandardMaterial({ map: floorT, color: 0x8e93c2, roughness: .36, metalness: .5 }));
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
   const ceil = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2), new THREE.MeshStandardMaterial({ color: 0x10132a, roughness: .95 }));
   ceil.rotation.x = Math.PI / 2; ceil.position.y = ROOM.h; scene.add(ceil);
   const left = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.depth * 2, ROOM.h), mat(wallT));
-  left.rotation.y = Math.PI / 2; left.position.set(-ROOM.hw, ROOM.h / 2, 0); scene.add(left);
+  left.rotation.y = Math.PI / 2; left.position.set(-ROOM.hw, ROOM.h / 2, 0); left.receiveShadow = true; scene.add(left);
   const right = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.depth * 2, ROOM.h), mat(wallT));
-  right.rotation.y = -Math.PI / 2; right.position.set(ROOM.hw, ROOM.h / 2, 0); scene.add(right);
+  right.rotation.y = -Math.PI / 2; right.position.set(ROOM.hw, ROOM.h / 2, 0); right.receiveShadow = true; scene.add(right);
   const back = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.h), mat(backT));
-  back.position.set(0, ROOM.h / 2, -ROOM.depth); scene.add(back);
+  back.position.set(0, ROOM.h / 2, -ROOM.depth); back.receiveShadow = true; scene.add(back);
 
   /* neon edge strips where surfaces meet — the box reads as a box */
   const strip = (w, x, y, z, rotY) => {
@@ -422,7 +440,7 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = [];
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = [], pillarAnims = [], terms = [];
 const brain = new THREE.Group(); scene.add(brain);
 
 function hsl(h, s, l) { const c = new THREE.Color(); c.setHSL(h / 360, s, l); return c; }
@@ -432,7 +450,7 @@ const STATUS_COLOR = {
 };
 
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = [];
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = []; pillarAnims = []; terms = [];
 
   /* the brain — a particle heart floating over the center of the base */
   {
@@ -502,7 +520,10 @@ function buildWorld() {
       );
       pillar.position.set(hx, H / 2, hz);
       pillar.userData = { kind: 'hub', dept: d.id, group: g.id };
+      pillar.castShadow = true;
       zone.add(pillar); hubMeshes.push(pillar);
+      const members = d.nodes.filter(n => n.group === g.id);
+      pillarAnims.push({ mat: pillar.material, running: members.some(n => n.status === 'running'), phase: gi * 1.7 });
 
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(15, 1.4, 10, 48),
@@ -521,6 +542,10 @@ function buildWorld() {
 
       const hl = makeLabel(g.label.toUpperCase(), { size: 34, hue: d.hue, scale: .22 });
       hl.position.set(hx, H + 26, hz); zone.add(hl);
+      /* live readout under the name — real member counts, nothing invented */
+      const okN = members.filter(n => n.status === 'ok').length, runN = members.filter(n => n.status === 'running').length;
+      const ro = makeLabel(`${members.length} agents · ${okN} ok${runN ? ' · ' + runN + ' live' : ''}`, { size: 22, scale: .2 });
+      ro.position.set(hx, H + 17, hz); zone.add(ro);
 
       d.hubs[g.id] = { ...g, x: d.cx + hx, z: d.cz + hz, y: H + 8, localX: hx, localZ: hz, H, ring };
 
@@ -544,6 +569,7 @@ function buildWorld() {
     count
   );
   agentMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  agentMesh.castShadow = true;
   world.add(agentMesh);
   const mtx = new THREE.Matrix4();
   nodes.forEach((n, i) => {
@@ -572,6 +598,51 @@ function buildWorld() {
     m.userData = { beam: Math.floor(Math.random() * beams.length), p: Math.random(), sp: .0016 + Math.random() * .003 };
     scene.add(m); pulseMeshes.push(m);
   }
+
+  /* wall terminals — live system log rendered from the real fleet, like the floating
+     windows in the reference. Every line is a real lane's real last result. */
+  const mkTerm = (w, h, title) => {
+    const c = document.createElement('canvas'); c.width = 640; c.height = 400;
+    const tex = new THREE.CanvasTexture(c); tex.anisotropy = 4;
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: .94 }));
+    return { c, g: c.getContext('2d'), tex, mesh, title, row: 0 };
+  };
+  const termNodes = [...nodes].sort((a, b) =>
+    ({ running: 0, flag: 1, ok: 2, dormant: 3 }[a.status] - { running: 0, flag: 1, ok: 2, dormant: 3 }[b.status]));
+  const TCOL = { running: '#8be2b9', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
+  function drawTerm(T) {
+    const { g, c } = T;
+    g.fillStyle = 'rgba(10,12,26,.96)'; g.fillRect(0, 0, c.width, c.height);
+    g.strokeStyle = 'rgba(139,226,185,.45)'; g.lineWidth = 2; g.strokeRect(1, 1, c.width - 2, c.height - 2);
+    g.fillStyle = '#8be2b9'; g.font = '600 22px Consolas, monospace';
+    g.fillText('▮ ' + T.title, 18, 34);
+    g.fillStyle = 'rgba(139,226,185,.3)'; g.fillRect(0, 46, c.width, 1);
+    g.font = '20px Consolas, monospace';
+    for (let i = 0; i < 11; i++) {
+      const n = termNodes[(T.row + i) % termNodes.length];
+      const y = 78 + i * 30;
+      g.fillStyle = TCOL[n.status] || TCOL.ok;
+      const line = `${n.status === 'running' ? '►' : n.status === 'flag' ? '✕' : '●'} ${n.label}`;
+      g.fillText(line.slice(0, 26), 18, y);
+      g.fillStyle = 'rgba(140,140,171,.85)';
+      g.fillText(String(n.detail || n.cadence || '').slice(0, 24), 330, y);
+    }
+    T.tex.needsUpdate = true;
+  }
+  const t1 = mkTerm(268, 168, 'FLEET / LIVE');
+  t1.mesh.position.set(-462, 196, -ROOM.depth + 2.5);
+  scene.add(t1.mesh); terms.push(t1);
+  const t2 = mkTerm(268, 168, 'FLEET / LOG');
+  t2.mesh.position.set(462, 196, -ROOM.depth + 2.5); t2.row = 11;
+  scene.add(t2.mesh); terms.push(t2);
+  terms.forEach(drawTerm);
+  terms.tick = (t) => {
+    if (!terms.last || t - terms.last > 1400) {
+      terms.last = t;
+      for (const T of terms) { T.row = (T.row + 1) % termNodes.length; drawTerm(T); }
+    }
+  };
 }
 
 /* ============================== per-frame ============================== */
@@ -614,8 +685,15 @@ function frame(now) {
   const pk = reel ? 0 : (level === 0 ? 1 : .45);
   par.sx += (par.x - par.sx) * .05;
   par.sy += (par.y - par.sy) * .05;
-  camera.position.set(camBase.x + par.sx * 85 * pk, camBase.y - par.sy * 48 * pk, camBase.z);
+  /* handheld drift — the scene is never perfectly still, so depth never stops reading */
+  const dx = reduced ? 0 : Math.sin(t * .00031) * 7 + Math.sin(t * .00013) * 4;
+  const dy = reduced ? 0 : Math.sin(t * .00042 + 2) * 4;
+  camera.position.set(camBase.x + par.sx * 85 * pk + dx, camBase.y - par.sy * 48 * pk + dy, camBase.z);
   camera.lookAt(tgtBase);
+  if (!reduced) {
+    for (const pa of pillarAnims) if (pa.running) pa.mat.emissiveIntensity = .9 + Math.sin(t * .004 + pa.phase) * .38;
+    if (terms.tick) terms.tick(t);
+  }
   if (!reduced) brain.rotation.y = t * .00012;
   for (const d of deptList) if (d.hubs) for (const h of Object.values(d.hubs)) {
     if (!reduced && h.ring) { h.ring.rotation.z = t * .0004 * h.ring.userData.spin; h.ring.position.y = h.ring.userData.baseY + Math.sin(t * .0009 + h.ring.userData.spin * 9) * 2.5; }
@@ -806,29 +884,18 @@ search.addEventListener('input', () => {
 
 /* ============================== reel mode ============================== */
 function tourKeys() {
-  /* fly IN through the open face, visit two rooms, pull back out */
-  const K = [{ t: 0, pos: [0, 300, 1560], tgt: [0, 200, -350] }];
-  let t = 4200;
-  const stops = [];
-  const ig = deptList.find(d => Object.keys(d.hubs || {}).some(g => /instagram/.test(g)));
-  if (ig) stops.push([ig, 'instagram']);
-  const selfD = deptList.find(d => d.id === 'self' && d.hubs && d.hubs.healing);
-  if (selfD) stops.push([selfD, 'healing']);
-  if (!stops.length && deptList[0]) stops.push([deptList[0], Object.keys(deptList[0].hubs)[0]]);
-  for (const [d, gid] of stops) {
-    K.push({ t, pos: [d.cx + d.nx * 420, 240, d.cz + d.nz * 420], tgt: [d.cx, 90, d.cz], act: () => { close(); setLevelSilent(1, deptList.indexOf(d)); } });
-    t += 5200;
-    const hub = d.hubs[gid];
-    if (hub) {
-      K.push({ t, pos: [hub.x + d.nx * 180, hub.y + 46, hub.z + d.nz * 180], tgt: [hub.x, hub.y - 14, hub.z], act: () => setLevelSilent(2, deptList.indexOf(d), gid) });
-      t += 4800;
-      const star = d.nodes.find(n => n.group === gid && n.replaces) || d.nodes.find(n => n.group === gid);
-      if (star) { K.push({ t, pos: [hub.x + d.nx * 125, hub.y + 24, hub.z + d.nz * 125], tgt: [hub.x, hub.y - 18, hub.z], act: () => open(star) }); t += 5600; }
-    }
-  }
-  K.push({ t, pos: [0, 260, 810], tgt: [0, 170, -350], act: () => { close(); setLevelSilent(0); } });
-  K.push({ t: t + 5000, pos: [0, 290, 1350], tgt: [0, 190, -350] });
-  return K;
+  /* exactly 10 seconds: dive in → one room → one monument → pull out */
+  const d = deptList.find(x => Object.keys(x.hubs || {}).some(g => /instagram/.test(g))) || deptList[0];
+  const gid = Object.keys(d.hubs).find(g => /instagram/.test(g)) || Object.keys(d.hubs)[0];
+  const hub = d.hubs[gid];
+  return [
+    { t: 0, pos: [0, 310, 1580], tgt: [0, 200, -350] },
+    { t: 2200, pos: [0, 250, 830], tgt: [0, 160, -350], act: () => { close(); setLevelSilent(0); } },
+    { t: 4200, pos: [d.cx + d.nx * 420, 240, d.cz + d.nz * 420], tgt: [d.cx, 90, d.cz], act: () => { close(); setLevelSilent(1, deptList.indexOf(d)); } },
+    { t: 6400, pos: [hub.x + d.nx * 170, hub.y + 42, hub.z + d.nz * 170], tgt: [hub.x, hub.y - 14, hub.z], act: () => setLevelSilent(2, deptList.indexOf(d), gid) },
+    { t: 8300, pos: [0, 250, 830], tgt: [0, 160, -350], act: () => { close(); setLevelSilent(0); } },
+    { t: 10000, pos: [0, 280, 1040], tgt: [0, 175, -350] },
+  ];
 }
 function setLevelSilent(lv, di, gid) { setLevel(lv, di, gid); camGoal.active = false; }
 const smooth = u => u * u * (3 - 2 * u);
