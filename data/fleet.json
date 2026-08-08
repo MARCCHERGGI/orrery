@@ -1,0 +1,1245 @@
+{
+ "meta": {
+  "title": "ORRERY",
+  "subtitle": "a live map of a one-person AI company",
+  "operator": "Marco Hergi · NYC",
+  "exported": "2026-08-08T01:46:50.997Z",
+  "source": "warden fleet-health"
+ },
+ "departments": [
+  {
+   "id": "revenue",
+   "label": "REVENUE",
+   "hue": 42,
+   "tagline": "money in, fires staged"
+  },
+  {
+   "id": "content",
+   "label": "CONTENT",
+   "hue": 320,
+   "tagline": "channels, reels, the diary"
+  },
+  {
+   "id": "hunt",
+   "label": "HUNT",
+   "hue": 190,
+   "tagline": "jobs, grants, luck, rooms"
+  },
+  {
+   "id": "senses",
+   "label": "SENSES",
+   "hue": 150,
+   "tagline": "screen, phone, city, weather"
+  },
+  {
+   "id": "self",
+   "label": "SELF",
+   "hue": 45,
+   "tagline": "the loop that sharpens the loop"
+  },
+  {
+   "id": "empire",
+   "label": "EMPIRE",
+   "hue": 265,
+   "tagline": "goals, oaths, discoveries"
+  },
+  {
+   "id": "bridge",
+   "label": "BRIDGE",
+   "hue": 12,
+   "tagline": "the two-way line to Marco"
+  },
+  {
+   "id": "markets",
+   "label": "MARKETS",
+   "hue": 220,
+   "tagline": "odds watched, never fired"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "AgentControlPlane-Dashboard",
+   "label": "Agent Control Plane-Dashboard",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "AgentControlPlane-Worker",
+   "label": "Agent Control Plane-Worker",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "Claude18M24",
+   "label": "18M24",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeAffiliateTick",
+   "label": "Affiliate Tick",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "a growth intern — keeps the affiliate funnel measured and warm",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeAlwaysOn",
+   "label": "Always On",
+   "dept": "self",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeApplyQueue",
+   "label": "Apply Queue",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeAtsHunt",
+   "label": "Ats Hunt",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeAurumCycle",
+   "label": "Aurum Cycle",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeBoardScan",
+   "label": "Board Scan",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "cadence": "every 30 min",
+   "replaces": "a job-board crawler — 801 boards on a 30-minute tick, ATS JSON not LinkedIn",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeBotEvolve",
+   "label": "Bot Evolve",
+   "dept": "self",
+   "status": "flag",
+   "detail": "REQUEST_REFUSED",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeBrowserRelay",
+   "label": "Browser Relay",
+   "dept": "bridge",
+   "status": "running",
+   "detail": "STILL_RUNNING (running)",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeBursaryImprove",
+   "label": "Bursary Improve",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeCdpRelay",
+   "label": "Cdp Relay",
+   "dept": "bridge",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeChannelManager",
+   "label": "Channel Manager",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeChannelStrategist",
+   "label": "Channel Strategist",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeClvResolve",
+   "label": "Clv Resolve",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeContentEngine",
+   "label": "Content Engine",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "a content team — drafts, schedules and grades platform-native posts",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeConvoDaily",
+   "label": "Convo Daily",
+   "dept": "content",
+   "status": "flag",
+   "detail": "GENERIC_FAILURE",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeCryptoTrader",
+   "label": "Crypto Trader",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeDaily0800",
+   "label": "Daily0800",
+   "dept": "self",
+   "status": "dormant",
+   "detail": "NEVER_RAN",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeDiaryDatafy",
+   "label": "Diary Datafy",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeDiscoveryEngine",
+   "label": "Discovery Engine",
+   "dept": "empire",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeEdenTick",
+   "label": "Eden Tick",
+   "dept": "empire",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeEmpireEvolve",
+   "label": "Empire Evolve",
+   "dept": "empire",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeEmpireStrategist",
+   "label": "Empire Strategist",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeEmpireTick",
+   "label": "Empire Tick",
+   "dept": "empire",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "an ops director — drives a 20-goal life portfolio forward daily",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeEntropyScan",
+   "label": "Entropy Scan",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "a janitor with taste — archives orphans before they rot the workspace",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeFinanceHQ",
+   "label": "Finance HQ",
+   "dept": "revenue",
+   "status": "flag",
+   "detail": "GENERIC_FAILURE",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeFiresGrade",
+   "label": "Fires Grade",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeFleetWarden",
+   "label": "Fleet Warden",
+   "dept": "self",
+   "status": "running",
+   "detail": "STILL_RUNNING (running)",
+   "cadence": "every 15 min",
+   "replaces": "an SRE on-call — audits, heals and restarts 144 scheduled lanes every 15 minutes",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeFloorGuard",
+   "label": "Floor Guard",
+   "dept": "revenue",
+   "status": "flag",
+   "detail": "FLOOR_BREACHED",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeForgetSweep",
+   "label": "Forget Sweep",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeGoalMatrix",
+   "label": "Goal Matrix",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeGpuTranscribe",
+   "label": "Gpu Transcribe",
+   "dept": "content",
+   "status": "flag",
+   "detail": "CTRL_C_EXIT",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeHundredToday",
+   "label": "Hundred Today",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeHuntTick",
+   "label": "Hunt Tick",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIadolaBridge",
+   "label": "Iadola Bridge",
+   "dept": "bridge",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeIadolaBriefs",
+   "label": "Iadola Briefs",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIadolaLedger",
+   "label": "Iadola Ledger",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIadolaOrb",
+   "label": "Iadola Orb",
+   "dept": "bridge",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeIadolaRadar",
+   "label": "Iadola Radar",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIgDeepScan",
+   "label": "Ig Deep Scan",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIgDmTriage",
+   "label": "Ig Dm Triage",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "cadence": "daily 07:45",
+   "replaces": "a social media assistant — triages Instagram DMs every morning, drafts gated replies",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeIgDmTriage15",
+   "label": "Ig Dm Triage15",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIgHealth",
+   "label": "Ig Health",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIgLocalTick",
+   "label": "Ig Local Tick",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "cadence": "every 15 min",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIgStoryPool",
+   "label": "Ig Story Pool",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIgStoryPost",
+   "label": "Ig Story Post",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeIgVoiceEval",
+   "label": "Ig Voice Eval",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeJarvisMiniLoop",
+   "label": "Jarvis Mini Loop",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeJobHunt",
+   "label": "Job Hunt",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "a recruiter working nights — finds, scores and queues applications 24/7",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeJobHuntDigest",
+   "label": "Job Hunt Digest",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeKeepAlive",
+   "label": "Keep Alive",
+   "dept": "self",
+   "status": "running",
+   "detail": "STILL_RUNNING (running)",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeLaptopResident",
+   "label": "Laptop Resident",
+   "dept": "self",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeLedgerRotate",
+   "label": "Ledger Rotate",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeLinkedInJobs",
+   "label": "Linked In Jobs",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeLiveFire",
+   "label": "Live Fire",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeLiveness",
+   "label": "Liveness",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeLuckDiscover",
+   "label": "Luck Discover",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeLuckScanner",
+   "label": "Luck Scanner",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "a scholarship office — 100+ keyless opportunities a day",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeLuckyRun",
+   "label": "Lucky Run",
+   "dept": "hunt",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeMarketCatalog",
+   "label": "Market Catalog",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeMarketWatch",
+   "label": "Market Watch",
+   "dept": "markets",
+   "status": "flag",
+   "detail": "GENERIC_FAILURE",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeMerchBridge",
+   "label": "Merch Bridge",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "a store manager — watches the merch reserve rail",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeMoneyDivision",
+   "label": "Money Division",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeMorningBrief",
+   "label": "Morning Brief",
+   "dept": "senses",
+   "status": "ok",
+   "detail": "OK",
+   "cadence": "daily 08:30",
+   "replaces": "a chief of staff — one 08:30 brief with everything that moved overnight",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeNycScout",
+   "label": "Nyc Scout",
+   "dept": "senses",
+   "status": "ok",
+   "detail": "OK",
+   "cadence": "daily 22:45",
+   "replaces": "a city concierge — an 11pm email with tomorrow’s NYC itinerary",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeNycTechWeekly",
+   "label": "Nyc Tech Weekly",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeOathForge",
+   "label": "Oath Forge",
+   "dept": "empire",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeOmniLoop",
+   "label": "Omni Loop",
+   "dept": "self",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeOracleGrade",
+   "label": "Oracle Grade",
+   "dept": "empire",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeOracleSweep",
+   "label": "Oracle Sweep",
+   "dept": "empire",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeOutcomeWitness",
+   "label": "Outcome Witness",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "a project manager checking claims — verifies each \"shipped\" against commits, deploys and Stripe",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeParlayLadder",
+   "label": "Parlay Ladder",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudePhoneLedger",
+   "label": "Phone Ledger",
+   "dept": "senses",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudePocketSentinel",
+   "label": "Pocket Sentinel",
+   "dept": "senses",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "attention triage — perceives every 30 min, taps Marco only at signal ≥ 7",
+   "mass": 3
+  },
+  {
+   "id": "ClaudePolyDaemon",
+   "label": "Poly Daemon",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudePolyEvolve",
+   "label": "Poly Evolve",
+   "dept": "markets",
+   "status": "flag",
+   "detail": "GENERIC_FAILURE",
+   "mass": 2
+  },
+  {
+   "id": "ClaudePolyPromptEvolve",
+   "label": "Poly Prompt Evolve",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudePolyResurrect",
+   "label": "Poly Resurrect",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeProfitLoop",
+   "label": "Profit Loop",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudePublishPublic",
+   "label": "Publish Public",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeReaper",
+   "label": "Reaper",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeRelayReap",
+   "label": "Relay Reap",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeRelayWatchdog",
+   "label": "Relay Watchdog",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeResearchTick",
+   "label": "Research Tick",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "cadence": "weekly Sun 06:00",
+   "replaces": "a research week — one self-directed experiment every Sunday, verdict required",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeScopeWeekly",
+   "label": "Scope Weekly",
+   "dept": "self",
+   "status": "dormant",
+   "detail": "NEVER_RAN",
+   "mass": 1
+  },
+  {
+   "id": "ClaudeScoutRefresh",
+   "label": "Scout Refresh",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeScreenActivity",
+   "label": "Screen Activity",
+   "dept": "senses",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeSelfEval",
+   "label": "Self Eval",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeSelfTick",
+   "label": "Self Tick",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "cadence": "daily 05:20",
+   "replaces": "a weekly retro — reads its own telemetry and ships one self-improvement daily at 05:20",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeSharpEngine",
+   "label": "Sharp Engine",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeSkillForge",
+   "label": "Skill Forge",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeSocialWatch",
+   "label": "Social Watch",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "cadence": "every 6 h",
+   "replaces": "a social analyst — snapshots five platforms every 6 hours",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeSovereignHeartbeat",
+   "label": "Sovereign Heartbeat",
+   "dept": "empire",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeSovereignViewer",
+   "label": "Sovereign Viewer",
+   "dept": "empire",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeSpendMeter",
+   "label": "Spend Meter",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeStageBatch",
+   "label": "Stage Batch",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeStoryFire",
+   "label": "Story Fire",
+   "dept": "content",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeStrategist",
+   "label": "Strategist",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeSubBridge",
+   "label": "Sub Bridge",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeTelegramBridge",
+   "label": "Telegram Bridge",
+   "dept": "bridge",
+   "status": "running",
+   "detail": "REQUEST_REFUSED (running)",
+   "replaces": "a pocket assistant — the phone-side line into everything here",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeTelegramWatchdog",
+   "label": "Telegram Watchdog",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeTimEmailWatch",
+   "label": "Tim Email Watch",
+   "dept": "self",
+   "status": "flag",
+   "detail": "GENERIC_FAILURE",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWakeLock",
+   "label": "Wake Lock",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWarPlanLoop",
+   "label": "War Plan Loop",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "a founder’s conscience — stages armed launches, never sends without Marco",
+   "mass": 3
+  },
+  {
+   "id": "ClaudeWarPlanTick",
+   "label": "War Plan Tick",
+   "dept": "revenue",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWCAutoFire",
+   "label": "WCAuto Fire",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWCBrainTick",
+   "label": "WCBrain Tick",
+   "dept": "markets",
+   "status": "flag",
+   "detail": "REQUEST_REFUSED",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWCEdgeWatch",
+   "label": "WCEdge Watch",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWCGuard",
+   "label": "WCGuard",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWCMindDaemon",
+   "label": "WCMind Daemon",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWCRefresh",
+   "label": "WCRefresh",
+   "dept": "markets",
+   "status": "flag",
+   "detail": "GENERIC_FAILURE",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWCSignalLatency",
+   "label": "WCSignal Latency",
+   "dept": "markets",
+   "status": "flag",
+   "detail": "REQUEST_REFUSED",
+   "mass": 2
+  },
+  {
+   "id": "ClaudeWeatherOracle",
+   "label": "Weather Oracle",
+   "dept": "senses",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "looking out the window, but at 6am and in writing",
+   "mass": 3
+  },
+  {
+   "id": "CrowResident",
+   "label": "Crow Resident",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "cadence": "every 10 min",
+   "replaces": "presence — a resident process that answers as the house AI every 10 minutes",
+   "mass": 3
+  },
+  {
+   "id": "CrowUnsealed",
+   "label": "Crow Unsealed",
+   "dept": "self",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "EVRoomScanner",
+   "label": "EVRoom Scanner",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "HermesBot",
+   "label": "Hermes Bot",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "replaces": "a peer operator — a second AI with its own memory who takes positions",
+   "mass": 3
+  },
+  {
+   "id": "HermesBrief",
+   "label": "Hermes Brief",
+   "dept": "bridge",
+   "status": "flag",
+   "detail": "REQUEST_REFUSED",
+   "mass": 2
+  },
+  {
+   "id": "HermesReflect",
+   "label": "Hermes Reflect",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "HermesServer",
+   "label": "Hermes Server",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "HermesTick",
+   "label": "Hermes Tick",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "HermesWC26",
+   "label": "Hermes WC26",
+   "dept": "bridge",
+   "status": "flag",
+   "detail": "REQUEST_REFUSED",
+   "mass": 2
+  },
+  {
+   "id": "HermesWC26Briefing",
+   "label": "Hermes WC26Briefing",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "HotPotHeal",
+   "label": "Hot Pot Heal",
+   "dept": "senses",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "JumpScalper",
+   "label": "Jump Scalper",
+   "dept": "markets",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "JumpScalperCalib",
+   "label": "Jump Scalper Calib",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "JumpScalperDash",
+   "label": "Jump Scalper Dash",
+   "dept": "markets",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "JumpScalperDeadman",
+   "label": "Jump Scalper Deadman",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "JumpScalperKalshi",
+   "label": "Jump Scalper Kalshi",
+   "dept": "markets",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "JumpScalperMiner",
+   "label": "Jump Scalper Miner",
+   "dept": "markets",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "JumpScalperMM",
+   "label": "Jump Scalper MM",
+   "dept": "markets",
+   "status": "dormant",
+   "detail": "TERMINATED",
+   "mass": 1
+  },
+  {
+   "id": "JumpScalperReview",
+   "label": "Jump Scalper Review",
+   "dept": "markets",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "LuckScannerDaily",
+   "label": "Luck Scanner Daily",
+   "dept": "hunt",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "MarcoOperatorBoot",
+   "label": "Marco Operator Boot",
+   "dept": "bridge",
+   "status": "flag",
+   "detail": "0xfffd0000",
+   "mass": 2
+  },
+  {
+   "id": "MarcoOperatorServe",
+   "label": "Marco Operator Serve",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "OpenClaw Gateway",
+   "label": "Open Claw Gateway",
+   "dept": "bridge",
+   "status": "running",
+   "detail": "STILL_RUNNING (running)",
+   "mass": 2
+  },
+  {
+   "id": "OpenClaw-Distiller",
+   "label": "Open Claw-Distiller",
+   "dept": "bridge",
+   "status": "flag",
+   "detail": "PROCESS_ABORTED",
+   "mass": 2
+  },
+  {
+   "id": "OpenClaw-Frontier-Intel",
+   "label": "Open Claw-Frontier-Intel",
+   "dept": "bridge",
+   "status": "flag",
+   "detail": "PROCESS_ABORTED",
+   "mass": 2
+  },
+  {
+   "id": "OpenClaw-Scout-Arxiv",
+   "label": "Open Claw-Scout-Arxiv",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "OpenClaw-Scout-GitHub",
+   "label": "Open Claw-Scout-Git Hub",
+   "dept": "bridge",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
+  },
+  {
+   "id": "OpenClaw-Scout-HF",
+   "label": "Open Claw-Scout-HF",
+   "dept": "bridge",
+   "status": "flag",
+   "detail": "REQUEST_REFUSED",
+   "mass": 2
+  },
+  {
+   "id": "WifiHeal",
+   "label": "Wifi Heal",
+   "dept": "senses",
+   "status": "running",
+   "detail": "STILL_RUNNING (running)",
+   "mass": 2
+  }
+ ]
+}
