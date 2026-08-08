@@ -452,26 +452,45 @@ const STATUS_COLOR = {
 function buildWorld() {
   world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = []; pillarAnims = []; terms = [];
 
-  /* the brain — a particle heart floating over the center of the base */
+  /* THE CORE — bigger, structured: particle cloud + wireframe heart + orbital rings +
+     a light column wiring it to the floor bus. Counters under it are real. */
   {
-    const N = 1400, g = new THREE.BufferGeometry();
+    const N = 2400, g = new THREE.BufferGeometry();
     const arr = new Float32Array(N * 3), col = new Float32Array(N * 3);
     for (let i = 0; i < N; i++) {
-      const v = new THREE.Vector3().randomDirection().multiplyScalar(Math.pow(Math.random(), .55) * 46);
-      arr[i * 3] = v.x; arr[i * 3 + 1] = v.y * .8; arr[i * 3 + 2] = v.z;
+      const v = new THREE.Vector3().randomDirection().multiplyScalar(Math.pow(Math.random(), .5) * 68);
+      arr[i * 3] = v.x; arr[i * 3 + 1] = v.y * .82; arr[i * 3 + 2] = v.z;
       const c = hsl([28, 285, 175, 48, 330, 210][i % 6], .6, .68);
       col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
     }
     g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    brain.add(new THREE.Points(g, new THREE.PointsMaterial({ vertexColors: true, size: 2.6, transparent: true, opacity: .95 })));
-    const glow = new THREE.PointLight(0xbfa7ff, 1.1, 500); glow.position.y = 0; brain.add(glow);
+    brain.add(new THREE.Points(g, new THREE.PointsMaterial({ vertexColors: true, size: 2.8, transparent: true, opacity: .95 })));
+    const heart = new THREE.Mesh(new THREE.IcosahedronGeometry(30, 1),
+      new THREE.MeshBasicMaterial({ color: 0xcbb8ff, wireframe: true, transparent: true, opacity: .55 }));
+    brain.add(heart);
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(88, 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .5 }));
+    ring1.rotation.x = Math.PI / 2.4; brain.add(ring1);
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(102, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .38 }));
+    ring2.rotation.x = Math.PI / 1.8; ring2.rotation.y = .7; brain.add(ring2);
+    const glow = new THREE.PointLight(0xbfa7ff, 1.5, 640); brain.add(glow);
     brain.position.set(0, 300, -640);
-    const lbl = makeLabel('the brain', { size: 44, serif: true }); lbl.position.set(0, 74, 0); brain.add(lbl);
+    const lbl = makeLabel('CORE', { size: 60, serif: true }); lbl.position.set(0, 138, 0); brain.add(lbl);
+    const c = s => nodes.filter(n => n.status === s).length;
+    const stats = makeLabel(`${nodes.length} UNITS · ${c('ok')} OK · ${c('running')} LIVE · ${c('flag')} ALERTS`, { size: 26, scale: .3 });
+    stats.position.set(0, -104, 0); brain.add(stats);
+    /* light column: CORE → floor bus */
+    const colM = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.2, 300, 12),
+      new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .22 }));
+    colM.position.set(0, 150, -640); scene.add(colM);
+    const pad = new THREE.Mesh(new THREE.CircleGeometry(26, 32), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .3, depthWrite: false }));
+    pad.rotation.x = -Math.PI / 2; pad.position.set(0, 1.1, -640); scene.add(pad);
   }
 
   /* zones live along the walls — 3 left, 2 back, 3 right, like rooms in the reference */
   const D = deptList;
+  /* universal system-role keywords — readable anywhere in the world */
+  const ROLE = { revenue: 'OUTPUT', content: 'MEDIA', hunt: 'SEARCH', senses: 'INPUT', self: 'REPAIR', empire: 'GOALS', bridge: 'LINK', markets: 'SIGNALS' };
   const SLOTS = [
     { x: -450, z: -470, nx: 1, nz: 0 }, { x: -450, z: -40, nx: 1, nz: 0 }, { x: -450, z: 390, nx: 1, nz: 0 },
     { x: -255, z: -650, nx: 0, nz: 1 }, { x: 255, z: -650, nx: 0, nz: 1 },
@@ -493,12 +512,35 @@ function buildWorld() {
     /* zone nameplate painted on the wall behind the district */
     const zl = makePlate(d.label, { size: 78, serif: true, sub: d.tagline || '', hue: d.hue, scale: .5 });
     /* pushed flush to the wall plane, rotated to face into the room */
-    if (s.nx === 1) { zl.position.set(-ROOM.hw - d.cx + 3, 320, 0); zl.rotation.y = Math.PI / 2; }
-    else if (s.nx === -1) { zl.position.set(ROOM.hw - d.cx - 3, 320, 0); zl.rotation.y = -Math.PI / 2; }
-    else { zl.position.set(0, 320, -ROOM.depth - d.cz + 3); }
+    if (s.nx === 1) { zl.position.set(-ROOM.hw - d.cx + 3, 330, 0); zl.rotation.y = Math.PI / 2; }
+    else if (s.nx === -1) { zl.position.set(ROOM.hw - d.cx - 3, 330, 0); zl.rotation.y = -Math.PI / 2; }
+    else { zl.position.set(0, 330, -ROOM.depth - d.cz + 3); }
     zone.add(zl);
     d.plate = zl; zl.userData = { kind: 'zone', dept: d.id };
     zoneDiscs.push(zl);
+
+    /* live stats strip on the wall under the nameplate — real counts + universal role */
+    const zc = st => d.nodes.filter(n => n.status === st).length;
+    const role = d.role || ROLE[d.id] || 'MODULE';
+    const strip = makePlate(
+      `${role} · ${d.nodes.length} UNITS · ${zc('ok')} OK${zc('running') ? ' · ' + zc('running') + ' LIVE' : ''}${zc('flag') ? ' · ' + zc('flag') + ' ALERTS' : ''}`,
+      { size: 26, hue: d.hue, scale: .34 });
+    strip.position.copy(zl.position); strip.position.y = 246; strip.rotation.copy(zl.rotation);
+    zone.add(strip);
+
+    /* circuit junction at the district center — everything in this zone wires here */
+    const jun = new THREE.Mesh(new THREE.CircleGeometry(9, 24), new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .85, depthWrite: false }));
+    jun.rotation.x = -Math.PI / 2; jun.position.y = 1.2; zone.add(jun);
+    const junRing = new THREE.Mesh(new THREE.TorusGeometry(14, .9, 6, 32), new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .5 }));
+    junRing.rotation.x = Math.PI / 2; junRing.position.y = 1.2; zone.add(junRing);
+
+    /* zone junction → back bus → CORE column: the visible wiring of the system */
+    const trace = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(d.cx, 1.2, d.cz),
+      new THREE.Vector3(d.cx, 1.2, -640),
+      new THREE.Vector3(0, 1.2, -640),
+    ]);
+    scene.add(new THREE.Line(trace, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .6), transparent: true, opacity: .5 })));
 
     /* checkpoints — monuments standing on the floor along the wall */
     const gs = groupsByDept[d.id] || [];
@@ -524,6 +566,11 @@ function buildWorld() {
       zone.add(pillar); hubMeshes.push(pillar);
       const members = d.nodes.filter(n => n.group === g.id);
       pillarAnims.push({ mat: pillar.material, running: members.some(n => n.status === 'running'), phase: gi * 1.7 });
+      /* monument → zone junction trace on the floor */
+      const tr = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(hx, 1.2, hz), new THREE.Vector3(0, 1.2, 0),
+      ]);
+      zone.add(new THREE.Line(tr, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .62), transparent: true, opacity: .45 })));
 
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(15, 1.4, 10, 48),
@@ -608,8 +655,7 @@ function buildWorld() {
       new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: .94 }));
     return { c, g: c.getContext('2d'), tex, mesh, title, row: 0 };
   };
-  const termNodes = [...nodes].sort((a, b) =>
-    ({ running: 0, flag: 1, ok: 2, dormant: 3 }[a.status] - { running: 0, flag: 1, ok: 2, dormant: 3 }[b.status]));
+  const byStatus = st => nodes.filter(n => st.includes(n.status));
   const TCOL = { running: '#8be2b9', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
   function drawTerm(T) {
     const { g, c } = T;
@@ -619,8 +665,8 @@ function buildWorld() {
     g.fillText('▮ ' + T.title, 18, 34);
     g.fillStyle = 'rgba(139,226,185,.3)'; g.fillRect(0, 46, c.width, 1);
     g.font = '20px Consolas, monospace';
-    for (let i = 0; i < 11; i++) {
-      const n = termNodes[(T.row + i) % termNodes.length];
+    for (let i = 0; i < 11 && T.list.length; i++) {
+      const n = T.list[(T.row + i) % T.list.length];
       const y = 78 + i * 30;
       g.fillStyle = TCOL[n.status] || TCOL.ok;
       const line = `${n.status === 'running' ? '►' : n.status === 'flag' ? '✕' : '●'} ${n.label}`;
@@ -630,12 +676,16 @@ function buildWorld() {
     }
     T.tex.needsUpdate = true;
   }
-  const t1 = mkTerm(268, 168, 'FLEET / LIVE');
-  t1.mesh.position.set(-462, 196, -ROOM.depth + 2.5);
-  scene.add(t1.mesh); terms.push(t1);
-  const t2 = mkTerm(268, 168, 'FLEET / LOG');
-  t2.mesh.position.set(462, 196, -ROOM.depth + 2.5); t2.row = 11;
-  scene.add(t2.mesh); terms.push(t2);
+  /* four live panels — sides + back, each a different real view of the system */
+  const panel = (title, list, x, y, z, rotY) => {
+    const T = mkTerm(258, 162, title); T.list = list;
+    T.mesh.position.set(x, y, z); T.mesh.rotation.y = rotY;
+    scene.add(T.mesh); terms.push(T);
+  };
+  panel('LIVE NOW', byStatus(['running', 'ok']), -ROOM.hw + 2.5, 160, 620, Math.PI / 2);
+  panel('SYSTEM LOG', [...nodes], ROOM.hw - 2.5, 160, 620, -Math.PI / 2);
+  panel('ALERTS', byStatus(['flag', 'dormant']), -462, 196, -ROOM.depth + 2.5, 0);
+  panel('ACTIVITY', byStatus(['running', 'flag', 'ok']), 462, 196, -ROOM.depth + 2.5, 0);
   terms.forEach(drawTerm);
   terms.tick = (t) => {
     if (!terms.last || t - terms.last > 1400) {
@@ -725,7 +775,7 @@ function setLevel(lv, di, gid) {
   const focus = level >= 1 ? deptList[deptIdx] : null;
   if (level === 0) {
     flyTo(0, 260, 810, 0, 170, -350);
-    setDeptnav('A L L', 'the whole ecosystem');
+    setDeptnav('A L L', 'the whole system');
   } else if (level === 1) {
     const d = focus;
     flyTo(d.cx + d.nx * 420, 240, d.cz + d.nz * 420, d.cx, 90, d.cz);
@@ -957,7 +1007,7 @@ function fmtAge(iso) {
 }
 function hud() {
   const c = s => nodes.filter(n => n.status === s).length;
-  $('counts').innerHTML = `<b>${nodes.length}</b> lanes · <b>${(fleet.groups || []).length}</b> checkpoints · <b>${c('ok')}</b> ok · <b>${c('running')}</b> running · ${c('flag')} flagged`;
+  $('counts').innerHTML = `<b>${nodes.length}</b> units · <b>${(fleet.groups || []).length}</b> checkpoints · <b>${c('ok')}</b> ok · <b>${c('running')}</b> running · ${c('flag')} flagged`;
   $('age').textContent = fmtAge(fleet.meta.exported);
   if (fleet.meta.subtitle) $('intro-sub').textContent = fleet.meta.subtitle;
   if (fleet.meta.title) { $('intro-title').textContent = fleet.meta.title; document.querySelector('header .wordmark').textContent = fleet.meta.title; }
