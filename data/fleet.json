@@ -10,19 +10,19 @@
   {
    "id": "revenue",
    "label": "REVENUE",
-   "hue": 42,
+   "hue": 28,
    "tagline": "money in, fires staged"
   },
   {
    "id": "content",
    "label": "CONTENT",
-   "hue": 320,
+   "hue": 285,
    "tagline": "channels, reels, the diary"
   },
   {
    "id": "hunt",
    "label": "HUNT",
-   "hue": 190,
+   "hue": 175,
    "tagline": "jobs, grants, luck, rooms"
   },
   {
@@ -34,13 +34,13 @@
   {
    "id": "self",
    "label": "SELF",
-   "hue": 45,
+   "hue": 48,
    "tagline": "the loop that sharpens the loop"
   },
   {
    "id": "empire",
    "label": "EMPIRE",
-   "hue": 265,
+   "hue": 260,
    "tagline": "goals, oaths, discoveries"
   },
   {
@@ -52,8 +52,184 @@
   {
    "id": "markets",
    "label": "MARKETS",
-   "hue": 220,
+   "hue": 210,
    "tagline": "odds watched, never fired"
+  }
+ ],
+ "groups": [
+  {
+   "id": "war-room",
+   "dept": "revenue",
+   "label": "war room",
+   "blurb": "stages armed launches; nothing sends itself"
+  },
+  {
+   "id": "storefronts",
+   "dept": "revenue",
+   "label": "storefronts",
+   "blurb": "the shops and funnels that face the world"
+  },
+  {
+   "id": "treasury",
+   "dept": "revenue",
+   "label": "treasury",
+   "blurb": "watches every dollar in and out"
+  },
+  {
+   "id": "instagram",
+   "dept": "content",
+   "label": "instagram",
+   "blurb": "the IG operation — triage, stories, health, analytics"
+  },
+  {
+   "id": "the-diary",
+   "dept": "content",
+   "label": "the diary",
+   "blurb": "A NEW YORK DIARY and the channels around it"
+  },
+  {
+   "id": "newsroom",
+   "dept": "content",
+   "label": "newsroom",
+   "blurb": "publications and the social listening desk"
+  },
+  {
+   "id": "job-engine",
+   "dept": "hunt",
+   "label": "job engine",
+   "blurb": "801 boards on a 30-minute tick"
+  },
+  {
+   "id": "fortune",
+   "dept": "hunt",
+   "label": "fortune",
+   "blurb": "grants, contests, rooms, found money"
+  },
+  {
+   "id": "eyes",
+   "dept": "senses",
+   "label": "eyes",
+   "blurb": "watches the screen and taps only at signal"
+  },
+  {
+   "id": "the-city",
+   "dept": "senses",
+   "label": "the city",
+   "blurb": "NYC itineraries and the sky above them"
+  },
+  {
+   "id": "the-pocket",
+   "dept": "senses",
+   "label": "the pocket",
+   "blurb": "the phone-side pulse and the 08:30 brief"
+  },
+  {
+   "id": "the-house",
+   "dept": "senses",
+   "label": "the house",
+   "blurb": "keeps the home network breathing"
+  },
+  {
+   "id": "healing",
+   "dept": "self",
+   "label": "healing",
+   "blurb": "audits, restarts, resurrects — the immune system"
+  },
+  {
+   "id": "learning",
+   "dept": "self",
+   "label": "learning",
+   "blurb": "reads its own telemetry and ships improvements"
+  },
+  {
+   "id": "memory",
+   "dept": "self",
+   "label": "memory",
+   "blurb": "archives, forgets, rotates — hygiene of the mind"
+  },
+  {
+   "id": "presence",
+   "dept": "self",
+   "label": "presence",
+   "blurb": "the resident that answers as the house AI"
+  },
+  {
+   "id": "truth",
+   "dept": "self",
+   "label": "truth",
+   "blurb": "verifies claims against reality"
+  },
+  {
+   "id": "field",
+   "dept": "self",
+   "label": "field",
+   "blurb": "unassigned lanes doing their own quiet work"
+  },
+  {
+   "id": "portfolio",
+   "dept": "empire",
+   "label": "portfolio",
+   "blurb": "drives the 20-goal life portfolio"
+  },
+  {
+   "id": "civilizations",
+   "dept": "empire",
+   "label": "civilizations",
+   "blurb": "EDEN, OATH — the invented worlds lane"
+  },
+  {
+   "id": "oracles",
+   "dept": "empire",
+   "label": "oracles",
+   "blurb": "graded predictions and the frozen sovereign"
+  },
+  {
+   "id": "telegram",
+   "dept": "bridge",
+   "label": "telegram",
+   "blurb": "the pocket line — brief, watchdog, two-way"
+  },
+  {
+   "id": "hermes",
+   "dept": "bridge",
+   "label": "hermes",
+   "blurb": "the peer operator with his own memory"
+  },
+  {
+   "id": "operators",
+   "dept": "bridge",
+   "label": "operators",
+   "blurb": "always-on operators with faces and ledgers"
+  },
+  {
+   "id": "relays",
+   "dept": "bridge",
+   "label": "relays",
+   "blurb": "the plumbing every hand reaches through"
+  },
+  {
+   "id": "world-cup",
+   "dept": "markets",
+   "label": "world cup",
+   "blurb": "WC26 edges — watched, never auto-fired"
+  },
+  {
+   "id": "polymarket",
+   "dept": "markets",
+   "label": "polymarket",
+   "blurb": "odds scanners and graded closes"
+  },
+  {
+   "id": "crypto",
+   "dept": "markets",
+   "label": "crypto",
+   "blurb": "paper swarms and a retired scalper"
+  },
+  {
+   "id": "field",
+   "dept": "markets",
+   "label": "field",
+   "blurb": "unassigned lanes doing their own quiet work"
   }
  ],
  "nodes": [
@@ -61,6 +237,7 @@
    "id": "AgentControlPlane-Dashboard",
    "label": "Agent Control Plane-Dashboard",
    "dept": "bridge",
+   "group": "relays",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -69,6 +246,7 @@
    "id": "AgentControlPlane-Worker",
    "label": "Agent Control Plane-Worker",
    "dept": "bridge",
+   "group": "relays",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -77,6 +255,7 @@
    "id": "Claude18M24",
    "label": "18M24",
    "dept": "bridge",
+   "group": "operators",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -85,6 +264,7 @@
    "id": "ClaudeAffiliateTick",
    "label": "Affiliate Tick",
    "dept": "revenue",
+   "group": "storefronts",
    "status": "ok",
    "detail": "OK",
    "replaces": "a growth intern — keeps the affiliate funnel measured and warm",
@@ -94,6 +274,7 @@
    "id": "ClaudeAlwaysOn",
    "label": "Always On",
    "dept": "self",
+   "group": "healing",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -102,6 +283,7 @@
    "id": "ClaudeApplyQueue",
    "label": "Apply Queue",
    "dept": "hunt",
+   "group": "job-engine",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -110,6 +292,7 @@
    "id": "ClaudeAtsHunt",
    "label": "Ats Hunt",
    "dept": "hunt",
+   "group": "job-engine",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -118,6 +301,7 @@
    "id": "ClaudeAurumCycle",
    "label": "Aurum Cycle",
    "dept": "revenue",
+   "group": "storefronts",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -126,6 +310,7 @@
    "id": "ClaudeBoardScan",
    "label": "Board Scan",
    "dept": "hunt",
+   "group": "job-engine",
    "status": "ok",
    "detail": "OK",
    "cadence": "every 30 min",
@@ -136,6 +321,7 @@
    "id": "ClaudeBotEvolve",
    "label": "Bot Evolve",
    "dept": "self",
+   "group": "learning",
    "status": "flag",
    "detail": "REQUEST_REFUSED",
    "mass": 2
@@ -144,6 +330,7 @@
    "id": "ClaudeBrowserRelay",
    "label": "Browser Relay",
    "dept": "bridge",
+   "group": "relays",
    "status": "running",
    "detail": "STILL_RUNNING (running)",
    "mass": 2
@@ -152,6 +339,7 @@
    "id": "ClaudeBursaryImprove",
    "label": "Bursary Improve",
    "dept": "revenue",
+   "group": "storefronts",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -160,6 +348,7 @@
    "id": "ClaudeCdpRelay",
    "label": "Cdp Relay",
    "dept": "bridge",
+   "group": "relays",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -168,6 +357,7 @@
    "id": "ClaudeChannelManager",
    "label": "Channel Manager",
    "dept": "content",
+   "group": "the-diary",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -176,6 +366,7 @@
    "id": "ClaudeChannelStrategist",
    "label": "Channel Strategist",
    "dept": "content",
+   "group": "the-diary",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -184,6 +375,7 @@
    "id": "ClaudeClvResolve",
    "label": "Clv Resolve",
    "dept": "markets",
+   "group": "polymarket",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -192,6 +384,7 @@
    "id": "ClaudeContentEngine",
    "label": "Content Engine",
    "dept": "content",
+   "group": "the-diary",
    "status": "ok",
    "detail": "OK",
    "replaces": "a content team — drafts, schedules and grades platform-native posts",
@@ -201,6 +394,7 @@
    "id": "ClaudeConvoDaily",
    "label": "Convo Daily",
    "dept": "content",
+   "group": "newsroom",
    "status": "flag",
    "detail": "GENERIC_FAILURE",
    "mass": 2
@@ -209,6 +403,7 @@
    "id": "ClaudeCryptoTrader",
    "label": "Crypto Trader",
    "dept": "markets",
+   "group": "crypto",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -217,6 +412,7 @@
    "id": "ClaudeDaily0800",
    "label": "Daily0800",
    "dept": "self",
+   "group": "healing",
    "status": "dormant",
    "detail": "NEVER_RAN",
    "mass": 1
@@ -225,6 +421,7 @@
    "id": "ClaudeDiaryDatafy",
    "label": "Diary Datafy",
    "dept": "content",
+   "group": "the-diary",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -233,6 +430,7 @@
    "id": "ClaudeDiscoveryEngine",
    "label": "Discovery Engine",
    "dept": "empire",
+   "group": "civilizations",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -241,6 +439,7 @@
    "id": "ClaudeEdenTick",
    "label": "Eden Tick",
    "dept": "empire",
+   "group": "civilizations",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -249,6 +448,7 @@
    "id": "ClaudeEmpireEvolve",
    "label": "Empire Evolve",
    "dept": "empire",
+   "group": "portfolio",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -257,6 +457,7 @@
    "id": "ClaudeEmpireStrategist",
    "label": "Empire Strategist",
    "dept": "self",
+   "group": "truth",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -265,6 +466,7 @@
    "id": "ClaudeEmpireTick",
    "label": "Empire Tick",
    "dept": "empire",
+   "group": "portfolio",
    "status": "ok",
    "detail": "OK",
    "replaces": "an ops director — drives a 20-goal life portfolio forward daily",
@@ -274,6 +476,7 @@
    "id": "ClaudeEntropyScan",
    "label": "Entropy Scan",
    "dept": "self",
+   "group": "memory",
    "status": "ok",
    "detail": "OK",
    "replaces": "a janitor with taste — archives orphans before they rot the workspace",
@@ -283,6 +486,7 @@
    "id": "ClaudeFinanceHQ",
    "label": "Finance HQ",
    "dept": "revenue",
+   "group": "treasury",
    "status": "flag",
    "detail": "GENERIC_FAILURE",
    "mass": 2
@@ -291,6 +495,7 @@
    "id": "ClaudeFiresGrade",
    "label": "Fires Grade",
    "dept": "revenue",
+   "group": "war-room",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -299,6 +504,7 @@
    "id": "ClaudeFleetWarden",
    "label": "Fleet Warden",
    "dept": "self",
+   "group": "healing",
    "status": "running",
    "detail": "STILL_RUNNING (running)",
    "cadence": "every 15 min",
@@ -309,6 +515,7 @@
    "id": "ClaudeFloorGuard",
    "label": "Floor Guard",
    "dept": "revenue",
+   "group": "war-room",
    "status": "flag",
    "detail": "FLOOR_BREACHED",
    "mass": 2
@@ -317,6 +524,7 @@
    "id": "ClaudeForgetSweep",
    "label": "Forget Sweep",
    "dept": "self",
+   "group": "memory",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -325,6 +533,7 @@
    "id": "ClaudeGoalMatrix",
    "label": "Goal Matrix",
    "dept": "self",
+   "group": "truth",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -333,6 +542,7 @@
    "id": "ClaudeGpuTranscribe",
    "label": "Gpu Transcribe",
    "dept": "content",
+   "group": "the-diary",
    "status": "flag",
    "detail": "CTRL_C_EXIT",
    "mass": 2
@@ -341,6 +551,7 @@
    "id": "ClaudeHundredToday",
    "label": "Hundred Today",
    "dept": "revenue",
+   "group": "treasury",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -349,6 +560,7 @@
    "id": "ClaudeHuntTick",
    "label": "Hunt Tick",
    "dept": "hunt",
+   "group": "job-engine",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -357,6 +569,7 @@
    "id": "ClaudeIadolaBridge",
    "label": "Iadola Bridge",
    "dept": "bridge",
+   "group": "operators",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -365,14 +578,17 @@
    "id": "ClaudeIadolaBriefs",
    "label": "Iadola Briefs",
    "dept": "bridge",
+   "group": "operators",
    "status": "ok",
    "detail": "OK",
-   "mass": 2
+   "replaces": "an IG growth analyst — daily briefs from real per-post follow data",
+   "mass": 3
   },
   {
    "id": "ClaudeIadolaLedger",
    "label": "Iadola Ledger",
    "dept": "bridge",
+   "group": "operators",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -381,6 +597,7 @@
    "id": "ClaudeIadolaOrb",
    "label": "Iadola Orb",
    "dept": "bridge",
+   "group": "operators",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -389,6 +606,7 @@
    "id": "ClaudeIadolaRadar",
    "label": "Iadola Radar",
    "dept": "bridge",
+   "group": "operators",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -397,6 +615,7 @@
    "id": "ClaudeIgDeepScan",
    "label": "Ig Deep Scan",
    "dept": "content",
+   "group": "instagram",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -405,6 +624,7 @@
    "id": "ClaudeIgDmTriage",
    "label": "Ig Dm Triage",
    "dept": "content",
+   "group": "instagram",
    "status": "ok",
    "detail": "OK",
    "cadence": "daily 07:45",
@@ -415,6 +635,7 @@
    "id": "ClaudeIgDmTriage15",
    "label": "Ig Dm Triage15",
    "dept": "content",
+   "group": "instagram",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -423,6 +644,7 @@
    "id": "ClaudeIgHealth",
    "label": "Ig Health",
    "dept": "content",
+   "group": "instagram",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -431,6 +653,7 @@
    "id": "ClaudeIgLocalTick",
    "label": "Ig Local Tick",
    "dept": "content",
+   "group": "instagram",
    "status": "ok",
    "detail": "OK",
    "cadence": "every 15 min",
@@ -440,6 +663,7 @@
    "id": "ClaudeIgStoryPool",
    "label": "Ig Story Pool",
    "dept": "content",
+   "group": "instagram",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -448,14 +672,17 @@
    "id": "ClaudeIgStoryPost",
    "label": "Ig Story Post",
    "dept": "content",
+   "group": "instagram",
    "status": "ok",
    "detail": "OK",
-   "mass": 2
+   "replaces": "a stories editor — keeps the story slot warm from a graded pool",
+   "mass": 3
   },
   {
    "id": "ClaudeIgVoiceEval",
    "label": "Ig Voice Eval",
    "dept": "content",
+   "group": "instagram",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -464,6 +691,7 @@
    "id": "ClaudeJarvisMiniLoop",
    "label": "Jarvis Mini Loop",
    "dept": "bridge",
+   "group": "operators",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -472,6 +700,7 @@
    "id": "ClaudeJobHunt",
    "label": "Job Hunt",
    "dept": "hunt",
+   "group": "job-engine",
    "status": "ok",
    "detail": "OK",
    "replaces": "a recruiter working nights — finds, scores and queues applications 24/7",
@@ -481,6 +710,7 @@
    "id": "ClaudeJobHuntDigest",
    "label": "Job Hunt Digest",
    "dept": "hunt",
+   "group": "job-engine",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -489,6 +719,7 @@
    "id": "ClaudeKeepAlive",
    "label": "Keep Alive",
    "dept": "self",
+   "group": "healing",
    "status": "running",
    "detail": "STILL_RUNNING (running)",
    "mass": 2
@@ -497,6 +728,7 @@
    "id": "ClaudeLaptopResident",
    "label": "Laptop Resident",
    "dept": "self",
+   "group": "presence",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -505,6 +737,7 @@
    "id": "ClaudeLedgerRotate",
    "label": "Ledger Rotate",
    "dept": "self",
+   "group": "memory",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -513,6 +746,7 @@
    "id": "ClaudeLinkedInJobs",
    "label": "Linked In Jobs",
    "dept": "hunt",
+   "group": "job-engine",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -521,6 +755,7 @@
    "id": "ClaudeLiveFire",
    "label": "Live Fire",
    "dept": "revenue",
+   "group": "war-room",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -529,6 +764,7 @@
    "id": "ClaudeLiveness",
    "label": "Liveness",
    "dept": "self",
+   "group": "healing",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -537,6 +773,7 @@
    "id": "ClaudeLuckDiscover",
    "label": "Luck Discover",
    "dept": "hunt",
+   "group": "fortune",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -545,6 +782,7 @@
    "id": "ClaudeLuckScanner",
    "label": "Luck Scanner",
    "dept": "hunt",
+   "group": "fortune",
    "status": "ok",
    "detail": "OK",
    "replaces": "a scholarship office — 100+ keyless opportunities a day",
@@ -554,6 +792,7 @@
    "id": "ClaudeLuckyRun",
    "label": "Lucky Run",
    "dept": "hunt",
+   "group": "fortune",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -562,6 +801,7 @@
    "id": "ClaudeMarketCatalog",
    "label": "Market Catalog",
    "dept": "hunt",
+   "group": "fortune",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -570,6 +810,7 @@
    "id": "ClaudeMarketWatch",
    "label": "Market Watch",
    "dept": "markets",
+   "group": "field",
    "status": "flag",
    "detail": "GENERIC_FAILURE",
    "mass": 2
@@ -578,6 +819,7 @@
    "id": "ClaudeMerchBridge",
    "label": "Merch Bridge",
    "dept": "revenue",
+   "group": "storefronts",
    "status": "ok",
    "detail": "OK",
    "replaces": "a store manager — watches the merch reserve rail",
@@ -587,6 +829,7 @@
    "id": "ClaudeMoneyDivision",
    "label": "Money Division",
    "dept": "revenue",
+   "group": "treasury",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -595,6 +838,7 @@
    "id": "ClaudeMorningBrief",
    "label": "Morning Brief",
    "dept": "senses",
+   "group": "the-pocket",
    "status": "ok",
    "detail": "OK",
    "cadence": "daily 08:30",
@@ -605,6 +849,7 @@
    "id": "ClaudeNycScout",
    "label": "Nyc Scout",
    "dept": "senses",
+   "group": "the-city",
    "status": "ok",
    "detail": "OK",
    "cadence": "daily 22:45",
@@ -615,14 +860,17 @@
    "id": "ClaudeNycTechWeekly",
    "label": "Nyc Tech Weekly",
    "dept": "content",
+   "group": "newsroom",
    "status": "ok",
    "detail": "OK",
-   "mass": 2
+   "replaces": "a newsletter staff — the NYC tech index, sourced and probed before send",
+   "mass": 3
   },
   {
    "id": "ClaudeOathForge",
    "label": "Oath Forge",
    "dept": "empire",
+   "group": "civilizations",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -631,6 +879,7 @@
    "id": "ClaudeOmniLoop",
    "label": "Omni Loop",
    "dept": "self",
+   "group": "presence",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -639,6 +888,7 @@
    "id": "ClaudeOracleGrade",
    "label": "Oracle Grade",
    "dept": "empire",
+   "group": "oracles",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -647,6 +897,7 @@
    "id": "ClaudeOracleSweep",
    "label": "Oracle Sweep",
    "dept": "empire",
+   "group": "oracles",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -655,6 +906,7 @@
    "id": "ClaudeOutcomeWitness",
    "label": "Outcome Witness",
    "dept": "self",
+   "group": "truth",
    "status": "ok",
    "detail": "OK",
    "replaces": "a project manager checking claims — verifies each \"shipped\" against commits, deploys and Stripe",
@@ -664,6 +916,7 @@
    "id": "ClaudeParlayLadder",
    "label": "Parlay Ladder",
    "dept": "markets",
+   "group": "polymarket",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -672,6 +925,7 @@
    "id": "ClaudePhoneLedger",
    "label": "Phone Ledger",
    "dept": "senses",
+   "group": "the-pocket",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -680,6 +934,7 @@
    "id": "ClaudePocketSentinel",
    "label": "Pocket Sentinel",
    "dept": "senses",
+   "group": "eyes",
    "status": "ok",
    "detail": "OK",
    "replaces": "attention triage — perceives every 30 min, taps Marco only at signal ≥ 7",
@@ -689,6 +944,7 @@
    "id": "ClaudePolyDaemon",
    "label": "Poly Daemon",
    "dept": "markets",
+   "group": "polymarket",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -697,6 +953,7 @@
    "id": "ClaudePolyEvolve",
    "label": "Poly Evolve",
    "dept": "markets",
+   "group": "polymarket",
    "status": "flag",
    "detail": "GENERIC_FAILURE",
    "mass": 2
@@ -705,6 +962,7 @@
    "id": "ClaudePolyPromptEvolve",
    "label": "Poly Prompt Evolve",
    "dept": "markets",
+   "group": "polymarket",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -713,6 +971,7 @@
    "id": "ClaudePolyResurrect",
    "label": "Poly Resurrect",
    "dept": "markets",
+   "group": "polymarket",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -721,6 +980,7 @@
    "id": "ClaudeProfitLoop",
    "label": "Profit Loop",
    "dept": "revenue",
+   "group": "treasury",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -729,6 +989,7 @@
    "id": "ClaudePublishPublic",
    "label": "Publish Public",
    "dept": "content",
+   "group": "newsroom",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -737,6 +998,7 @@
    "id": "ClaudeReaper",
    "label": "Reaper",
    "dept": "self",
+   "group": "healing",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -745,6 +1007,7 @@
    "id": "ClaudeRelayReap",
    "label": "Relay Reap",
    "dept": "self",
+   "group": "healing",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -753,6 +1016,7 @@
    "id": "ClaudeRelayWatchdog",
    "label": "Relay Watchdog",
    "dept": "bridge",
+   "group": "relays",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -761,6 +1025,7 @@
    "id": "ClaudeResearchTick",
    "label": "Research Tick",
    "dept": "self",
+   "group": "learning",
    "status": "ok",
    "detail": "OK",
    "cadence": "weekly Sun 06:00",
@@ -771,6 +1036,7 @@
    "id": "ClaudeScopeWeekly",
    "label": "Scope Weekly",
    "dept": "self",
+   "group": "field",
    "status": "dormant",
    "detail": "NEVER_RAN",
    "mass": 1
@@ -779,6 +1045,7 @@
    "id": "ClaudeScoutRefresh",
    "label": "Scout Refresh",
    "dept": "hunt",
+   "group": "fortune",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -787,6 +1054,7 @@
    "id": "ClaudeScreenActivity",
    "label": "Screen Activity",
    "dept": "senses",
+   "group": "eyes",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -795,6 +1063,7 @@
    "id": "ClaudeSelfEval",
    "label": "Self Eval",
    "dept": "self",
+   "group": "learning",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -803,6 +1072,7 @@
    "id": "ClaudeSelfTick",
    "label": "Self Tick",
    "dept": "self",
+   "group": "learning",
    "status": "ok",
    "detail": "OK",
    "cadence": "daily 05:20",
@@ -813,6 +1083,7 @@
    "id": "ClaudeSharpEngine",
    "label": "Sharp Engine",
    "dept": "self",
+   "group": "learning",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -821,6 +1092,7 @@
    "id": "ClaudeSkillForge",
    "label": "Skill Forge",
    "dept": "self",
+   "group": "learning",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -829,6 +1101,7 @@
    "id": "ClaudeSocialWatch",
    "label": "Social Watch",
    "dept": "content",
+   "group": "newsroom",
    "status": "ok",
    "detail": "OK",
    "cadence": "every 6 h",
@@ -839,6 +1112,7 @@
    "id": "ClaudeSovereignHeartbeat",
    "label": "Sovereign Heartbeat",
    "dept": "empire",
+   "group": "oracles",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -847,6 +1121,7 @@
    "id": "ClaudeSovereignViewer",
    "label": "Sovereign Viewer",
    "dept": "empire",
+   "group": "oracles",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -855,6 +1130,7 @@
    "id": "ClaudeSpendMeter",
    "label": "Spend Meter",
    "dept": "revenue",
+   "group": "treasury",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -863,6 +1139,7 @@
    "id": "ClaudeStageBatch",
    "label": "Stage Batch",
    "dept": "revenue",
+   "group": "war-room",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -871,6 +1148,7 @@
    "id": "ClaudeStoryFire",
    "label": "Story Fire",
    "dept": "content",
+   "group": "the-diary",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -879,6 +1157,7 @@
    "id": "ClaudeStrategist",
    "label": "Strategist",
    "dept": "self",
+   "group": "truth",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -887,6 +1166,7 @@
    "id": "ClaudeSubBridge",
    "label": "Sub Bridge",
    "dept": "bridge",
+   "group": "relays",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -895,6 +1175,7 @@
    "id": "ClaudeTelegramBridge",
    "label": "Telegram Bridge",
    "dept": "bridge",
+   "group": "telegram",
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "replaces": "a pocket assistant — the phone-side line into everything here",
@@ -904,6 +1185,7 @@
    "id": "ClaudeTelegramWatchdog",
    "label": "Telegram Watchdog",
    "dept": "bridge",
+   "group": "telegram",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -912,6 +1194,7 @@
    "id": "ClaudeTimEmailWatch",
    "label": "Tim Email Watch",
    "dept": "self",
+   "group": "field",
    "status": "flag",
    "detail": "GENERIC_FAILURE",
    "mass": 2
@@ -920,6 +1203,7 @@
    "id": "ClaudeWakeLock",
    "label": "Wake Lock",
    "dept": "self",
+   "group": "healing",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -928,6 +1212,7 @@
    "id": "ClaudeWarPlanLoop",
    "label": "War Plan Loop",
    "dept": "revenue",
+   "group": "war-room",
    "status": "ok",
    "detail": "OK",
    "replaces": "a founder’s conscience — stages armed launches, never sends without Marco",
@@ -937,6 +1222,7 @@
    "id": "ClaudeWarPlanTick",
    "label": "War Plan Tick",
    "dept": "revenue",
+   "group": "war-room",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -945,6 +1231,7 @@
    "id": "ClaudeWCAutoFire",
    "label": "WCAuto Fire",
    "dept": "markets",
+   "group": "world-cup",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -953,6 +1240,7 @@
    "id": "ClaudeWCBrainTick",
    "label": "WCBrain Tick",
    "dept": "markets",
+   "group": "world-cup",
    "status": "flag",
    "detail": "REQUEST_REFUSED",
    "mass": 2
@@ -961,6 +1249,7 @@
    "id": "ClaudeWCEdgeWatch",
    "label": "WCEdge Watch",
    "dept": "markets",
+   "group": "world-cup",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -969,6 +1258,7 @@
    "id": "ClaudeWCGuard",
    "label": "WCGuard",
    "dept": "markets",
+   "group": "world-cup",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -977,6 +1267,7 @@
    "id": "ClaudeWCMindDaemon",
    "label": "WCMind Daemon",
    "dept": "markets",
+   "group": "world-cup",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -985,6 +1276,7 @@
    "id": "ClaudeWCRefresh",
    "label": "WCRefresh",
    "dept": "markets",
+   "group": "world-cup",
    "status": "flag",
    "detail": "GENERIC_FAILURE",
    "mass": 2
@@ -993,6 +1285,7 @@
    "id": "ClaudeWCSignalLatency",
    "label": "WCSignal Latency",
    "dept": "markets",
+   "group": "world-cup",
    "status": "flag",
    "detail": "REQUEST_REFUSED",
    "mass": 2
@@ -1001,6 +1294,7 @@
    "id": "ClaudeWeatherOracle",
    "label": "Weather Oracle",
    "dept": "senses",
+   "group": "the-city",
    "status": "ok",
    "detail": "OK",
    "replaces": "looking out the window, but at 6am and in writing",
@@ -1010,6 +1304,7 @@
    "id": "CrowResident",
    "label": "Crow Resident",
    "dept": "self",
+   "group": "presence",
    "status": "ok",
    "detail": "OK",
    "cadence": "every 10 min",
@@ -1020,6 +1315,7 @@
    "id": "CrowUnsealed",
    "label": "Crow Unsealed",
    "dept": "self",
+   "group": "presence",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1028,6 +1324,7 @@
    "id": "EVRoomScanner",
    "label": "EVRoom Scanner",
    "dept": "hunt",
+   "group": "fortune",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1036,6 +1333,7 @@
    "id": "HermesBot",
    "label": "Hermes Bot",
    "dept": "bridge",
+   "group": "hermes",
    "status": "ok",
    "detail": "OK",
    "replaces": "a peer operator — a second AI with its own memory who takes positions",
@@ -1045,6 +1343,7 @@
    "id": "HermesBrief",
    "label": "Hermes Brief",
    "dept": "bridge",
+   "group": "hermes",
    "status": "flag",
    "detail": "REQUEST_REFUSED",
    "mass": 2
@@ -1053,6 +1352,7 @@
    "id": "HermesReflect",
    "label": "Hermes Reflect",
    "dept": "bridge",
+   "group": "hermes",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1061,6 +1361,7 @@
    "id": "HermesServer",
    "label": "Hermes Server",
    "dept": "bridge",
+   "group": "hermes",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1069,6 +1370,7 @@
    "id": "HermesTick",
    "label": "Hermes Tick",
    "dept": "bridge",
+   "group": "hermes",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1077,6 +1379,7 @@
    "id": "HermesWC26",
    "label": "Hermes WC26",
    "dept": "bridge",
+   "group": "hermes",
    "status": "flag",
    "detail": "REQUEST_REFUSED",
    "mass": 2
@@ -1085,6 +1388,7 @@
    "id": "HermesWC26Briefing",
    "label": "Hermes WC26Briefing",
    "dept": "bridge",
+   "group": "hermes",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1093,6 +1397,7 @@
    "id": "HotPotHeal",
    "label": "Hot Pot Heal",
    "dept": "senses",
+   "group": "the-house",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1101,6 +1406,7 @@
    "id": "JumpScalper",
    "label": "Jump Scalper",
    "dept": "markets",
+   "group": "crypto",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -1109,6 +1415,7 @@
    "id": "JumpScalperCalib",
    "label": "Jump Scalper Calib",
    "dept": "markets",
+   "group": "crypto",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1117,6 +1424,7 @@
    "id": "JumpScalperDash",
    "label": "Jump Scalper Dash",
    "dept": "markets",
+   "group": "crypto",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -1125,6 +1433,7 @@
    "id": "JumpScalperDeadman",
    "label": "Jump Scalper Deadman",
    "dept": "markets",
+   "group": "crypto",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1133,6 +1442,7 @@
    "id": "JumpScalperKalshi",
    "label": "Jump Scalper Kalshi",
    "dept": "markets",
+   "group": "crypto",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -1141,6 +1451,7 @@
    "id": "JumpScalperMiner",
    "label": "Jump Scalper Miner",
    "dept": "markets",
+   "group": "crypto",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -1149,6 +1460,7 @@
    "id": "JumpScalperMM",
    "label": "Jump Scalper MM",
    "dept": "markets",
+   "group": "crypto",
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
@@ -1157,6 +1469,7 @@
    "id": "JumpScalperReview",
    "label": "Jump Scalper Review",
    "dept": "markets",
+   "group": "crypto",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1165,6 +1478,7 @@
    "id": "LuckScannerDaily",
    "label": "Luck Scanner Daily",
    "dept": "hunt",
+   "group": "fortune",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1173,6 +1487,7 @@
    "id": "MarcoOperatorBoot",
    "label": "Marco Operator Boot",
    "dept": "bridge",
+   "group": "operators",
    "status": "flag",
    "detail": "0xfffd0000",
    "mass": 2
@@ -1181,6 +1496,7 @@
    "id": "MarcoOperatorServe",
    "label": "Marco Operator Serve",
    "dept": "bridge",
+   "group": "operators",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1189,6 +1505,7 @@
    "id": "OpenClaw Gateway",
    "label": "Open Claw Gateway",
    "dept": "bridge",
+   "group": "relays",
    "status": "running",
    "detail": "STILL_RUNNING (running)",
    "mass": 2
@@ -1197,6 +1514,7 @@
    "id": "OpenClaw-Distiller",
    "label": "Open Claw-Distiller",
    "dept": "bridge",
+   "group": "relays",
    "status": "flag",
    "detail": "PROCESS_ABORTED",
    "mass": 2
@@ -1205,6 +1523,7 @@
    "id": "OpenClaw-Frontier-Intel",
    "label": "Open Claw-Frontier-Intel",
    "dept": "bridge",
+   "group": "relays",
    "status": "flag",
    "detail": "PROCESS_ABORTED",
    "mass": 2
@@ -1213,6 +1532,7 @@
    "id": "OpenClaw-Scout-Arxiv",
    "label": "Open Claw-Scout-Arxiv",
    "dept": "bridge",
+   "group": "relays",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1221,6 +1541,7 @@
    "id": "OpenClaw-Scout-GitHub",
    "label": "Open Claw-Scout-Git Hub",
    "dept": "bridge",
+   "group": "relays",
    "status": "ok",
    "detail": "OK",
    "mass": 2
@@ -1229,6 +1550,7 @@
    "id": "OpenClaw-Scout-HF",
    "label": "Open Claw-Scout-HF",
    "dept": "bridge",
+   "group": "relays",
    "status": "flag",
    "detail": "REQUEST_REFUSED",
    "mass": 2
@@ -1237,6 +1559,7 @@
    "id": "WifiHeal",
    "label": "Wifi Heal",
    "dept": "senses",
+   "group": "the-house",
    "status": "running",
    "detail": "STILL_RUNNING (running)",
    "mass": 2

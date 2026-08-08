@@ -3,19 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ORRERY — a live map of an AI company</title>
-<meta name="description" content="Every star is a real scheduled agent. Open source — point it at your own fleet.">
+<title>ORRERY — a live AI ecosystem</title>
+<meta name="description" content="Zones, checkpoints, agents — every star is a real scheduled lane. Open source; point it at your own fleet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&display=swap">
 <style>
   :root {
-    --void: #14172b;          /* deep navy-violet, their base */
-    --panel: #1b1f38;         /* raised card surface */
-    --ink:  #eceaf6;          /* warm white */
+    --void: #14172b;
+    --panel: #1b1f38;
+    --ink:  #eceaf6;
     --ink-dim: #a9a9c4;
     --ink-faint: #8c8cab;
-    --accent: #8be2b9;        /* their green: autonomous / alive */
+    --accent: #8be2b9;
     --danger: #e08a7c;
     --line: rgba(236,234,246,.10);
-    --serif: "Didot", "Bodoni MT", "Playfair Display", "Cormorant Garamond", Georgia, serif;
+    --serif: "Cormorant Garamond", "Didot", "Bodoni MT", Georgia, serif;
     --sans: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
     --r-s: 6px; --r-m: 10px; --r-l: 16px;
     --t-quick: 160ms cubic-bezier(.3,.7,.3,1);
@@ -38,7 +41,7 @@
   }
   #intro.gone { opacity: 0; pointer-events: none; }
   #intro h1 {
-    font-family: var(--serif); font-weight: 400; letter-spacing: .42em; text-indent: .42em;
+    font-family: var(--serif); font-weight: 500; letter-spacing: .42em; text-indent: .42em;
     font-size: clamp(34px, 7vw, 64px);
     text-shadow: 0 0 44px rgba(139,226,185,.28);
   }
@@ -58,13 +61,34 @@
     display: flex; align-items: center; gap: 18px; padding: 14px 20px;
     pointer-events: none;
   }
-  header .wordmark { font-family: var(--serif); font-size: 17px; letter-spacing: .34em; }
+  header .wordmark { font-family: var(--serif); font-weight: 600; font-size: 17px; letter-spacing: .34em; }
   header .counts { font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
   header .counts b { color: var(--ink); font-weight: 600; }
-  header .age { margin-left: auto; font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
-  @media (max-width: 700px) { header .counts { display: none; } }
+  header .right { margin-left: auto; display: flex; align-items: center; gap: 14px; pointer-events: auto; }
+  header .age { font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  header #rec {
+    font: 600 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-dim); background: rgba(27,31,56,.9); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 14px; cursor: pointer; transition: color var(--t-quick), border-color var(--t-quick);
+  }
+  header #rec:hover { color: var(--ink); border-color: rgba(236,234,246,.3); }
+  header #rec:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 700px) { header .counts, header .age { display: none; } }
 
-  /* their top-center pill */
+  #crumbs {
+    position: fixed; top: 46px; left: 20px; z-index: 20; display: flex; gap: 8px; align-items: center;
+    font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  #crumbs button {
+    font: inherit; letter-spacing: inherit; text-transform: inherit; background: none; border: 0;
+    color: var(--ink-dim); cursor: pointer; padding: 6px 2px; border-radius: var(--r-s);
+    transition: color var(--t-quick);
+  }
+  #crumbs button:hover, #crumbs button:focus-visible { color: var(--ink); }
+  #crumbs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #crumbs .here { color: var(--ink); }
+  #crumbs .sep { opacity: .5; }
+
   nav#pill {
     position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 21;
     display: flex; gap: 2px; padding: 4px;
@@ -78,9 +102,8 @@
   }
   nav#pill button[aria-pressed="true"] { background: rgba(236,234,246,.14); color: var(--ink); }
   nav#pill button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  @media (max-width: 700px) { nav#pill { top: auto; bottom: calc(64px + env(safe-area-inset-bottom)); } }
+  @media (max-width: 700px) { nav#pill { top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); } }
 
-  /* department carousel — their ‹ NAME › */
   #deptnav {
     position: fixed; bottom: calc(18px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
     z-index: 21; display: flex; align-items: center; gap: 22px; pointer-events: auto;
@@ -92,12 +115,12 @@
   #deptnav button:hover { color: var(--ink); }
   #deptnav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   #deptnav .name {
-    font-family: var(--serif); font-size: 22px; letter-spacing: .34em; text-indent: .34em;
+    font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacing: .34em; text-indent: .34em;
     text-align: center; min-width: 220px; cursor: pointer;
   }
-  #deptnav .tag { font-family: var(--sans); font-size: 11px; letter-spacing: .18em; color: var(--ink-faint); text-transform: lowercase; text-indent: 0; margin-top: 3px; }
+  #deptnav .tag { font-family: var(--sans); font-weight: 400; font-size: 11px; letter-spacing: .18em; color: var(--ink-faint); text-transform: lowercase; text-indent: 0; margin-top: 4px; }
 
-  /* ---------- skill card — their structure ---------- */
+  /* ---------- card (agent + checkpoint modes) ---------- */
   #card {
     position: fixed; z-index: 25; right: 16px; top: 60px; bottom: 16px; width: min(400px, calc(100vw - 32px));
     background: linear-gradient(rgba(236,234,246,.04), rgba(236,234,246,0)), var(--panel);
@@ -111,7 +134,7 @@
   #card .autonomy { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 10px; }
   #card .autonomy .led { width: 7px; height: 7px; border-radius: 50%; }
   #card .crumb { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
-  #card h2 { font-family: var(--serif); font-weight: 400; font-size: 26px; line-height: 1.12; margin-bottom: 8px; }
+  #card h2 { font-family: var(--serif); font-weight: 500; font-size: 26px; line-height: 1.12; margin-bottom: 8px; }
   #card .lede { color: var(--ink-dim); font-size: 13px; margin-bottom: 16px; max-width: 60ch; }
   #card .pill-dl {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -128,6 +151,16 @@
   #card .ladder .rung .rk { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
   #card .ladder .rung.on { color: var(--ink); }
   #card .ladder .rung.on .rk { color: var(--accent); }
+  #card ul.members { list-style: none; display: grid; gap: 2px; }
+  #card ul.members button {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    font: inherit; font-size: 13px; color: var(--ink); background: none; border: 0;
+    padding: 8px 6px; border-radius: var(--r-s); cursor: pointer; transition: background var(--t-quick);
+  }
+  #card ul.members button:hover { background: rgba(236,234,246,.06); }
+  #card ul.members button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #card ul.members .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  #card ul.members .st { margin-left: auto; font-size: 11px; color: var(--ink-faint); letter-spacing: .06em; }
   #card button.close {
     position: absolute; top: 8px; right: 8px; width: 44px; height: 44px;
     background: none; border: 0; color: var(--ink-faint); font-size: 17px; cursor: pointer;
@@ -139,7 +172,7 @@
     #card { right: 8px; left: 8px; top: auto; bottom: 8px; max-height: 62vh; width: auto; }
   }
 
-  /* ---------- search + legend ---------- */
+  /* ---------- search / legend / minimap ---------- */
   #search {
     position: fixed; z-index: 22; left: 50%; top: 58px; transform: translateX(-50%);
     width: min(340px, calc(100vw - 40px)); padding: 10px 16px;
@@ -161,18 +194,30 @@
   #legend .dot.running { background: var(--accent); box-shadow: 0 0 8px rgba(139,226,185,.8); }
   #legend .dot.flag { background: var(--danger); border-radius: 1px; transform: rotate(45deg); }
   #legend .dot.dormant { background: var(--ink-faint); opacity: .5; }
-  @media (max-width: 700px) { #legend { display: none; } }
+  @media (max-width: 900px) { #legend { display: none; } }
+
+  #minimap {
+    position: fixed; right: 20px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 20;
+    width: 148px; height: 148px; border-radius: var(--r-m); cursor: pointer;
+    background: rgba(20,23,43,.8); border: 1px solid var(--line);
+    box-shadow: 0 12px 40px rgba(6,8,20,.5);
+  }
+  @media (max-width: 900px) { #minimap { display: none; } }
+
+  /* ---------- reel mode: chrome vanishes, sky remains ---------- */
+  body.reel header, body.reel nav#pill, body.reel #deptnav, body.reel #legend,
+  body.reel #minimap, body.reel #crumbs, body.reel #search { display: none; }
 
   #live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>
 </head>
 <body>
-<canvas id="sky" aria-label="Star map of the agent fleet. Use arrow keys to move between agents, Enter to open one."></canvas>
+<canvas id="sky" aria-label="Ecosystem map. Arrow keys move between agents, Enter opens one, Escape goes up a level."></canvas>
 
 <div id="intro" role="button" tabindex="0" aria-label="Enter the map">
   <div>
     <h1 id="intro-title">ORRERY</h1>
-    <p class="sub" id="intro-sub">a live map of an AI company</p>
+    <p class="sub" id="intro-sub">a live AI ecosystem</p>
     <p class="hint">tap anywhere · every star is a real agent</p>
   </div>
 </div>
@@ -180,21 +225,26 @@
 <header>
   <span class="wordmark">ORRERY</span>
   <span class="counts" id="counts">—</span>
-  <span class="age" id="age"></span>
+  <span class="right">
+    <span class="age" id="age"></span>
+    <button id="rec" title="Cinematic tour — press R">● tour</button>
+  </span>
 </header>
+
+<div id="crumbs" aria-label="You are here"></div>
 
 <nav id="pill" aria-label="View">
   <button id="pill-map" aria-pressed="true">Map</button>
   <button id="pill-chart" aria-pressed="false">Chart</button>
 </nav>
 
-<div id="deptnav" aria-label="Departments">
-  <button id="dept-prev" aria-label="Previous department">‹</button>
+<div id="deptnav" aria-label="Zones">
+  <button id="dept-prev" aria-label="Previous zone">‹</button>
   <div>
-    <div class="name" id="dept-name" role="button" tabindex="0">— </div>
+    <div class="name" id="dept-name" role="button" tabindex="0">—</div>
     <div class="tag name" id="dept-tag"></div>
   </div>
-  <button id="dept-next" aria-label="Next department">›</button>
+  <button id="dept-next" aria-label="Next zone">›</button>
 </div>
 
 <input id="search" type="search" placeholder="find an agent — esc to clear" aria-label="Find an agent">
@@ -205,16 +255,21 @@
   <div class="crumb" id="card-dept"></div>
   <h2 id="card-name"></h2>
   <p class="lede" id="card-lede"></p>
-  <div class="pill-dl"><span><b>1 real scheduled lane</b> — not a diagram</span><span id="card-cad"></span></div>
-  <div class="sect" id="card-replaces-sect"><div class="k">what it replaces</div><div class="v" id="card-replaces"></div></div>
-  <div class="sect"><div class="k">the ladder</div>
-    <div class="ladder">
-      <div class="rung" id="rung-led"><span class="rk">human-led</span><span>Marco does it, by hand, every time.</span></div>
-      <div class="rung" id="rung-assist"><span class="rk">human-assisted</span><span>The agent drafts; Marco approves each send.</span></div>
-      <div class="rung" id="rung-auto"><span class="rk">fully autonomous</span><span>Runs on its own schedule. Gated actions still stop for Marco.</span></div>
+  <div id="agent-only">
+    <div class="pill-dl"><span><b>1 real scheduled lane</b> — not a diagram</span><span id="card-cad"></span></div>
+    <div class="sect" id="card-replaces-sect"><div class="k">what it replaces</div><div class="v" id="card-replaces"></div></div>
+    <div class="sect"><div class="k">the ladder</div>
+      <div class="ladder">
+        <div class="rung" id="rung-led"><span class="rk">human-led</span><span>Marco does it, by hand, every time.</span></div>
+        <div class="rung" id="rung-assist"><span class="rk">human-assisted</span><span>The agent drafts; Marco approves each send.</span></div>
+        <div class="rung" id="rung-auto"><span class="rk">fully autonomous</span><span>Runs on its own schedule. Gated actions still stop for Marco.</span></div>
+      </div>
     </div>
+    <div class="sect"><div class="k">last result</div><div class="v mono" id="card-detail"></div></div>
   </div>
-  <div class="sect"><div class="k">last result</div><div class="v mono" id="card-detail"></div></div>
+  <div id="group-only" style="display:none">
+    <div class="sect"><div class="k">agents at this checkpoint</div><ul class="members" id="card-members"></ul></div>
+  </div>
 </aside>
 
 <div id="legend">
@@ -223,6 +278,8 @@
   <span class="chip"><span class="dot flag"></span>flagged</span>
   <span class="chip"><span class="dot dormant"></span>dormant</span>
 </div>
+
+<canvas id="minimap" aria-label="Minimap — click to jump"></canvas>
 
 <div id="live" aria-live="polite"></div>
 
@@ -235,11 +292,18 @@ const SAMPLE = {
     { id: 'revenue', label: 'REVENUE', hue: 28,  tagline: 'money in' },
     { id: 'content', label: 'CONTENT', hue: 285, tagline: 'what the world sees' },
     { id: 'ops',     label: 'OPS',     hue: 175, tagline: 'keeps the lights on' },
-    { id: 'self',    label: 'SELF',    hue: 48,  tagline: 'the loop that sharpens the loop' },
+    { id: 'self',    label: 'SELF',    hue: 48,  tagline: 'sharpens the loop' },
+  ],
+  groups: [
+    { id: 'alpha', dept: 'revenue', label: 'alpha', blurb: 'sample checkpoint' },
+    { id: 'beta',  dept: 'content', label: 'beta',  blurb: 'sample checkpoint' },
+    { id: 'gamma', dept: 'ops',     label: 'gamma', blurb: 'sample checkpoint' },
+    { id: 'delta', dept: 'self',    label: 'delta', blurb: 'sample checkpoint' },
   ],
   nodes: Array.from({ length: 36 }, (_, i) => ({
     id: 'sample-' + i, label: 'Sample Agent ' + (i + 1),
     dept: ['revenue', 'content', 'ops', 'self'][i % 4],
+    group: ['alpha', 'beta', 'gamma', 'delta'][i % 4],
     status: ['ok', 'ok', 'ok', 'running', 'ok', 'flag', 'ok', 'dormant'][i % 8],
     detail: 'sample node — replace data/fleet.json with your own fleet', mass: (i % 5 === 0) ? 3 : 2,
   })),
@@ -248,59 +312,100 @@ const SAMPLE = {
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canvas = document.getElementById('sky');
 const ctx = canvas.getContext('2d');
+const mini = document.getElementById('minimap');
+const mctx = mini.getContext('2d');
 let DPR = Math.min(devicePixelRatio || 1, 2);
 let W = 0, H = 0;
 
-let fleet = null, nodes = [], deptList = [], depts = {}, bgStars = [], core = [];
+let fleet = null, nodes = [], deptList = [], depts = {}, groupsByDept = {}, bgStars = [], core = [], pulses = [];
 let cam = { x: 0, y: 0, z: 1 };
 let camTarget = null;
-let selected = null, focusIdx = -1, query = '', deptIdx = -1; // -1 = overview
-let entered = false, chart = false;
+let selected = null, selGroup = null, focusIdx = -1, query = '', chart = false;
+let level = 0, deptIdx = -1, groupId = null;   // 0 ALL · 1 zone · 2 checkpoint
+let entered = false, reel = false, tour = null;
 const t0 = performance.now();
 
 /* ============================== layout ============================== */
 function mulberry(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
-// organic tree per department, like theirs: a root close to center, branches
-// fanning outward, children forking off their parent
 function layout() {
   const rnd = mulberry(1837);
   const D = fleet.departments;
-  depts = {}; deptList = [];
+  depts = {}; deptList = []; groupsByDept = {};
+  (fleet.groups || []).forEach(g => { (groupsByDept[g.dept] = groupsByDept[g.dept] || []).push({ ...g }); });
   D.forEach((d, i) => {
     const a = -Math.PI / 2 + i * (2 * Math.PI / D.length);
-    const dd = { ...d, angle: a, ax: Math.cos(a) * 170, ay: Math.sin(a) * 170, nodes: [] };
+    const dd = { ...d, angle: a, ax: Math.cos(a) * 170, ay: Math.sin(a) * 170, nodes: [], m: 0, mTarget: 0, alpha: 1, alphaT: 1 };
     depts[d.id] = dd; deptList.push(dd);
   });
   nodes = fleet.nodes.map(n => ({ ...n }));
-  nodes.forEach(n => (depts[n.dept] || deptList[0]).nodes.push(n));
+  nodes.forEach(n => { const d = depts[n.dept] || deptList[0]; n.dept = d.id; d.nodes.push(n); });
+
+  // ---- overview: organic outward trees (their look) ----
   for (const d of deptList) {
     const branches = Math.max(3, Math.min(6, Math.ceil(d.nodes.length / 5)));
-    const open = [];   // growth frontier: [{x,y,angle,level,parent}]
+    const open = [];
     for (let b = 0; b < branches; b++) {
-      const spread = (b / (branches - 1) - .5) * 1.5;
+      const spread = (b / Math.max(1, branches - 1) - .5) * 1.5;
       open.push({ x: d.ax, y: d.ay, angle: d.angle + spread, level: 0, parent: null });
     }
     d.nodes.forEach((node, i) => {
       const slot = open[i % open.length];
       const step = 46 + rnd() * 26 - slot.level * 3;
       const a = slot.angle + (rnd() - .5) * .5;
-      node.x = slot.x + Math.cos(a) * step;
-      node.y = slot.y + Math.sin(a) * step;
-      node.parent = slot.parent;
+      node.ox = slot.x + Math.cos(a) * step;
+      node.oy = slot.y + Math.sin(a) * step;
+      node.oParent = slot.parent;
       node.level = slot.level;
       node.tw = rnd() * Math.PI * 2;
-      // this node becomes a growth point; occasionally fork
-      const next = { x: node.x, y: node.y, angle: a + (rnd() - .5) * .35, level: slot.level + 1, parent: node };
+      const next = { x: node.ox, y: node.oy, angle: a + (rnd() - .5) * .35, level: slot.level + 1, parent: node };
       open[i % open.length] = next;
-      if (rnd() > .62 && open.length < 9) open.push({ x: node.x, y: node.y, angle: a + (rnd() > .5 ? .55 : -.55), level: slot.level + 1, parent: node });
+      if (rnd() > .62 && open.length < 9) open.push({ x: node.ox, y: node.oy, angle: a + (rnd() > .5 ? .55 : -.55), level: slot.level + 1, parent: node });
     });
+    let sx = 0, sy = 0;
+    d.nodes.forEach(n => { sx += n.ox; sy += n.oy; });
+    d.cx = d.nodes.length ? sx / d.nodes.length : d.ax;
+    d.cy = d.nodes.length ? sy / d.nodes.length : d.ay;
   }
+
+  // ---- zone view: checkpoints as hubs on a ring, agents orbit their hub ----
+  for (const d of deptList) {
+    const gs = (groupsByDept[d.id] || []);
+    d.hubs = {};
+    const R = 190;
+    gs.forEach((g, gi) => {
+      const ga = d.angle + (gi / gs.length) * Math.PI * 2;
+      const hx = d.cx + Math.cos(ga) * R, hy = d.cy + Math.sin(ga) * R;
+      d.hubs[g.id] = { ...g, x: hx, y: hy, angle: ga };
+      const members = d.nodes.filter(n => n.group === g.id);
+      members.forEach((n, ni) => {
+        const spread = (ni / Math.max(1, members.length - 1) - .5) * 1.9;
+        const na = ga + spread * .75;
+        const nr = 62 + (ni % 3) * 26 + rnd() * 10;
+        n.zx = hx + Math.cos(na) * nr;
+        n.zy = hy + Math.sin(na) * nr;
+      });
+    });
+    // nodes with a group that has no hub (shouldn't happen) sit near the centroid
+    d.nodes.forEach(n => { if (n.zx === undefined) { n.zx = d.cx + (rnd() - .5) * 80; n.zy = d.cy + (rnd() - .5) * 80; } });
+  }
+
   bgStars = Array.from({ length: 380 }, () => ({ x: (rnd() - .5) * 2600, y: (rnd() - .5) * 2600, m: rnd(), tw: rnd() * Math.PI * 2 }));
   core = Array.from({ length: 850 }, () => {
     const a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 2.1) * 80;
     return { a, r, sp: (rnd() - .5) * .002, m: rnd(), hue: [28, 285, 175, 48, 330, 210, 100, 0][Math.floor(rnd() * 8)] };
   });
+  pulses = [];
+}
+
+/* live node position: overview↔zone morph + gentle drift */
+function pos(n, t) {
+  const d = depts[n.dept];
+  const m = d.m;
+  let x = n.ox + (n.zx - n.ox) * m;
+  let y = n.oy + (n.zy - n.oy) * m;
+  if (!reduced) { x += Math.sin(t / 2400 + n.tw) * 2.2; y += Math.cos(t / 2900 + n.tw) * 2.2; }
+  return [x, y];
 }
 
 /* ============================== rendering ============================== */
@@ -309,6 +414,7 @@ function resize() {
   W = innerWidth; H = innerHeight;
   canvas.width = W * DPR; canvas.height = H * DPR;
   canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  mini.width = 148 * DPR; mini.height = 148 * DPR;
 }
 addEventListener('resize', resize);
 
@@ -324,6 +430,33 @@ function nodeColor(n, t) {
 }
 const nodeR = n => (n.level === 0 ? 5.5 : n.level === 1 ? 4.2 : n.level < 4 ? 3.4 : 2.7) * (n.mass === 3 ? 1.25 : 1);
 
+function nodeAlpha(n) {
+  const d = depts[n.dept];
+  let a = d.alpha;
+  if (level === 2 && d.id === deptList[deptIdx].id) a *= (n.group === groupId ? 1 : .14);
+  if (query && !n._hit) a *= .15;
+  return a;
+}
+
+function edgeFor(n, t) {
+  // overview: parent chain · zone view: agent → its hub
+  const d = depts[n.dept];
+  const [x1, y1] = pos(n, t);
+  if (d.m > .5) {
+    const hub = d.hubs[n.group];
+    return hub ? [x1, y1, hub.x, hub.y] : [x1, y1, d.cx, d.cy];
+  }
+  if (n.oParent) { const [px, py] = pos(n.oParent, t); return [x1, y1, px, py]; }
+  return [x1, y1, d.ax, d.ay];
+}
+
+function spawnPulse() {
+  if (reduced || pulses.length > 70 || !nodes.length) return;
+  const live = nodes[Math.floor(Math.random() * nodes.length)];
+  if (live.status === 'dormant' || nodeAlpha(live) < .5) return;
+  pulses.push({ n: live, p: 0, sp: .008 + Math.random() * .01 });
+}
+
 function draw(now) {
   const t = now - t0;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -332,11 +465,18 @@ function draw(now) {
   g.addColorStop(0, '#232848'); g.addColorStop(.55, '#191d38'); g.addColorStop(1, '#12152a');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 
+  // eased state: camera, morphs, zone alphas
+  if (tour) tourStep(now);
   if (camTarget) {
-    cam.x += (camTarget.x - cam.x) * .09; cam.y += (camTarget.y - cam.y) * .09; cam.z += (camTarget.z - cam.z) * .09;
+    cam.x += (camTarget.x - cam.x) * .08; cam.y += (camTarget.y - cam.y) * .08; cam.z += (camTarget.z - cam.z) * .08;
     if (Math.abs(cam.z - camTarget.z) < .003 && Math.hypot(cam.x - camTarget.x, cam.y - camTarget.y) < 1) camTarget = null;
   }
+  for (const d of deptList) {
+    d.m += (d.mTarget - d.m) * .07;
+    d.alpha += (d.alphaT - d.alpha) * .09;
+  }
 
+  // background stars
   for (const s of bgStars) {
     const x = (s.x - cam.x * .5) * cam.z * .6 + W / 2, y = (s.y - cam.y * .5) * cam.z * .6 + H / 2;
     if (x < -8 || x > W + 8 || y < -8 || y > H + 8) continue;
@@ -346,76 +486,126 @@ function draw(now) {
   }
   if (!fleet) return;
 
-  const focusDept = deptIdx >= 0 ? deptList[deptIdx] : null;
+  // zone nebulae — each zone breathes in its own hue
+  for (const d of deptList) {
+    const [nx, ny] = w2s(d.cx, d.cy);
+    const nr = (170 + d.m * 200) * cam.z;
+    const neb = ctx.createRadialGradient(nx, ny, 0, nx, ny, nr);
+    neb.addColorStop(0, `hsla(${d.hue},55%,60%,${(0.05 + d.m * .05) * d.alpha})`);
+    neb.addColorStop(1, 'hsla(0,0%,0%,0)');
+    ctx.fillStyle = neb;
+    ctx.fillRect(nx - nr, ny - nr, nr * 2, nr * 2);
+  }
 
-  // center core
+  // center core (fades when inside a zone)
+  const coreAlpha = 1 - Math.max(...deptList.map(d => d.m)) * .8;
   const [cx, cy] = w2s(0, 0);
   const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 110 * cam.z);
-  halo.addColorStop(0, 'rgba(236,234,246,.10)'); halo.addColorStop(1, 'rgba(236,234,246,0)');
+  halo.addColorStop(0, `rgba(236,234,246,${.10 * coreAlpha})`); halo.addColorStop(1, 'rgba(236,234,246,0)');
   ctx.fillStyle = halo; ctx.fillRect(cx - 110 * cam.z, cy - 110 * cam.z, 220 * cam.z, 220 * cam.z);
   for (const p of core) {
     if (!reduced) p.a += p.sp;
     const x = cx + Math.cos(p.a) * p.r * cam.z, y = cy + Math.sin(p.a) * p.r * cam.z;
-    ctx.fillStyle = `hsla(${p.hue},65%,${68 + p.m * 18}%,${.3 + p.m * .5})`;
+    ctx.fillStyle = `hsla(${p.hue},65%,${68 + p.m * 18}%,${(.3 + p.m * .5) * coreAlpha})`;
     ctx.fillRect(x, y, p.m > .8 ? 1.9 : 1.2, p.m > .8 ? 1.9 : 1.2);
   }
 
-  // trunk lines: dept root → center
+  // trunks to the brain
   for (const d of deptList) {
-    const dimD = focusDept && d !== focusDept ? .25 : 1;
     const [x1, y1] = w2s(d.ax, d.ay);
-    ctx.strokeStyle = `rgba(236,234,246,${.07 * dimD})`;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([2, 6]);
+    ctx.strokeStyle = `rgba(236,234,246,${.07 * d.alpha * coreAlpha})`;
+    ctx.lineWidth = 1; ctx.setLineDash([2, 6]);
     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(cx, cy); ctx.stroke();
     ctx.setLineDash([]);
   }
 
-  // branch lines — theirs: thin, visible, white
+  // edges
   ctx.lineWidth = Math.max(.6, .9 * Math.min(cam.z, 1.4));
   for (const n of nodes) {
-    const d = depts[n.dept];
-    const dimD = (focusDept && d !== focusDept ? .18 : 1) * (query && !n._hit ? .25 : 1);
-    if (n.status === 'dormant' && !focusDept && cam.z < 1.4) continue;
-    const [x1, y1] = w2s(n.x, n.y);
-    const [x2, y2] = n.parent ? w2s(n.parent.x, n.parent.y) : w2s(d.ax, d.ay);
-    ctx.strokeStyle = `rgba(236,234,246,${.16 * dimD})`;
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    const a = nodeAlpha(n);
+    if (a < .03) continue;
+    if (n.status === 'dormant' && level === 0 && cam.z < 1.4) continue;
+    const [x1, y1, x2, y2] = edgeFor(n, t);
+    const [sx1, sy1] = w2s(x1, y1), [sx2, sy2] = w2s(x2, y2);
+    ctx.strokeStyle = `rgba(236,234,246,${.16 * a})`;
+    ctx.beginPath(); ctx.moveTo(sx1, sy1); ctx.lineTo(sx2, sy2); ctx.stroke();
   }
 
-  // dept root markers
+  // pulses — light travelling from agents toward their hub / parent
+  if (!reduced) {
+    if (Math.random() < .5) spawnPulse();
+    for (let i = pulses.length - 1; i >= 0; i--) {
+      const p = pulses[i];
+      p.p += p.sp;
+      if (p.p >= 1) { pulses.splice(i, 1); continue; }
+      const a = nodeAlpha(p.n);
+      if (a < .1) { pulses.splice(i, 1); continue; }
+      const [x1, y1, x2, y2] = edgeFor(p.n, t);
+      const [sx, sy] = w2s(x1 + (x2 - x1) * p.p, y1 + (y2 - y1) * p.p);
+      ctx.fillStyle = p.n.status === 'running' ? `rgba(139,226,185,${.8 * a})` : `rgba(236,234,246,${.55 * a})`;
+      ctx.beginPath(); ctx.arc(sx, sy, 1.4, 0, 7); ctx.fill();
+    }
+  }
+
+  // zone roots
   for (const d of deptList) {
-    const dimD = focusDept && d !== focusDept ? .25 : 1;
     const [x, y] = w2s(d.ax, d.ay);
-    ctx.fillStyle = `hsla(${d.hue},60%,74%,${.95 * dimD})`;
+    ctx.globalAlpha = d.alpha * (1 - d.m * .85);
+    ctx.fillStyle = `hsla(${d.hue},60%,74%,.95)`;
     ctx.beginPath(); ctx.arc(x, y, 6.5 * Math.min(cam.z, 1.6), 0, 7); ctx.fill();
-    ctx.strokeStyle = `hsla(${d.hue},60%,74%,${.4 * dimD})`;
+    ctx.strokeStyle = `hsla(${d.hue},60%,74%,.4)`;
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(x, y, 11 * Math.min(cam.z, 1.6), 0, 7); ctx.stroke();
+    ctx.globalAlpha = 1;
   }
 
-  // nodes — big soft glowing circles like theirs
+  // checkpoint hubs (zone view)
+  for (const d of deptList) {
+    if (d.m < .05) continue;
+    for (const hub of Object.values(d.hubs)) {
+      const [x, y] = w2s(hub.x, hub.y);
+      let a = d.alpha * d.m;
+      if (level === 2 && d.id === deptList[deptIdx].id) a *= (hub.id === groupId ? 1 : .2);
+      ctx.globalAlpha = a;
+      const hr = 9 * Math.min(cam.z, 1.7);
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, hr * 3);
+      glow.addColorStop(0, `hsla(${d.hue},60%,70%,.4)`); glow.addColorStop(1, 'hsla(0,0%,0%,0)');
+      ctx.fillStyle = glow; ctx.fillRect(x - hr * 3, y - hr * 3, hr * 6, hr * 6);
+      ctx.fillStyle = `hsla(${d.hue},55%,78%,.95)`;
+      ctx.beginPath(); ctx.arc(x, y, hr * .55, 0, 7); ctx.fill();
+      ctx.strokeStyle = `hsla(${d.hue},55%,78%,.5)`; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x, y, hr, 0, 7); ctx.stroke();
+      if (cam.z > .9) {
+        ctx.fillStyle = `rgba(236,234,246,${.9 * a})`;
+        ctx.font = `600 ${Math.min(13, 10 * cam.z)}px Inter, system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(hub.label.toUpperCase(), x, y - hr - 8);
+        ctx.textAlign = 'start';
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // nodes
   for (const n of nodes) {
-    const [x, y] = w2s(n.x, n.y);
+    const a = nodeAlpha(n);
+    if (a < .03) continue;
+    const [wx, wy] = pos(n, t);
+    const [x, y] = w2s(wx, wy);
     if (x < -40 || x > W + 40 || y < -40 || y > H + 40) continue;
-    const d = depts[n.dept];
-    const dimD = (focusDept && d !== focusDept ? .15 : 1) * (query && !n._hit ? .15 : 1);
     const r = nodeR(n) * Math.min(Math.sqrt(cam.z) * 1.15, 1.8);
     const tw = reduced || n.status === 'dormant' ? 0 : Math.sin(t / 700 + n.tw) * .3;
-    ctx.globalAlpha = dimD;
-    // glow
+    ctx.globalAlpha = a;
     const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 3.2);
     glow.addColorStop(0, n.status === 'running' ? 'rgba(139,226,185,.35)' : 'rgba(236,234,246,.22)');
     glow.addColorStop(1, 'rgba(236,234,246,0)');
     ctx.fillStyle = glow;
     ctx.fillRect(x - r * 3.2, y - r * 3.2, r * 6.4, r * 6.4);
-    // body
     ctx.fillStyle = nodeColor(n, t);
     ctx.beginPath(); ctx.arc(x, y, Math.max(.4, r + tw), 0, 7); ctx.fill();
-    // running halo ring
     if (n.status === 'running' && !reduced) {
       const ring = ((t / 1400 + n.tw) % 1);
-      ctx.strokeStyle = `rgba(139,226,185,${(1 - ring) * .5 * dimD})`;
+      ctx.strokeStyle = `rgba(139,226,185,${(1 - ring) * .5 * a})`;
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(x, y, r + 3 + ring * 16, 0, 7); ctx.stroke();
     }
@@ -423,27 +613,28 @@ function draw(now) {
       ctx.strokeStyle = 'rgba(139,226,185,.9)'; ctx.lineWidth = 1.4;
       ctx.beginPath(); ctx.arc(x, y, r + 6, 0, 7); ctx.stroke();
     }
-    // labels: flagships always at readable zoom; all when a dept is focused
-    if ((n.mass === 3 && cam.z > .95) || (focusDept === d && cam.z > 1.15) || cam.z > 2.2 || n === selected) {
-      ctx.globalAlpha = Math.min(1, Math.max(0, (cam.z - .8)) * 1.6) * dimD;
+    const d = depts[n.dept];
+    if ((n.mass === 3 && cam.z > .95) || (d.m > .5 && cam.z > 1.1) || cam.z > 2.2 || n === selected) {
+      ctx.globalAlpha = Math.min(1, Math.max(0, (cam.z - .8)) * 1.6) * a;
       ctx.fillStyle = 'rgba(236,234,246,.8)';
       ctx.font = '11px Inter, system-ui, sans-serif';
       ctx.fillText(n.label, x + r + 7, y + 3.5);
-      ctx.globalAlpha = 1;
     }
+    ctx.globalAlpha = 1;
   }
-  ctx.globalAlpha = 1;
 
-  // department names — big spaced serif, like their O P E R A T I O N S
+  // zone names
   ctx.textAlign = 'center';
+  const focusDept = level >= 1 ? deptList[deptIdx] : null;
   for (const d of deptList) {
-    if (d === focusDept) continue;           // the carousel already names it
-    const dimD = focusDept ? .2 : 1;
+    if (d === focusDept) continue;
+    const dimD = (focusDept ? .2 : 1) * d.alpha;
+    if (dimD < .03) continue;
     const lr = 170 + 320;
     let [x, y] = w2s(Math.cos(d.angle) * lr, Math.sin(d.angle) * lr);
-    y = Math.max(84, Math.min(H - 108, y));   // keep clear of the pill and the carousel
+    y = Math.max(84, Math.min(H - 108, y));
     const size = Math.max(13, Math.min(30, 17 * cam.z));
-    ctx.font = `${size}px Didot, "Bodoni MT", Georgia, serif`;
+    ctx.font = `500 ${size}px "Cormorant Garamond", Didot, Georgia, serif`;
     ctx.fillStyle = `rgba(236,234,246,${.75 * dimD})`;
     ctx.fillText(d.label.split('').join(' '), x, y);
     if (d.tagline && cam.z > 1.05) {
@@ -453,7 +644,30 @@ function draw(now) {
     }
   }
   ctx.textAlign = 'start';
+
+  drawMini(t);
 }
+
+function drawMini() {
+  if (!fleet || reel) return;
+  mctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  mctx.clearRect(0, 0, 148, 148);
+  const S = 148 / 1400;                       // world span → minimap
+  const mx = w => 74 + w * S, my = w => 74 + w * S;
+  for (const n of nodes) {
+    mctx.fillStyle = n.status === 'running' ? 'rgba(139,226,185,.9)' : n.status === 'flag' ? 'rgba(224,138,124,.8)' : 'rgba(236,234,246,.5)';
+    mctx.fillRect(mx(n.ox), my(n.oy), 1.4, 1.4);
+  }
+  // viewport rectangle
+  const [wx1, wy1] = s2w(0, 0), [wx2, wy2] = s2w(W, H);
+  mctx.strokeStyle = 'rgba(139,226,185,.8)'; mctx.lineWidth = 1;
+  mctx.strokeRect(mx(wx1), my(wy1), (wx2 - wx1) * S, (wy2 - wy1) * S);
+}
+mini.addEventListener('click', e => {
+  const r = mini.getBoundingClientRect();
+  const wx = (e.clientX - r.left - 74) / (148 / 1400), wy = (e.clientY - r.top - 74) / (148 / 1400);
+  camTarget = { x: wx, y: wy, z: cam.z }; kick();
+});
 
 // the loop OWNS the schedule — a bad frame can never kill the animation
 function loop(now) {
@@ -461,11 +675,73 @@ function loop(now) {
   if (!reduced) requestAnimationFrame(loop);
 }
 
-/* ============================== interaction ============================== */
+/* ============================== navigation model ============================== */
+function setLevel(lv, di, gid) {
+  level = lv; deptIdx = di === undefined ? deptIdx : di; groupId = gid || null;
+  const focus = level >= 1 ? deptList[deptIdx] : null;
+  for (const d of deptList) {
+    d.mTarget = (d === focus) ? 1 : 0;
+    d.alphaT = focus ? (d === focus ? 1 : .06) : 1;
+  }
+  if (level === 0) {
+    camTarget = { x: 0, y: 0, z: baseZoom() };
+    setDeptnav('A L L', 'the whole ecosystem');
+  } else if (level === 1) {
+    camTarget = { x: focus.cx, y: focus.cy, z: Math.max(baseZoom() * 2.0, 1.15) };
+    setDeptnav(focus.label.split('').join(' '), focus.tagline || '');
+    $('live').textContent = focus.label + ' zone — ' + focus.nodes.length + ' agents, ' + Object.keys(focus.hubs).length + ' checkpoints';
+  } else if (level === 2) {
+    const hub = focus.hubs[groupId];
+    camTarget = { x: hub.x, y: hub.y, z: Math.max(baseZoom() * 3.4, 2.1) };
+    setDeptnav(focus.label.split('').join(' '), hub.label);
+    openGroup(focus, hub);
+  }
+  crumbs(); kick();
+}
+function setDeptnav(name, tag) { $('dept-name').textContent = name; $('dept-tag').textContent = tag; }
+function crumbs() {
+  const el = $('crumbs'); el.innerHTML = '';
+  const mk = (label, fn, here) => {
+    const b = document.createElement('button');
+    b.textContent = label; if (here) b.classList.add('here');
+    b.addEventListener('click', fn); el.appendChild(b);
+  };
+  mk('all', () => { close(); setLevel(0); }, level === 0);
+  if (level >= 1) {
+    el.insertAdjacentHTML('beforeend', '<span class="sep">›</span>');
+    mk(deptList[deptIdx].label.toLowerCase(), () => { close(); setLevel(1, deptIdx); }, level === 1);
+  }
+  if (level === 2) {
+    el.insertAdjacentHTML('beforeend', '<span class="sep">›</span>');
+    mk(groupId.replace(/-/g, ' '), () => {}, true);
+  }
+}
+function up() { if (selected) { close(); return; } if (level === 2) setLevel(1, deptIdx); else if (level === 1) setLevel(0); }
+
+document.getElementById('dept-prev').addEventListener('click', () => { close(); setLevel(1, deptIdx < 0 ? deptList.length - 1 : (deptIdx - 1 + deptList.length) % deptList.length); });
+document.getElementById('dept-next').addEventListener('click', () => { close(); setLevel(1, deptIdx < 0 ? 0 : (deptIdx + 1) % deptList.length); });
+document.getElementById('dept-name').addEventListener('click', () => { close(); setLevel(0); });
+document.getElementById('dept-name').addEventListener('keydown', e => { if (e.key === 'Enter') { close(); setLevel(0); } });
+
+const pillMap = document.getElementById('pill-map'), pillChart = document.getElementById('pill-chart');
+function setChart(on) {
+  chart = on;
+  pillMap.setAttribute('aria-pressed', String(!on));
+  pillChart.setAttribute('aria-pressed', String(on));
+  nodes.forEach(n => n._hit = on ? (n.status === 'flag' || n.status === 'running') : false);
+  query = on ? 'status' : '';
+  if (on) $('live').textContent = 'chart view — running and flagged lanes highlighted';
+  kick();
+}
+pillMap.addEventListener('click', () => setChart(false));
+pillChart.addEventListener('click', () => setChart(true));
+
+/* ============================== picking ============================== */
 let drag = null, pinch = null, moved = false;
-const kick = () => { if (reduced) requestAnimationFrame(t => draw(t)); };
+const kick = () => { if (reduced) requestAnimationFrame(t => { try { draw(t); } catch (e) {} }); };
 
 canvas.addEventListener('pointerdown', e => {
+  if (reel) { exitReel(); return; }
   canvas.setPointerCapture(e.pointerId);
   if (drag && e.pointerId !== drag.id) { pinch = { id: e.pointerId, x: e.clientX, y: e.clientY, d0: 0 }; return; }
   drag = { id: e.pointerId, x: e.clientX, y: e.clientY }; moved = false;
@@ -497,10 +773,10 @@ canvas.addEventListener('wheel', e => {
   e.preventDefault();
   zoomAt(e.clientX, e.clientY, cam.z * (e.deltaY < 0 ? 1.13 : .885));
 }, { passive: false });
-canvas.addEventListener('dblclick', () => overview());
+canvas.addEventListener('dblclick', () => { close(); setLevel(0); });
 
 function zoomAt(sx, sy, nz) {
-  nz = Math.max(.4, Math.min(7, nz));
+  nz = Math.max(.4, Math.min(8, nz));
   const [wx, wy] = s2w(sx, sy);
   cam.z = nz; camTarget = null;
   const [nx, ny] = w2s(wx, wy);
@@ -508,65 +784,34 @@ function zoomAt(sx, sy, nz) {
 }
 
 function pick(sx, sy) {
+  const t = performance.now() - t0;
+  // 1: agent
   let best = null, bd = 22;
   for (const n of nodes) {
-    const [x, y] = w2s(n.x, n.y);
-    const d = Math.hypot(x - sx, y - sy);
-    if (d < bd) { bd = d; best = n; }
+    if (nodeAlpha(n) < .3) continue;
+    const [wx, wy] = pos(n, t);
+    const [x, y] = w2s(wx, wy);
+    const dd = Math.hypot(x - sx, y - sy);
+    if (dd < bd) { bd = dd; best = n; }
   }
   if (best) { open(best); return; }
-  // dept root tap → focus that constellation
+  // 2: checkpoint hub (zone view)
+  if (level >= 1) {
+    const d = deptList[deptIdx];
+    for (const hub of Object.values(d.hubs)) {
+      const [x, y] = w2s(hub.x, hub.y);
+      if (Math.hypot(x - sx, y - sy) < 30) { setLevel(2, deptIdx, hub.id); return; }
+    }
+  }
+  // 3: zone root
   for (let i = 0; i < deptList.length; i++) {
     const [x, y] = w2s(deptList[i].ax, deptList[i].ay);
-    if (Math.hypot(x - sx, y - sy) < 26) { focusDeptAt(i); return; }
+    if (Math.hypot(x - sx, y - sy) < 26) { close(); setLevel(1, i); return; }
   }
   close();
 }
 
-/* ============================== departments ============================== */
-function deptCenter(d) {
-  let sx = 0, sy = 0;
-  for (const n of d.nodes) { sx += n.x; sy += n.y; }
-  const c = d.nodes.length || 1;
-  return [sx / c, sy / c];
-}
-function focusDeptAt(i) {
-  deptIdx = ((i % deptList.length) + deptList.length) % deptList.length;
-  const d = deptList[deptIdx];
-  const [cx2, cy2] = deptCenter(d);
-  camTarget = { x: cx2, y: cy2, z: Math.max(baseZoom() * 2.6, 1.5) };
-  document.getElementById('dept-name').textContent = d.label.split('').join(' ');
-  document.getElementById('dept-tag').textContent = d.tagline || '';
-  $('live').textContent = d.label + ' — ' + d.nodes.length + ' agents';
-  kick();
-}
-function overview() {
-  deptIdx = -1; close();
-  camTarget = { x: 0, y: 0, z: baseZoom() };
-  document.getElementById('dept-name').textContent = 'A L L';
-  document.getElementById('dept-tag').textContent = 'the whole company';
-  kick();
-}
-document.getElementById('dept-prev').addEventListener('click', () => focusDeptAt(deptIdx < 0 ? deptList.length - 1 : deptIdx - 1));
-document.getElementById('dept-next').addEventListener('click', () => focusDeptAt(deptIdx < 0 ? 0 : deptIdx + 1));
-document.getElementById('dept-name').addEventListener('click', overview);
-document.getElementById('dept-name').addEventListener('keydown', e => { if (e.key === 'Enter') overview(); });
-
-/* pill: Map / Chart — chart = same sky, statuses only (their DASHBOARDS/CHART pill) */
-const pillMap = document.getElementById('pill-map'), pillChart = document.getElementById('pill-chart');
-function setChart(on) {
-  chart = on;
-  pillMap.setAttribute('aria-pressed', String(!on));
-  pillChart.setAttribute('aria-pressed', String(on));
-  query = on ? '' : query;
-  nodes.forEach(n => n._hit = on ? (n.status === 'flag' || n.status === 'running') : false);
-  if (on) { query = 'status'; $('live').textContent = 'chart view — running and flagged lanes highlighted'; }
-  kick();
-}
-pillMap.addEventListener('click', () => setChart(false));
-pillChart.addEventListener('click', () => setChart(true));
-
-/* ============================== card ============================== */
+/* ============================== cards ============================== */
 const $ = id => document.getElementById(id);
 const BADGE = {
   ok:      { text: 'fully autonomous', color: 'var(--accent)' },
@@ -574,16 +819,19 @@ const BADGE = {
   flag:    { text: 'needs attention',  color: 'var(--danger)' },
   dormant: { text: 'dormant',          color: 'var(--ink-faint)' },
 };
+const STATUS_SHORT = { ok: 'ok', running: 'running', flag: 'flagged', dormant: 'dormant' };
+const DOT = { ok: '#e9e7f4', running: '#8be2b9', flag: '#e08a7c', dormant: 'rgba(140,141,171,.5)' };
+
 function open(n) {
-  selected = n; focusIdx = nodes.indexOf(n);
+  selected = n; selGroup = null; focusIdx = nodes.indexOf(n);
   const d = depts[n.dept];
   const b = BADGE[n.status] || BADGE.ok;
+  $('agent-only').style.display = ''; $('group-only').style.display = 'none';
   $('card-led').style.background = b.color;
-  $('card-badge').textContent = b.text;
-  $('card-badge').style.color = b.color;
-  $('card-dept').textContent = d.label.toLowerCase() + (d.tagline ? ' · ' + d.tagline : '');
+  $('card-badge').textContent = b.text; $('card-badge').style.color = b.color;
+  $('card-dept').textContent = d.label.toLowerCase() + ' · ' + (n.group || '').replace(/-/g, ' ');
   $('card-name').textContent = n.label;
-  $('card-lede').textContent = n.replaces ? '' : 'A scheduled lane in the ' + d.label.toLowerCase() + ' constellation.';
+  $('card-lede').textContent = n.replaces ? '' : 'A scheduled lane at the ' + (n.group || 'field').replace(/-/g, ' ') + ' checkpoint.';
   $('card-cad').textContent = n.cadence || '';
   $('card-replaces-sect').style.display = n.replaces ? '' : 'none';
   $('card-replaces').textContent = n.replaces || '';
@@ -592,11 +840,36 @@ function open(n) {
   $('card-detail').textContent = n.detail || '—';
   $('card').classList.add('open');
   $('live').textContent = `${n.label}, ${d.label}, ${b.text}`;
-  camTarget = { x: n.x, y: n.y, z: Math.max(cam.z, 2.2) };
+  const t = performance.now() - t0;
+  const [wx, wy] = pos(n, t);
+  camTarget = { x: wx, y: wy, z: Math.max(cam.z, 2.2) };
   kick();
 }
-function close() { selected = null; $('card').classList.remove('open'); kick(); }
-document.querySelector('#card .close').addEventListener('click', close);
+
+function openGroup(d, hub) {
+  selected = null; selGroup = hub;
+  const members = d.nodes.filter(n => n.group === hub.id);
+  const c = s => members.filter(n => n.status === s).length;
+  $('agent-only').style.display = 'none'; $('group-only').style.display = '';
+  $('card-led').style.background = `hsl(${d.hue},55%,72%)`;
+  $('card-badge').textContent = 'checkpoint · ' + members.length + ' agents';
+  $('card-badge').style.color = `hsl(${d.hue},55%,72%)`;
+  $('card-dept').textContent = d.label.toLowerCase();
+  $('card-name').textContent = hub.label.replace(/-/g, ' ');
+  $('card-lede').textContent = (hub.blurb || '') + ` — ${c('ok')} ok · ${c('running')} running · ${c('flag')} flagged · ${c('dormant')} dormant.`;
+  const ul = $('card-members'); ul.innerHTML = '';
+  for (const m of members) {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span><span class="st">${STATUS_SHORT[m.status]}</span>`;
+    b.addEventListener('click', () => open(m));
+    li.appendChild(b); ul.appendChild(li);
+  }
+  $('card').classList.add('open');
+  $('live').textContent = `${hub.label} checkpoint, ${members.length} agents`;
+}
+function close() { selected = null; selGroup = null; $('card').classList.remove('open'); kick(); }
+document.querySelector('#card .close').addEventListener('click', () => { close(); if (level === 2) setLevel(1, deptIdx); });
 
 /* ============================== keyboard + search ============================== */
 const search = $('search');
@@ -605,27 +878,86 @@ addEventListener('keydown', e => {
     if (e.key === 'Escape') { search.value = ''; query = ''; nodes.forEach(n => n._hit = false); search.classList.remove('show'); canvas.focus(); kick(); }
     return;
   }
+  if (reel) { if (e.key === 'Escape' || e.key.toLowerCase() === 'r') exitReel(); return; }
   if (e.key === '/') { e.preventDefault(); search.classList.add('show'); search.focus(); return; }
-  if (e.key === 'Escape') { selected ? close() : overview(); return; }
+  if (e.key.toLowerCase() === 'r') { startReel(); return; }
+  if (e.key === 'Escape') { up(); return; }
   if (e.key === 'Enter' && focusIdx >= 0) { open(nodes[focusIdx]); return; }
   if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Tab'].includes(e.key)) {
     e.preventDefault();
-    const pool = query ? nodes.filter(n => n._hit) : nodes;
+    const pool = (query ? nodes.filter(n => n._hit) : nodes).filter(n => nodeAlpha(n) > .3);
     if (!pool.length) return;
     const dir = (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) ? -1 : 1;
     const cur = focusIdx >= 0 ? pool.indexOf(nodes[focusIdx]) : -1;
     const nxt = pool[(cur + dir + pool.length) % pool.length];
     focusIdx = nodes.indexOf(nxt);
-    camTarget = { x: nxt.x, y: nxt.y, z: Math.max(cam.z, 1.8) };
+    const t = performance.now() - t0;
+    const [wx, wy] = pos(nxt, t);
+    camTarget = { x: wx, y: wy, z: Math.max(cam.z, 1.8) };
     $('live').textContent = nxt.label;
     kick();
   }
 });
 search.addEventListener('input', () => {
   query = search.value.trim().toLowerCase();
-  nodes.forEach(n => n._hit = query && (n.label.toLowerCase().includes(query) || n.id.toLowerCase().includes(query) || depts[n.dept].label.toLowerCase().includes(query)));
+  nodes.forEach(n => n._hit = query && (n.label.toLowerCase().includes(query) || n.id.toLowerCase().includes(query) || (n.group || '').includes(query) || depts[n.dept].label.toLowerCase().includes(query)));
   kick();
 });
+
+/* ============================== reel mode — the tour films itself ============================== */
+function tourKeys() {
+  const z0 = baseZoom();
+  const K = [{ t: 0, x: 0, y: 0, z: z0 * .95 }];
+  let t = 4000;
+  const stops = [];
+  const ig = deptList.find(d => groupsByDept[d.id] && groupsByDept[d.id].some(g => /instagram/.test(g.id)));
+  if (ig) stops.push([ig, 'instagram']);
+  const selfD = deptList.find(d => d.id === 'self');
+  if (selfD && selfD.hubs.healing) stops.push([selfD, 'healing']);
+  if (!stops.length && deptList[0]) stops.push([deptList[0], Object.keys(deptList[0].hubs)[0]]);
+  for (const [d, gid] of stops) {
+    K.push({ t, x: d.cx, y: d.cy, z: Math.max(z0 * 2.0, 1.15), act: () => { close(); setLevelSilent(1, deptList.indexOf(d)); } });
+    t += 5200;
+    const hub = d.hubs[gid];
+    if (hub) {
+      K.push({ t, x: hub.x, y: hub.y, z: Math.max(z0 * 3.4, 2.1), act: () => setLevelSilent(2, deptList.indexOf(d), gid) });
+      t += 4600;
+      const star = d.nodes.find(n => n.group === gid && n.replaces) || d.nodes.find(n => n.group === gid);
+      if (star) { K.push({ t, x: star.zx, y: star.zy, z: 2.6, act: () => open(star) }); t += 5600; }
+    }
+  }
+  K.push({ t, x: 0, y: 0, z: z0, act: () => { close(); setLevelSilent(0); } });
+  K.push({ t: t + 4500, x: 0, y: 0, z: z0 * .9 });
+  return K;
+}
+function setLevelSilent(lv, di, gid) { setLevel(lv, di, gid); camTarget = null; }
+const smooth = u => u * u * (3 - 2 * u);
+function startReel() {
+  if (reel) return;
+  reel = true; document.body.classList.add('reel'); close(); setLevelSilent(0);
+  tour = { keys: tourKeys(), start: performance.now() };
+  $('live').textContent = 'cinematic tour running — tap or press escape to exit';
+}
+function exitReel() {
+  reel = false; tour = null; document.body.classList.remove('reel');
+  close(); setLevel(0);
+}
+function tourStep(now) {
+  const el = now - tour.start;
+  const K = tour.keys;
+  if (el >= K[K.length - 1].t) { exitReel(); return; }
+  let i = 0;
+  while (i < K.length - 1 && K[i + 1].t <= el) i++;
+  const a = K[i], b = K[Math.min(i + 1, K.length - 1)];
+  if (a.act && !a.done) { a.done = true; a.act(); }
+  const span = Math.max(1, b.t - a.t);
+  const u = smooth(Math.min(1, (el - a.t) / span));
+  cam.x = a.x + (b.x - a.x) * u;
+  cam.y = a.y + (b.y - a.y) * u;
+  cam.z = a.z + (b.z - a.z) * u;
+  camTarget = null;
+}
+document.getElementById('rec').addEventListener('click', startReel);
 
 /* ============================== intro ============================== */
 const intro = $('intro');
@@ -642,7 +974,6 @@ intro.addEventListener('click', enter);
 intro.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') enter(); });
 function armIntro() { if (entered || document.hidden) return; setTimeout(enter, 3400); }
 if (!reduced) { armIntro(); document.addEventListener('visibilitychange', armIntro); }
-else { /* reduced-motion enters from boot */ }
 
 /* ============================== boot ============================== */
 function fmtAge(iso) {
@@ -654,7 +985,7 @@ function fmtAge(iso) {
 }
 function hud() {
   const c = s => nodes.filter(n => n.status === s).length;
-  $('counts').innerHTML = `<b>${nodes.length}</b> lanes · <b>${c('ok')}</b> ok · <b>${c('running')}</b> running · ${c('flag')} flagged · ${c('dormant')} dormant`;
+  $('counts').innerHTML = `<b>${nodes.length}</b> lanes · <b>${(fleet.groups || []).length}</b> checkpoints · <b>${c('ok')}</b> ok · <b>${c('running')}</b> running · ${c('flag')} flagged`;
   $('age').textContent = fmtAge(fleet.meta.exported);
   if (fleet.meta.subtitle) $('intro-sub').textContent = fleet.meta.subtitle;
   if (fleet.meta.title) { $('intro-title').textContent = fleet.meta.title; document.querySelector('header .wordmark').textContent = fleet.meta.title; }
@@ -664,11 +995,12 @@ function boot(data) {
   layout(); hud();
   resize();
   cam = { x: 0, y: 0, z: reduced ? baseZoom() : baseZoom() * .3 };
-  overview(); camTarget = reduced ? null : camTarget;
+  setLevel(0);
+  camTarget = reduced ? null : camTarget;
   if (reduced) { enter(); kick(); }
 }
 resize();
-if (!reduced) requestAnimationFrame(loop);   // the loop runs from t0, with or without data
+if (!reduced) requestAnimationFrame(loop);
 fetch('data/fleet.json').then(r => { if (!r.ok) throw 0; return r.json(); }).then(boot).catch(() => boot(SAMPLE));
 </script>
 </body>
