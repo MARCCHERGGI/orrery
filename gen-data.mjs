@@ -113,10 +113,10 @@ const CADENCE = {
   ClaudeIgLocalTick: 'every 15 min',
 };
 
-const lines = text.split('\n').filter(l => /^- [✓·] /.test(l.trim()));
+const lines = text.split('\n').filter(l => /^- [✓·✗] /.test(l.trim()));
 const nodes = [];
 for (const raw of lines) {
-  const m = raw.trim().match(/^- ([✓·]) (\S[^—]*?) — (.+)$/);
+  const m = raw.trim().match(/^- ([✓·✗]) (\S[^—]*?) — (.+)$/);
   if (!m) continue;
   const [, mark, name, result] = m;
   const id = name.trim();
@@ -124,7 +124,8 @@ for (const raw of lines) {
   const groupDef = (GROUPS[dept] || []).find(([, re]) => re.test(id));
   const group = groupDef ? groupDef[0] : 'field';
   let status;
-  if (/STILL_RUNNING|\(running\)/.test(result)) status = 'running';
+  if (mark === '✗') status = 'flag';
+  else if (/STILL_RUNNING|\(running\)/.test(result)) status = 'running';
   else if (mark === '✓' && /^OK/.test(result)) status = 'ok';
   else if (mark === '✓') status = 'flag';
   else if (/TERMINATED|NEVER_RAN/.test(result)) status = 'dormant';

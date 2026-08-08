@@ -3,7 +3,7 @@
   "title": "ORRERY",
   "subtitle": "a live map of a one-person AI company",
   "operator": "Marco Hergi · NYC",
-  "exported": "2026-08-08T02:32:47.277Z",
+  "exported": "2026-08-08T18:18:15.491Z",
   "source": "warden fleet-health"
  },
  "departments": [
@@ -1073,8 +1073,8 @@
    "label": "Self Tick",
    "dept": "self",
    "group": "learning",
-   "status": "ok",
-   "detail": "OK",
+   "status": "flag",
+   "detail": "GENERIC_FAILURE",
    "cadence": "daily 05:20",
    "replaces": "a weekly retro — reads its own telemetry and ships one self-improvement daily at 05:20",
    "mass": 3
