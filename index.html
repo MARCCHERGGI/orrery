@@ -7,19 +7,18 @@
 <meta name="description" content="Every star is a real scheduled agent. Open source — point it at your own fleet.">
 <style>
   :root {
-    --void: #070a14;          /* deepest space — off-black, blue-leaning */
-    --haze: #0d1222;          /* raised surface */
-    --ink:  #e8e6df;          /* starlight — off-white, warm */
-    --ink-dim: #a3a2ac;
-    --ink-faint: #8a8da1;
-    --gold: #d9b36a;          /* the one accent: alive / selected */
-    --danger: #c96a5a;
-    --line: rgba(232,230,223,.08);
+    --void: #14172b;          /* deep navy-violet, their base */
+    --panel: #1b1f38;         /* raised card surface */
+    --ink:  #eceaf6;          /* warm white */
+    --ink-dim: #a9a9c4;
+    --ink-faint: #8c8cab;
+    --accent: #8be2b9;        /* their green: autonomous / alive */
+    --danger: #e08a7c;
+    --line: rgba(236,234,246,.10);
     --serif: "Didot", "Bodoni MT", "Playfair Display", "Cormorant Garamond", Georgia, serif;
     --sans: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
-    --r-s: 6px; --r-m: 12px; --r-l: 18px;
+    --r-s: 6px; --r-m: 10px; --r-l: 16px;
     --t-quick: 160ms cubic-bezier(.3,.7,.3,1);
-    --t-soft: 280ms cubic-bezier(.25,.8,.25,1);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; overscroll-behavior: none; }
@@ -34,19 +33,16 @@
   /* ---------- intro ---------- */
   #intro {
     position: fixed; inset: 0; display: grid; place-items: center; text-align: center;
-    background: radial-gradient(ellipse 90% 70% at 50% 60%, rgba(20,26,48,.55), transparent 70%);
+    background: radial-gradient(ellipse 90% 70% at 50% 55%, rgba(56,60,110,.35), transparent 70%);
     transition: opacity 900ms cubic-bezier(.4,0,.2,1); z-index: 30;
   }
   #intro.gone { opacity: 0; pointer-events: none; }
   #intro h1 {
     font-family: var(--serif); font-weight: 400; letter-spacing: .42em; text-indent: .42em;
-    font-size: clamp(34px, 7vw, 64px); color: var(--ink);
-    text-shadow: 0 0 44px rgba(217,179,106,.25);
+    font-size: clamp(34px, 7vw, 64px);
+    text-shadow: 0 0 44px rgba(139,226,185,.28);
   }
-  #intro p.sub {
-    margin-top: 14px; color: var(--ink-dim); font-size: 13px;
-    letter-spacing: .18em; text-transform: uppercase;
-  }
+  #intro p.sub { margin-top: 14px; color: var(--ink-dim); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
   #intro p.hint { margin-top: 44px; color: var(--ink-faint); font-size: 12px; letter-spacing: .12em; }
   @media (prefers-reduced-motion: no-preference) {
     #intro h1 { animation: rise 1.4s cubic-bezier(.2,.7,.2,1) both; }
@@ -56,75 +52,116 @@
     @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
   }
 
-  /* ---------- HUD ---------- */
+  /* ---------- chrome ---------- */
   header {
     position: fixed; top: 0; left: 0; right: 0; z-index: 20;
-    display: flex; align-items: baseline; gap: 18px; padding: 18px 22px;
-    background: linear-gradient(to bottom, rgba(7,10,20,.85), transparent);
+    display: flex; align-items: center; gap: 18px; padding: 14px 20px;
     pointer-events: none;
   }
   header .wordmark { font-family: var(--serif); font-size: 17px; letter-spacing: .34em; }
-  /* type scale: 11 · 12 · 13 · 14 · 17 · 25 · display clamp — nothing else */
   header .counts { font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
   header .counts b { color: var(--ink); font-weight: 600; }
   header .age { margin-left: auto; font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  @media (max-width: 700px) { header .counts { display: none; } }
 
-  footer {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
-    display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;
-    padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
-    background: linear-gradient(to top, rgba(7,10,20,.85), transparent);
-    font-size: 12px; color: var(--ink-faint); letter-spacing: .06em; pointer-events: none;
+  /* their top-center pill */
+  nav#pill {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 21;
+    display: flex; gap: 2px; padding: 4px;
+    background: rgba(27,31,56,.9); border: 1px solid var(--line); border-radius: 999px;
+    box-shadow: 0 8px 30px rgba(6,8,20,.5);
   }
-  footer .chip { display: inline-flex; align-items: center; gap: 6px; }
-  footer .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-dim); }
-  footer .dot.ok { background: #cfd3e8; }
-  footer .dot.running { background: var(--gold); box-shadow: 0 0 8px rgba(217,179,106,.8); }
-  footer .dot.flag { background: var(--danger); border-radius: 1px; transform: rotate(45deg); }
-  footer .dot.dormant { background: var(--ink-faint); opacity: .5; }
-  footer .keys { display: none; }
-  @media (min-width: 700px) { footer .keys { display: inline; } }
+  nav#pill button {
+    font: 600 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-dim); background: none; border: 0; border-radius: 999px;
+    padding: 8px 14px; cursor: pointer; transition: color var(--t-quick), background var(--t-quick);
+  }
+  nav#pill button[aria-pressed="true"] { background: rgba(236,234,246,.14); color: var(--ink); }
+  nav#pill button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 700px) { nav#pill { top: auto; bottom: calc(64px + env(safe-area-inset-bottom)); } }
 
-  /* ---------- detail card ---------- */
+  /* department carousel — their ‹ NAME › */
+  #deptnav {
+    position: fixed; bottom: calc(18px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+    z-index: 21; display: flex; align-items: center; gap: 22px; pointer-events: auto;
+  }
+  #deptnav button {
+    width: 44px; height: 44px; background: none; border: 0; color: var(--ink-dim);
+    font-size: 22px; cursor: pointer; border-radius: 50%; transition: color var(--t-quick);
+  }
+  #deptnav button:hover { color: var(--ink); }
+  #deptnav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #deptnav .name {
+    font-family: var(--serif); font-size: 22px; letter-spacing: .34em; text-indent: .34em;
+    text-align: center; min-width: 220px; cursor: pointer;
+  }
+  #deptnav .tag { font-family: var(--sans); font-size: 11px; letter-spacing: .18em; color: var(--ink-faint); text-transform: lowercase; text-indent: 0; margin-top: 3px; }
+
+  /* ---------- skill card — their structure ---------- */
   #card {
-    position: fixed; z-index: 25; right: 22px; top: 74px; width: min(360px, calc(100vw - 32px));
-    background: linear-gradient(rgba(232,230,223,.035), rgba(232,230,223,0)) , var(--haze);
-    border: 1px solid var(--line); border-top-color: rgba(232,230,223,.16);
-    border-radius: var(--r-l); padding: 22px;
-    box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.5);
+    position: fixed; z-index: 25; right: 16px; top: 60px; bottom: 16px; width: min(400px, calc(100vw - 32px));
+    background: linear-gradient(rgba(236,234,246,.04), rgba(236,234,246,0)), var(--panel);
+    border: 1px solid var(--line); border-top-color: rgba(236,234,246,.18);
+    border-radius: var(--r-l); padding: 26px 24px; overflow-y: auto;
+    box-shadow: 0 24px 60px rgba(6,8,20,.6);
     opacity: 0; transform: translateY(8px); pointer-events: none;
     transition: opacity var(--t-quick), transform var(--t-quick);
   }
   #card.open { opacity: 1; transform: none; pointer-events: auto; }
-  #card .eyebrow { font-size: 11px; letter-spacing: .24em; text-transform: uppercase; margin-bottom: 6px; }
-  #card h2 { font-family: var(--serif); font-weight: 400; font-size: 25px; line-height: 1.15; margin-bottom: 12px; }
-  #card .status { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 14px; color: var(--ink-dim); }
-  #card .status .dot { width: 8px; height: 8px; border-radius: 50%; }
-  #card .sect { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
-  #card .sect .k { font-size: 11px; letter-spacing: .22em; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 4px; }
-  #card .sect .v { font-size: 13px; color: var(--ink); max-width: 62ch; }
-  #card .sect .v.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--ink-dim); }
+  #card .autonomy { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 10px; }
+  #card .autonomy .led { width: 7px; height: 7px; border-radius: 50%; }
+  #card .crumb { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
+  #card h2 { font-family: var(--serif); font-weight: 400; font-size: 26px; line-height: 1.12; margin-bottom: 8px; }
+  #card .lede { color: var(--ink-dim); font-size: 13px; margin-bottom: 16px; max-width: 60ch; }
+  #card .pill-dl {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: rgba(236,234,246,.06); border: 1px solid var(--line); border-radius: var(--r-m);
+    padding: 12px 14px; font-size: 12px; color: var(--ink-dim); margin-bottom: 18px;
+  }
+  #card .pill-dl b { color: var(--ink); font-weight: 600; }
+  #card .sect { border-top: 1px solid var(--line); padding: 12px 0; }
+  #card .sect .k { font-size: 11px; letter-spacing: .22em; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 6px; }
+  #card .sect .v { font-size: 13px; color: var(--ink); max-width: 60ch; }
+  #card .sect .v.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--ink-dim); overflow-wrap: anywhere; }
+  #card .ladder { display: grid; gap: 8px; }
+  #card .ladder .rung { display: grid; grid-template-columns: 118px 1fr; gap: 10px; font-size: 12px; color: var(--ink-faint); }
+  #card .ladder .rung .rk { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+  #card .ladder .rung.on { color: var(--ink); }
+  #card .ladder .rung.on .rk { color: var(--accent); }
   #card button.close {
-    position: absolute; top: 10px; right: 10px; width: 44px; height: 44px;
+    position: absolute; top: 8px; right: 8px; width: 44px; height: 44px;
     background: none; border: 0; color: var(--ink-faint); font-size: 17px; cursor: pointer;
     border-radius: var(--r-s); transition: color var(--t-quick);
   }
   #card button.close:hover { color: var(--ink); }
-  #card button.close:focus-visible, #search:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  #card button.close:focus-visible, #search:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media (max-width: 700px) {
-    #card { right: 8px; left: 8px; top: auto; bottom: 8px; width: auto; transform: translateY(16px); }
+    #card { right: 8px; left: 8px; top: auto; bottom: 8px; max-height: 62vh; width: auto; }
   }
 
-  /* ---------- search ---------- */
+  /* ---------- search + legend ---------- */
   #search {
-    position: fixed; z-index: 22; left: 50%; top: 68px; transform: translateX(-50%);
+    position: fixed; z-index: 22; left: 50%; top: 58px; transform: translateX(-50%);
     width: min(340px, calc(100vw - 40px)); padding: 10px 16px;
-    background: var(--haze); border: 1px solid var(--line); border-top-color: rgba(232,230,223,.16);
+    background: var(--panel); border: 1px solid var(--line); border-top-color: rgba(236,234,246,.18);
     border-radius: 999px; color: var(--ink); font: inherit; letter-spacing: .04em;
-    box-shadow: 0 12px 40px rgba(0,0,0,.5); display: none;
+    box-shadow: 0 12px 40px rgba(6,8,20,.5); display: none;
   }
   #search::placeholder { color: var(--ink-faint); }
   #search.show { display: block; }
+
+  #legend {
+    position: fixed; left: 20px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 20;
+    display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--ink-faint);
+    letter-spacing: .06em; pointer-events: none;
+  }
+  #legend .chip { display: inline-flex; align-items: center; gap: 8px; }
+  #legend .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-dim); }
+  #legend .dot.ok { background: #e9e7f4; }
+  #legend .dot.running { background: var(--accent); box-shadow: 0 0 8px rgba(139,226,185,.8); }
+  #legend .dot.flag { background: var(--danger); border-radius: 1px; transform: rotate(45deg); }
+  #legend .dot.dormant { background: var(--ink-faint); opacity: .5; }
+  @media (max-width: 700px) { #legend { display: none; } }
 
   #live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>
@@ -140,31 +177,52 @@
   </div>
 </div>
 
-<header aria-hidden="false">
+<header>
   <span class="wordmark">ORRERY</span>
   <span class="counts" id="counts">—</span>
   <span class="age" id="age"></span>
 </header>
 
+<nav id="pill" aria-label="View">
+  <button id="pill-map" aria-pressed="true">Map</button>
+  <button id="pill-chart" aria-pressed="false">Chart</button>
+</nav>
+
+<div id="deptnav" aria-label="Departments">
+  <button id="dept-prev" aria-label="Previous department">‹</button>
+  <div>
+    <div class="name" id="dept-name" role="button" tabindex="0">— </div>
+    <div class="tag name" id="dept-tag"></div>
+  </div>
+  <button id="dept-next" aria-label="Next department">›</button>
+</div>
+
 <input id="search" type="search" placeholder="find an agent — esc to clear" aria-label="Find an agent">
 
 <aside id="card" role="dialog" aria-modal="false" aria-labelledby="card-name">
   <button class="close" aria-label="Close">×</button>
-  <div class="eyebrow" id="card-dept"></div>
+  <div class="autonomy"><span class="led" id="card-led"></span><span id="card-badge"></span></div>
+  <div class="crumb" id="card-dept"></div>
   <h2 id="card-name"></h2>
-  <div class="status"><span class="dot" id="card-dot"></span><span id="card-status"></span></div>
-  <div class="sect" id="card-replaces-sect"><div class="k">replaces</div><div class="v" id="card-replaces"></div></div>
-  <div class="sect" id="card-cadence-sect"><div class="k">cadence</div><div class="v" id="card-cadence"></div></div>
+  <p class="lede" id="card-lede"></p>
+  <div class="pill-dl"><span><b>1 real scheduled lane</b> — not a diagram</span><span id="card-cad"></span></div>
+  <div class="sect" id="card-replaces-sect"><div class="k">what it replaces</div><div class="v" id="card-replaces"></div></div>
+  <div class="sect"><div class="k">the ladder</div>
+    <div class="ladder">
+      <div class="rung" id="rung-led"><span class="rk">human-led</span><span>Marco does it, by hand, every time.</span></div>
+      <div class="rung" id="rung-assist"><span class="rk">human-assisted</span><span>The agent drafts; Marco approves each send.</span></div>
+      <div class="rung" id="rung-auto"><span class="rk">fully autonomous</span><span>Runs on its own schedule. Gated actions still stop for Marco.</span></div>
+    </div>
+  </div>
   <div class="sect"><div class="k">last result</div><div class="v mono" id="card-detail"></div></div>
 </aside>
 
-<footer>
+<div id="legend">
   <span class="chip"><span class="dot ok"></span>ok</span>
   <span class="chip"><span class="dot running"></span>running</span>
   <span class="chip"><span class="dot flag"></span>flagged</span>
   <span class="chip"><span class="dot dormant"></span>dormant</span>
-  <span class="keys">drag · scroll · click a star · <b>/</b> search</span>
-</footer>
+</div>
 
 <div id="live" aria-live="polite"></div>
 
@@ -174,10 +232,10 @@
 const SAMPLE = {
   meta: { title: 'ORRERY', subtitle: 'sample fleet — bring your own data/fleet.json', operator: 'sample data', exported: null },
   departments: [
-    { id: 'revenue', label: 'REVENUE', hue: 42,  tagline: 'money in' },
-    { id: 'content', label: 'CONTENT', hue: 320, tagline: 'what the world sees' },
-    { id: 'ops',     label: 'OPS',     hue: 190, tagline: 'keeps the lights on' },
-    { id: 'self',    label: 'SELF',    hue: 45,  tagline: 'the loop that sharpens the loop' },
+    { id: 'revenue', label: 'REVENUE', hue: 28,  tagline: 'money in' },
+    { id: 'content', label: 'CONTENT', hue: 285, tagline: 'what the world sees' },
+    { id: 'ops',     label: 'OPS',     hue: 175, tagline: 'keeps the lights on' },
+    { id: 'self',    label: 'SELF',    hue: 48,  tagline: 'the loop that sharpens the loop' },
   ],
   nodes: Array.from({ length: 36 }, (_, i) => ({
     id: 'sample-' + i, label: 'Sample Agent ' + (i + 1),
@@ -193,49 +251,55 @@ const ctx = canvas.getContext('2d');
 let DPR = Math.min(devicePixelRatio || 1, 2);
 let W = 0, H = 0;
 
-let fleet = null, nodes = [], depts = {}, bgStars = [], core = [];
-let cam = { x: 0, y: 0, z: 1 };            // world offset + zoom
-let camTarget = null;                       // fly-to animation target
-let selected = null, focusIdx = -1, query = '';
-let entered = false, t0 = performance.now();
+let fleet = null, nodes = [], deptList = [], depts = {}, bgStars = [], core = [];
+let cam = { x: 0, y: 0, z: 1 };
+let camTarget = null;
+let selected = null, focusIdx = -1, query = '', deptIdx = -1; // -1 = overview
+let entered = false, chart = false;
+const t0 = performance.now();
 
 /* ============================== layout ============================== */
-// deterministic pseudo-random so the sky is identical on every visit
 function mulberry(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
+// organic tree per department, like theirs: a root close to center, branches
+// fanning outward, children forking off their parent
 function layout() {
   const rnd = mulberry(1837);
   const D = fleet.departments;
-  depts = {};
-  const R0 = 210;                 // constellation anchor radius (world units)
+  depts = {}; deptList = [];
   D.forEach((d, i) => {
     const a = -Math.PI / 2 + i * (2 * Math.PI / D.length);
-    depts[d.id] = { ...d, angle: a, ax: Math.cos(a) * R0, ay: Math.sin(a) * R0, nodes: [] };
+    const dd = { ...d, angle: a, ax: Math.cos(a) * 170, ay: Math.sin(a) * 170, nodes: [] };
+    depts[d.id] = dd; deptList.push(dd);
   });
   nodes = fleet.nodes.map(n => ({ ...n }));
-  nodes.forEach(n => (depts[n.dept] || depts[Object.keys(depts)[0]]).nodes.push(n));
-  // each constellation: nodes fan outward from the anchor in branching arcs
-  Object.values(depts).forEach(d => {
-    const n = d.nodes.length;
+  nodes.forEach(n => (depts[n.dept] || deptList[0]).nodes.push(n));
+  for (const d of deptList) {
+    const branches = Math.max(3, Math.min(6, Math.ceil(d.nodes.length / 5)));
+    const open = [];   // growth frontier: [{x,y,angle,level,parent}]
+    for (let b = 0; b < branches; b++) {
+      const spread = (b / (branches - 1) - .5) * 1.5;
+      open.push({ x: d.ax, y: d.ay, angle: d.angle + spread, level: 0, parent: null });
+    }
     d.nodes.forEach((node, i) => {
-      const branch = i % 5, depth = Math.floor(i / 5);
-      const spread = (branch - 2) * 0.30 + (rnd() - .5) * 0.16;
-      const dist = 54 + depth * (34 + rnd() * 14) + Math.abs(branch - 2) * 9;
-      const a = d.angle + spread * (1 - dist / 700);
-      node.x = Math.cos(a) * (210 + dist) * 1.0 - Math.cos(d.angle) * 210 + d.ax;
-      node.y = Math.sin(a) * (210 + dist) * 1.0 - Math.sin(d.angle) * 210 + d.ay;
-      node.tw = rnd() * Math.PI * 2;        // twinkle phase
-      node.branch = branch; node.depth = depth;
-      // parent for constellation lines: previous node on same branch, else anchor
-      node.parent = null;
-      for (let j = i - 1; j >= 0; j--) if (d.nodes[j].branch === branch) { node.parent = d.nodes[j]; break; }
+      const slot = open[i % open.length];
+      const step = 46 + rnd() * 26 - slot.level * 3;
+      const a = slot.angle + (rnd() - .5) * .5;
+      node.x = slot.x + Math.cos(a) * step;
+      node.y = slot.y + Math.sin(a) * step;
+      node.parent = slot.parent;
+      node.level = slot.level;
+      node.tw = rnd() * Math.PI * 2;
+      // this node becomes a growth point; occasionally fork
+      const next = { x: node.x, y: node.y, angle: a + (rnd() - .5) * .35, level: slot.level + 1, parent: node };
+      open[i % open.length] = next;
+      if (rnd() > .62 && open.length < 9) open.push({ x: node.x, y: node.y, angle: a + (rnd() > .5 ? .55 : -.55), level: slot.level + 1, parent: node });
     });
-  });
-  // background starfield + core particles
-  bgStars = Array.from({ length: 420 }, () => ({ x: (rnd() - .5) * 2400, y: (rnd() - .5) * 2400, m: rnd(), tw: rnd() * Math.PI * 2 }));
-  core = Array.from({ length: 900 }, () => {
-    const a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 2.2) * 92;
-    return { a, r, sp: (rnd() - .5) * .0022, m: rnd(), hue: [42, 320, 190, 150, 45, 265, 12, 220][Math.floor(rnd() * 8)] };
+  }
+  bgStars = Array.from({ length: 380 }, () => ({ x: (rnd() - .5) * 2600, y: (rnd() - .5) * 2600, m: rnd(), tw: rnd() * Math.PI * 2 }));
+  core = Array.from({ length: 850 }, () => {
+    const a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 2.1) * 80;
+    return { a, r, sp: (rnd() - .5) * .002, m: rnd(), hue: [28, 285, 175, 48, 330, 210, 100, 0][Math.floor(rnd() * 8)] };
   });
 }
 
@@ -245,138 +309,165 @@ function resize() {
   W = innerWidth; H = innerHeight;
   canvas.width = W * DPR; canvas.height = H * DPR;
   canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-  if (reduced) draw(performance.now());
 }
 addEventListener('resize', resize);
 
 const w2s = (x, y) => [(x - cam.x) * cam.z + W / 2, (y - cam.y) * cam.z + H / 2];
 const s2w = (x, y) => [(x - W / 2) / cam.z + cam.x, (y - H / 2) / cam.z + cam.y];
+const baseZoom = () => Math.min(W, H) / 1150;
 
-function statusColor(n, t) {
-  const hue = (depts[n.dept] || { hue: 0 }).hue;
-  if (n.status === 'running') return `rgba(217,179,106,${.85 + .15 * Math.sin(t / 300 + n.tw)})`;
-  if (n.status === 'flag') return 'rgba(201,106,90,.9)';
-  if (n.status === 'dormant') return `hsla(${hue},18%,55%,.28)`;
-  return `hsla(${hue},42%,82%,.92)`;
+function nodeColor(n, t) {
+  if (n.status === 'running') return `rgba(139,226,185,${.85 + .15 * Math.sin(t / 300 + n.tw)})`;
+  if (n.status === 'flag') return 'rgba(224,138,124,.92)';
+  if (n.status === 'dormant') return 'rgba(169,169,196,.26)';
+  return 'rgba(240,238,250,.95)';
 }
+const nodeR = n => (n.level === 0 ? 5.5 : n.level === 1 ? 4.2 : n.level < 4 ? 3.4 : 2.7) * (n.mass === 3 ? 1.25 : 1);
 
 function draw(now) {
   const t = now - t0;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.clearRect(0, 0, W, H);
-  // vignette base
-  const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * .75);
-  g.addColorStop(0, '#0b1020'); g.addColorStop(1, '#070a14');
+  const g = ctx.createRadialGradient(W / 2, H * .42, 0, W / 2, H / 2, Math.max(W, H) * .8);
+  g.addColorStop(0, '#232848'); g.addColorStop(.55, '#191d38'); g.addColorStop(1, '#12152a');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 
-  // fly-to easing
   if (camTarget) {
     cam.x += (camTarget.x - cam.x) * .09; cam.y += (camTarget.y - cam.y) * .09; cam.z += (camTarget.z - cam.z) * .09;
     if (Math.abs(cam.z - camTarget.z) < .003 && Math.hypot(cam.x - camTarget.x, cam.y - camTarget.y) < 1) camTarget = null;
   }
 
-  // background stars (parallax at half depth)
-  ctx.save();
   for (const s of bgStars) {
     const x = (s.x - cam.x * .5) * cam.z * .6 + W / 2, y = (s.y - cam.y * .5) * cam.z * .6 + H / 2;
     if (x < -8 || x > W + 8 || y < -8 || y > H + 8) continue;
-    const a = .12 + s.m * .3 + (reduced ? 0 : Math.sin(t / 900 + s.tw) * .08);
-    ctx.fillStyle = `rgba(220,224,240,${a})`;
-    ctx.fillRect(x, y, s.m > .92 ? 1.6 : 1, s.m > .92 ? 1.6 : 1);
+    const a = .10 + s.m * .22 + (reduced ? 0 : Math.sin(t / 900 + s.tw) * .06);
+    ctx.fillStyle = `rgba(226,228,248,${a})`;
+    ctx.fillRect(x, y, s.m > .92 ? 1.5 : 1, s.m > .92 ? 1.5 : 1);
   }
-  ctx.restore();
   if (!fleet) return;
 
-  // core — the brain
+  const focusDept = deptIdx >= 0 ? deptList[deptIdx] : null;
+
+  // center core
   const [cx, cy] = w2s(0, 0);
-  ctx.save();
-  const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 120 * cam.z);
-  halo.addColorStop(0, 'rgba(217,179,106,.10)'); halo.addColorStop(1, 'rgba(217,179,106,0)');
-  ctx.fillStyle = halo; ctx.fillRect(cx - 120 * cam.z, cy - 120 * cam.z, 240 * cam.z, 240 * cam.z);
+  const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 110 * cam.z);
+  halo.addColorStop(0, 'rgba(236,234,246,.10)'); halo.addColorStop(1, 'rgba(236,234,246,0)');
+  ctx.fillStyle = halo; ctx.fillRect(cx - 110 * cam.z, cy - 110 * cam.z, 220 * cam.z, 220 * cam.z);
   for (const p of core) {
     if (!reduced) p.a += p.sp;
-    const breathe = reduced ? 1 : 1 + Math.sin(t / 2600) * .04;
-    const x = cx + Math.cos(p.a) * p.r * cam.z * breathe, y = cy + Math.sin(p.a) * p.r * cam.z * breathe;
-    ctx.fillStyle = `hsla(${p.hue},55%,${62 + p.m * 20}%,${.25 + p.m * .5})`;
-    ctx.fillRect(x, y, p.m > .8 ? 1.8 : 1.1, p.m > .8 ? 1.8 : 1.1);
+    const x = cx + Math.cos(p.a) * p.r * cam.z, y = cy + Math.sin(p.a) * p.r * cam.z;
+    ctx.fillStyle = `hsla(${p.hue},65%,${68 + p.m * 18}%,${.3 + p.m * .5})`;
+    ctx.fillRect(x, y, p.m > .8 ? 1.9 : 1.2, p.m > .8 ? 1.9 : 1.2);
   }
-  ctx.restore();
 
-  // constellation lines
-  ctx.save();
-  ctx.lineWidth = Math.max(.5, .7 * cam.z);
+  // trunk lines: dept root → center
+  for (const d of deptList) {
+    const dimD = focusDept && d !== focusDept ? .25 : 1;
+    const [x1, y1] = w2s(d.ax, d.ay);
+    ctx.strokeStyle = `rgba(236,234,246,${.07 * dimD})`;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 6]);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(cx, cy); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // branch lines — theirs: thin, visible, white
+  ctx.lineWidth = Math.max(.6, .9 * Math.min(cam.z, 1.4));
   for (const n of nodes) {
-    if (n.status === 'dormant' && cam.z < 1.6) continue;
-    const p = n.parent;
+    const d = depts[n.dept];
+    const dimD = (focusDept && d !== focusDept ? .18 : 1) * (query && !n._hit ? .25 : 1);
+    if (n.status === 'dormant' && !focusDept && cam.z < 1.4) continue;
     const [x1, y1] = w2s(n.x, n.y);
-    const dep = depts[n.dept];
-    const [x2, y2] = p ? w2s(p.x, p.y) : w2s(dep.ax, dep.ay);
-    const dim = query && !n._hit ? .25 : 1;
-    ctx.strokeStyle = `hsla(${dep.hue},30%,70%,${.10 * dim})`;
+    const [x2, y2] = n.parent ? w2s(n.parent.x, n.parent.y) : w2s(d.ax, d.ay);
+    ctx.strokeStyle = `rgba(236,234,246,${.16 * dimD})`;
     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
   }
-  ctx.restore();
 
-  // nodes
+  // dept root markers
+  for (const d of deptList) {
+    const dimD = focusDept && d !== focusDept ? .25 : 1;
+    const [x, y] = w2s(d.ax, d.ay);
+    ctx.fillStyle = `hsla(${d.hue},60%,74%,${.95 * dimD})`;
+    ctx.beginPath(); ctx.arc(x, y, 6.5 * Math.min(cam.z, 1.6), 0, 7); ctx.fill();
+    ctx.strokeStyle = `hsla(${d.hue},60%,74%,${.4 * dimD})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(x, y, 11 * Math.min(cam.z, 1.6), 0, 7); ctx.stroke();
+  }
+
+  // nodes — big soft glowing circles like theirs
   for (const n of nodes) {
     const [x, y] = w2s(n.x, n.y);
-    if (x < -30 || x > W + 30 || y < -30 || y > H + 30) continue;
-    const dim = query && !n._hit ? .18 : 1;
-    const base = (n.mass === 3 ? 3.2 : n.mass === 2 ? 2.1 : 1.4) * Math.sqrt(cam.z);
-    const twinkle = reduced || n.status === 'dormant' ? 0 : Math.sin(t / 700 + n.tw) * .35;
-    ctx.globalAlpha = dim;
-    ctx.fillStyle = statusColor(n, t);
-    ctx.beginPath(); ctx.arc(x, y, base + twinkle, 0, 7); ctx.fill();
+    if (x < -40 || x > W + 40 || y < -40 || y > H + 40) continue;
+    const d = depts[n.dept];
+    const dimD = (focusDept && d !== focusDept ? .15 : 1) * (query && !n._hit ? .15 : 1);
+    const r = nodeR(n) * Math.min(Math.sqrt(cam.z) * 1.15, 1.8);
+    const tw = reduced || n.status === 'dormant' ? 0 : Math.sin(t / 700 + n.tw) * .3;
+    ctx.globalAlpha = dimD;
+    // glow
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 3.2);
+    glow.addColorStop(0, n.status === 'running' ? 'rgba(139,226,185,.35)' : 'rgba(236,234,246,.22)');
+    glow.addColorStop(1, 'rgba(236,234,246,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(x - r * 3.2, y - r * 3.2, r * 6.4, r * 6.4);
+    // body
+    ctx.fillStyle = nodeColor(n, t);
+    ctx.beginPath(); ctx.arc(x, y, Math.max(.4, r + tw), 0, 7); ctx.fill();
+    // running halo ring
     if (n.status === 'running' && !reduced) {
       const ring = ((t / 1400 + n.tw) % 1);
-      ctx.strokeStyle = `rgba(217,179,106,${(1 - ring) * .5 * dim})`;
+      ctx.strokeStyle = `rgba(139,226,185,${(1 - ring) * .5 * dimD})`;
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(x, y, base + 3 + ring * 14 * cam.z, 0, 7); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, r + 3 + ring * 16, 0, 7); ctx.stroke();
     }
     if (n === selected || nodes.indexOf(n) === focusIdx) {
-      ctx.strokeStyle = 'rgba(217,179,106,.9)'; ctx.lineWidth = 1.4;
-      ctx.beginPath(); ctx.arc(x, y, base + 6, 0, 7); ctx.stroke();
+      ctx.strokeStyle = 'rgba(139,226,185,.9)'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(x, y, r + 6, 0, 7); ctx.stroke();
     }
-    // flagship labels at readable zoom
-    if ((n.mass === 3 && cam.z > 1.15) || cam.z > 2.4 || n === selected) {
-      ctx.globalAlpha = Math.min(1, (cam.z - 1) * 1.6) * dim;
-      ctx.fillStyle = 'rgba(232,230,223,.75)';
-      ctx.font = `${11}px ${'Inter, system-ui, sans-serif'}`;
-      ctx.fillText(n.label, x + base + 7, y + 3.5);
+    // labels: flagships always at readable zoom; all when a dept is focused
+    if ((n.mass === 3 && cam.z > .95) || (focusDept === d && cam.z > 1.15) || cam.z > 2.2 || n === selected) {
+      ctx.globalAlpha = Math.min(1, Math.max(0, (cam.z - .8)) * 1.6) * dimD;
+      ctx.fillStyle = 'rgba(236,234,246,.8)';
+      ctx.font = '11px Inter, system-ui, sans-serif';
+      ctx.fillText(n.label, x + r + 7, y + 3.5);
       ctx.globalAlpha = 1;
     }
   }
   ctx.globalAlpha = 1;
 
-  // department names — spaced serif, planetarium style
-  ctx.save();
+  // department names — big spaced serif, like their O P E R A T I O N S
   ctx.textAlign = 'center';
-  for (const d of Object.values(depts)) {
-    const lx = d.ax * 2.55, ly = d.ay * 2.55;
-    const [x, y] = w2s(lx, ly);
-    const size = Math.min(26, 15 * cam.z);
+  for (const d of deptList) {
+    if (d === focusDept) continue;           // the carousel already names it
+    const dimD = focusDept ? .2 : 1;
+    const lr = 170 + 320;
+    let [x, y] = w2s(Math.cos(d.angle) * lr, Math.sin(d.angle) * lr);
+    y = Math.max(84, Math.min(H - 108, y));   // keep clear of the pill and the carousel
+    const size = Math.max(13, Math.min(30, 17 * cam.z));
     ctx.font = `${size}px Didot, "Bodoni MT", Georgia, serif`;
-    const label = d.label.split('').join('  ');
-    ctx.fillStyle = `hsla(${d.hue},28%,80%,.6)`;
-    ctx.fillText(label, x, y);
-    if (d.tagline && cam.z > 1.3) {
-      ctx.font = `${Math.min(11, 7 * cam.z)}px Inter, system-ui, sans-serif`;
-      ctx.fillStyle = 'rgba(154,153,163,.55)';
-      ctx.fillText(d.tagline, x, y + size * .95);
+    ctx.fillStyle = `rgba(236,234,246,${.75 * dimD})`;
+    ctx.fillText(d.label.split('').join(' '), x, y);
+    if (d.tagline && cam.z > 1.05) {
+      ctx.font = `${Math.min(11, 8 * cam.z)}px Inter, system-ui, sans-serif`;
+      ctx.fillStyle = `rgba(169,169,196,${.6 * dimD})`;
+      ctx.fillText(d.tagline, x, y + size * .9);
     }
   }
-  ctx.restore();
+  ctx.textAlign = 'start';
+}
 
-  if (!reduced) requestAnimationFrame(draw);
+// the loop OWNS the schedule — a bad frame can never kill the animation
+function loop(now) {
+  try { draw(now); } catch (e) { /* one bad frame must not stop the sky */ }
+  if (!reduced) requestAnimationFrame(loop);
 }
 
 /* ============================== interaction ============================== */
 let drag = null, pinch = null, moved = false;
-const kick = () => { if (reduced) requestAnimationFrame(draw); };
+const kick = () => { if (reduced) requestAnimationFrame(t => draw(t)); };
 
 canvas.addEventListener('pointerdown', e => {
   canvas.setPointerCapture(e.pointerId);
-  if (pinch === null && drag) { pinch = { id: e.pointerId, x: e.clientX, y: e.clientY }; return; }
+  if (drag && e.pointerId !== drag.id) { pinch = { id: e.pointerId, x: e.clientX, y: e.clientY, d0: 0 }; return; }
   drag = { id: e.pointerId, x: e.clientX, y: e.clientY }; moved = false;
   canvas.classList.add('dragging');
 });
@@ -385,8 +476,8 @@ canvas.addEventListener('pointermove', e => {
     if (e.pointerId === pinch.id) { pinch.x = e.clientX; pinch.y = e.clientY; }
     else if (e.pointerId === drag.id) { drag.x = e.clientX; drag.y = e.clientY; }
     const d = Math.hypot(drag.x - pinch.x, drag.y - pinch.y);
-    if (pinch.d0) { const f = d / pinch.d0; zoomAt((drag.x + pinch.x) / 2, (drag.y + pinch.y) / 2, cam.z * f); }
-    pinch.d0 = d; moved = true; kick(); return;
+    if (pinch.d0) zoomAt((drag.x + pinch.x) / 2, (drag.y + pinch.y) / 2, cam.z * (d / pinch.d0));
+    pinch.d0 = d; moved = true; return;
   }
   if (!drag || e.pointerId !== drag.id) return;
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
@@ -406,49 +497,103 @@ canvas.addEventListener('wheel', e => {
   e.preventDefault();
   zoomAt(e.clientX, e.clientY, cam.z * (e.deltaY < 0 ? 1.13 : .885));
 }, { passive: false });
-canvas.addEventListener('dblclick', () => { camTarget = { x: 0, y: 0, z: baseZoom() }; kick(); });
+canvas.addEventListener('dblclick', () => overview());
 
 function zoomAt(sx, sy, nz) {
-  nz = Math.max(.45, Math.min(7, nz));
+  nz = Math.max(.4, Math.min(7, nz));
   const [wx, wy] = s2w(sx, sy);
   cam.z = nz; camTarget = null;
   const [nx, ny] = w2s(wx, wy);
   cam.x += (nx - sx) / cam.z; cam.y += (ny - sy) / cam.z; kick();
 }
-const baseZoom = () => Math.min(W, H) / 1250;
 
 function pick(sx, sy) {
-  let best = null, bd = 18;
+  let best = null, bd = 22;
   for (const n of nodes) {
     const [x, y] = w2s(n.x, n.y);
     const d = Math.hypot(x - sx, y - sy);
     if (d < bd) { bd = d; best = n; }
   }
-  if (best) open(best); else close();
+  if (best) { open(best); return; }
+  // dept root tap → focus that constellation
+  for (let i = 0; i < deptList.length; i++) {
+    const [x, y] = w2s(deptList[i].ax, deptList[i].ay);
+    if (Math.hypot(x - sx, y - sy) < 26) { focusDeptAt(i); return; }
+  }
+  close();
 }
+
+/* ============================== departments ============================== */
+function deptCenter(d) {
+  let sx = 0, sy = 0;
+  for (const n of d.nodes) { sx += n.x; sy += n.y; }
+  const c = d.nodes.length || 1;
+  return [sx / c, sy / c];
+}
+function focusDeptAt(i) {
+  deptIdx = ((i % deptList.length) + deptList.length) % deptList.length;
+  const d = deptList[deptIdx];
+  const [cx2, cy2] = deptCenter(d);
+  camTarget = { x: cx2, y: cy2, z: Math.max(baseZoom() * 2.6, 1.5) };
+  document.getElementById('dept-name').textContent = d.label.split('').join(' ');
+  document.getElementById('dept-tag').textContent = d.tagline || '';
+  $('live').textContent = d.label + ' — ' + d.nodes.length + ' agents';
+  kick();
+}
+function overview() {
+  deptIdx = -1; close();
+  camTarget = { x: 0, y: 0, z: baseZoom() };
+  document.getElementById('dept-name').textContent = 'A L L';
+  document.getElementById('dept-tag').textContent = 'the whole company';
+  kick();
+}
+document.getElementById('dept-prev').addEventListener('click', () => focusDeptAt(deptIdx < 0 ? deptList.length - 1 : deptIdx - 1));
+document.getElementById('dept-next').addEventListener('click', () => focusDeptAt(deptIdx < 0 ? 0 : deptIdx + 1));
+document.getElementById('dept-name').addEventListener('click', overview);
+document.getElementById('dept-name').addEventListener('keydown', e => { if (e.key === 'Enter') overview(); });
+
+/* pill: Map / Chart — chart = same sky, statuses only (their DASHBOARDS/CHART pill) */
+const pillMap = document.getElementById('pill-map'), pillChart = document.getElementById('pill-chart');
+function setChart(on) {
+  chart = on;
+  pillMap.setAttribute('aria-pressed', String(!on));
+  pillChart.setAttribute('aria-pressed', String(on));
+  query = on ? '' : query;
+  nodes.forEach(n => n._hit = on ? (n.status === 'flag' || n.status === 'running') : false);
+  if (on) { query = 'status'; $('live').textContent = 'chart view — running and flagged lanes highlighted'; }
+  kick();
+}
+pillMap.addEventListener('click', () => setChart(false));
+pillChart.addEventListener('click', () => setChart(true));
 
 /* ============================== card ============================== */
 const $ = id => document.getElementById(id);
-const STATUS_TEXT = { ok: 'ok — last run clean', running: 'running now', flag: 'flagged — needs attention', dormant: 'dormant' };
-const STATUS_CSS = { ok: '#cfd3e8', running: 'var(--gold)', flag: 'var(--danger)', dormant: 'var(--ink-faint)' };
-
+const BADGE = {
+  ok:      { text: 'fully autonomous', color: 'var(--accent)' },
+  running: { text: 'running now',      color: 'var(--accent)' },
+  flag:    { text: 'needs attention',  color: 'var(--danger)' },
+  dormant: { text: 'dormant',          color: 'var(--ink-faint)' },
+};
 function open(n) {
   selected = n; focusIdx = nodes.indexOf(n);
   const d = depts[n.dept];
-  $('card-dept').textContent = d.label.toLowerCase() + ' · ' + (d.tagline || '');
-  $('card-dept').style.color = `hsl(${d.hue},35%,72%)`;
+  const b = BADGE[n.status] || BADGE.ok;
+  $('card-led').style.background = b.color;
+  $('card-badge').textContent = b.text;
+  $('card-badge').style.color = b.color;
+  $('card-dept').textContent = d.label.toLowerCase() + (d.tagline ? ' · ' + d.tagline : '');
   $('card-name').textContent = n.label;
-  $('card-status').textContent = STATUS_TEXT[n.status] || n.status;
-  $('card-dot').style.background = STATUS_CSS[n.status];
-  $('card-dot').style.borderRadius = n.status === 'flag' ? '1px' : '50%';
+  $('card-lede').textContent = n.replaces ? '' : 'A scheduled lane in the ' + d.label.toLowerCase() + ' constellation.';
+  $('card-cad').textContent = n.cadence || '';
   $('card-replaces-sect').style.display = n.replaces ? '' : 'none';
   $('card-replaces').textContent = n.replaces || '';
-  $('card-cadence-sect').style.display = n.cadence ? '' : 'none';
-  $('card-cadence').textContent = n.cadence || '';
+  ['rung-led', 'rung-assist', 'rung-auto'].forEach(id => $(id).classList.remove('on'));
+  $(n.status === 'dormant' ? 'rung-led' : 'rung-auto').classList.add('on');
   $('card-detail').textContent = n.detail || '—';
   $('card').classList.add('open');
-  $('live').textContent = `${n.label}, ${d.label}, ${STATUS_TEXT[n.status]}`;
-  camTarget = { x: n.x, y: n.y, z: Math.max(cam.z, 2.1) }; kick();
+  $('live').textContent = `${n.label}, ${d.label}, ${b.text}`;
+  camTarget = { x: n.x, y: n.y, z: Math.max(cam.z, 2.2) };
+  kick();
 }
 function close() { selected = null; $('card').classList.remove('open'); kick(); }
 document.querySelector('#card .close').addEventListener('click', close);
@@ -461,7 +606,7 @@ addEventListener('keydown', e => {
     return;
   }
   if (e.key === '/') { e.preventDefault(); search.classList.add('show'); search.focus(); return; }
-  if (e.key === 'Escape') { close(); return; }
+  if (e.key === 'Escape') { selected ? close() : overview(); return; }
   if (e.key === 'Enter' && focusIdx >= 0) { open(nodes[focusIdx]); return; }
   if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Tab'].includes(e.key)) {
     e.preventDefault();
@@ -478,7 +623,7 @@ addEventListener('keydown', e => {
 });
 search.addEventListener('input', () => {
   query = search.value.trim().toLowerCase();
-  nodes.forEach(n => n._hit = query && (n.label.toLowerCase().includes(query) || n.id.toLowerCase().includes(query) || (depts[n.dept].label.toLowerCase().includes(query))));
+  nodes.forEach(n => n._hit = query && (n.label.toLowerCase().includes(query) || n.id.toLowerCase().includes(query) || depts[n.dept].label.toLowerCase().includes(query)));
   kick();
 });
 
@@ -488,20 +633,16 @@ function enter() {
   if (entered) return; entered = true;
   intro.classList.add('gone');
   intro.setAttribute('aria-hidden', 'true');
-  if (!reduced) { cam.z = baseZoom() * .32; camTarget = { x: 0, y: 0, z: baseZoom() }; }
-  else { cam.z = baseZoom(); draw(performance.now()); }
+  if (!reduced) { cam.z = baseZoom() * .3; camTarget = { x: 0, y: 0, z: baseZoom() }; }
+  else { cam.z = baseZoom(); kick(); }
   setTimeout(() => intro.remove(), 1000);
   canvas.focus();
 }
 intro.addEventListener('click', enter);
 intro.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') enter(); });
-// arm the auto-enter only once the page is actually visible — a background tab
-// must not burn the intro (rAF is throttled there anyway)
-function armIntro() {
-  if (entered || document.hidden) return;
-  setTimeout(enter, 3400);
-}
+function armIntro() { if (entered || document.hidden) return; setTimeout(enter, 3400); }
 if (!reduced) { armIntro(); document.addEventListener('visibilitychange', armIntro); }
+else { /* reduced-motion enters from boot */ }
 
 /* ============================== boot ============================== */
 function fmtAge(iso) {
@@ -521,13 +662,14 @@ function hud() {
 function boot(data) {
   fleet = data;
   layout(); hud();
-  cam = { x: 0, y: 0, z: reduced ? baseZoom() : baseZoom() * .32 };
   resize();
-  if (!reduced) requestAnimationFrame(draw); else draw(performance.now());
-  if (reduced) enter();
+  cam = { x: 0, y: 0, z: reduced ? baseZoom() : baseZoom() * .3 };
+  overview(); camTarget = reduced ? null : camTarget;
+  if (reduced) { enter(); kick(); }
 }
+resize();
+if (!reduced) requestAnimationFrame(loop);   // the loop runs from t0, with or without data
 fetch('data/fleet.json').then(r => { if (!r.ok) throw 0; return r.json(); }).then(boot).catch(() => boot(SAMPLE));
-document.addEventListener('visibilitychange', () => { if (!document.hidden && !reduced) requestAnimationFrame(draw); });
 </script>
 </body>
 </html>
