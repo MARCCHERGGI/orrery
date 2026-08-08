@@ -253,7 +253,6 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* ============================== data ============================== */
 const SAMPLE = {
@@ -292,63 +291,93 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x14172b);
-scene.fog = new THREE.Fog(0x14172b, 900, 2200);
-const camera = new THREE.PerspectiveCamera(48, 1, 1, 4000);
-camera.position.set(0, 780, 1150);
+scene.fog = new THREE.Fog(0x14172b, 1300, 3200);
+const camera = new THREE.PerspectiveCamera(54, 1, 1, 4000);
+camera.position.set(0, 260, 1500);
 
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true; controls.dampingFactor = .06;
-controls.maxPolarAngle = Math.PI * .49;
-controls.minDistance = 60; controls.maxDistance = 1600;
-controls.target.set(0, 40, 0);
-
-scene.add(new THREE.AmbientLight(0x8a8fc0, .55));
-const key = new THREE.DirectionalLight(0xf0eeff, .9); key.position.set(300, 700, 200); scene.add(key);
-const rim = new THREE.DirectionalLight(0x8be2b9, .25); rim.position.set(-400, 300, -500); scene.add(rim);
-
-const camGoal = { pos: new THREE.Vector3(0, 780, 1150), tgt: new THREE.Vector3(0, 40, 0), active: false };
+/* the diorama rig — the camera lives INSIDE the room; mouse parallax sells the depth */
+const camBase = new THREE.Vector3(0, 260, 810);
+const tgtBase = new THREE.Vector3(0, 170, -350);
+const camGoal = { pos: camBase.clone(), tgt: tgtBase.clone(), active: false };
+const par = { x: 0, y: 0, sx: 0, sy: 0 };
+addEventListener('pointermove', e => {
+  par.x = (e.clientX / innerWidth - .5) * 2;
+  par.y = (e.clientY / innerHeight - .5) * 2;
+});
+addEventListener('wheel', e => {
+  const dir = tgtBase.clone().sub(camBase).normalize();
+  camGoal.pos.addScaledVector(dir, -e.deltaY * .45);
+  camGoal.pos.z = Math.min(camGoal.pos.z, 830);
+  if (camGoal.pos.distanceTo(camGoal.tgt) < 140) camGoal.pos.copy(camGoal.tgt).addScaledVector(dir, -140);
+  camGoal.active = true;
+}, { passive: true });
 function flyTo(px, py, pz, tx, ty, tz) { camGoal.pos.set(px, py, pz); camGoal.tgt.set(tx, ty, tz); camGoal.active = true; }
 
-/* starfield sky */
+scene.add(new THREE.AmbientLight(0x8a8fc0, .6));
+const key = new THREE.DirectionalLight(0xf0eeff, .8); key.position.set(200, 600, 500); scene.add(key);
+const rim = new THREE.DirectionalLight(0x8be2b9, .25); rim.position.set(-400, 300, -500); scene.add(rim);
+
+/* THE ROOM — the screen is the open face of a box; everything lives inside it */
+const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-depth, open front at z=+depth
 {
-  const g = new THREE.BufferGeometry();
-  const N = 1600, arr = new Float32Array(N * 3);
+  const gridTex = (dots) => {
+    const c = document.createElement('canvas'); c.width = c.height = 512;
+    const g = c.getContext('2d');
+    g.fillStyle = '#171a31'; g.fillRect(0, 0, 512, 512);
+    if (dots) {
+      g.fillStyle = 'rgba(150,158,225,.13)';
+      for (let y = 24; y < 512; y += 48) for (let x = 24; x < 512; x += 48) { g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill(); }
+    } else {
+      g.strokeStyle = 'rgba(140,150,220,.15)'; g.lineWidth = 1;
+      for (let i = 0; i <= 16; i++) {
+        g.beginPath(); g.moveTo(i * 32, 0); g.lineTo(i * 32, 512); g.stroke();
+        g.beginPath(); g.moveTo(0, i * 32); g.lineTo(512, i * 32); g.stroke();
+      }
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    return t;
+  };
+  const floorT = gridTex(false); floorT.repeat.set(8, 11);
+  const wallT = gridTex(true); wallT.repeat.set(8, 3);
+  const backT = gridTex(true); backT.repeat.set(6, 3);
+  const mat = (t) => new THREE.MeshStandardMaterial({ map: t, color: 0xffffff, roughness: .88, metalness: .18 });
+
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2), mat(floorT));
+  floor.rotation.x = -Math.PI / 2; scene.add(floor);
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2), new THREE.MeshStandardMaterial({ color: 0x10132a, roughness: .95 }));
+  ceil.rotation.x = Math.PI / 2; ceil.position.y = ROOM.h; scene.add(ceil);
+  const left = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.depth * 2, ROOM.h), mat(wallT));
+  left.rotation.y = Math.PI / 2; left.position.set(-ROOM.hw, ROOM.h / 2, 0); scene.add(left);
+  const right = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.depth * 2, ROOM.h), mat(wallT));
+  right.rotation.y = -Math.PI / 2; right.position.set(ROOM.hw, ROOM.h / 2, 0); scene.add(right);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.h), mat(backT));
+  back.position.set(0, ROOM.h / 2, -ROOM.depth); scene.add(back);
+
+  /* neon edge strips where surfaces meet — the box reads as a box */
+  const strip = (w, x, y, z, rotY) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2.6, 2.6), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .5 }));
+    m.position.set(x, y, z); m.rotation.y = rotY || 0; scene.add(m);
+  };
+  strip(ROOM.depth * 2, -ROOM.hw, 1.4, 0, Math.PI / 2);
+  strip(ROOM.depth * 2, ROOM.hw, 1.4, 0, Math.PI / 2);
+  strip(ROOM.hw * 2, 0, 1.4, -ROOM.depth);
+  strip(ROOM.hw * 2, 0, ROOM.h - 1.4, -ROOM.depth);
+  const vstrip = (x) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(2.6, ROOM.h, 2.6), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .38 }));
+    m.position.set(x, ROOM.h / 2, -ROOM.depth); scene.add(m);
+  };
+  vstrip(-ROOM.hw); vstrip(ROOM.hw);
+
+  /* dust motes drifting in the volume — depth cue */
+  const N = 320, g = new THREE.BufferGeometry(), arr = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) {
-    const v = new THREE.Vector3().randomDirection().multiplyScalar(1800 + Math.random() * 800);
-    arr[i * 3] = v.x; arr[i * 3 + 1] = Math.abs(v.y) * .7 + 60; arr[i * 3 + 2] = v.z;
+    arr[i * 3] = (Math.random() * 2 - 1) * ROOM.hw * .95;
+    arr[i * 3 + 1] = Math.random() * ROOM.h;
+    arr[i * 3 + 2] = -Math.random() * ROOM.depth;
   }
   g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
-  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xdfe2f8, size: 2.2, sizeAttenuation: true, transparent: true, opacity: .8 })));
-}
-
-/* THE BASE — a clear ground the whole ecosystem stands on */
-const BASE_R = 640;
-{
-  const grid = document.createElement('canvas'); grid.width = grid.height = 1024;
-  const g2 = grid.getContext('2d');
-  g2.fillStyle = '#171a31'; g2.fillRect(0, 0, 1024, 1024);
-  g2.strokeStyle = 'rgba(140,150,220,.16)'; g2.lineWidth = 1;
-  for (let i = 0; i <= 32; i++) {
-    g2.beginPath(); g2.moveTo(i * 32, 0); g2.lineTo(i * 32, 1024); g2.stroke();
-    g2.beginPath(); g2.moveTo(0, i * 32); g2.lineTo(1024, i * 32); g2.stroke();
-  }
-  const tex = new THREE.CanvasTexture(grid);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(10, 10);
-  const disc = new THREE.Mesh(
-    new THREE.CircleGeometry(BASE_R, 96),
-    new THREE.MeshStandardMaterial({ map: tex, color: 0xffffff, roughness: .85, metalness: .25 })
-  );
-  disc.rotation.x = -Math.PI / 2; scene.add(disc);
-  const edge = new THREE.Mesh(
-    new THREE.TorusGeometry(BASE_R, 2.4, 8, 128),
-    new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .55 })
-  );
-  edge.rotation.x = Math.PI / 2; edge.position.y = 1; scene.add(edge);
-  const under = new THREE.Mesh(
-    new THREE.CylinderGeometry(BASE_R, BASE_R * .92, 26, 96),
-    new THREE.MeshStandardMaterial({ color: 0x10132a, roughness: .9 })
-  );
-  under.position.y = -14; scene.add(under);
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xdfe2f8, size: 1.6, transparent: true, opacity: .35 })));
 }
 
 /* label sprites */
@@ -375,7 +404,20 @@ function makeLabel(text, { size = 64, serif = false, hue = null, sub = '', scale
   const m = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
   const s = new THREE.Sprite(m);
   s.scale.set(c.width * scale, c.height * scale, 1);
+  s.userData.canvas = c;
   return s;
+}
+/* a label painted ON a wall (not billboarded) — the poster look from the reference */
+function makePlate(text, opts) {
+  const spr = makeLabel(text, opts);
+  const c = spr.userData.canvas;
+  const tex = spr.material.map;
+  const scale = opts.scale ?? .42;
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(c.width * scale, c.height * scale),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
+  );
+  return mesh;
 }
 
 /* ============================== build world from data ============================== */
@@ -406,36 +448,50 @@ function buildWorld() {
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
     brain.add(new THREE.Points(g, new THREE.PointsMaterial({ vertexColors: true, size: 2.6, transparent: true, opacity: .95 })));
     const glow = new THREE.PointLight(0xbfa7ff, 1.1, 500); glow.position.y = 0; brain.add(glow);
-    brain.position.set(0, 120, 0);
+    brain.position.set(0, 300, -640);
     const lbl = makeLabel('the brain', { size: 44, serif: true }); lbl.position.set(0, 74, 0); brain.add(lbl);
   }
 
+  /* zones live along the walls — 3 left, 2 back, 3 right, like rooms in the reference */
   const D = deptList;
-  const ringR = 430;
+  const SLOTS = [
+    { x: -450, z: -470, nx: 1, nz: 0 }, { x: -450, z: -40, nx: 1, nz: 0 }, { x: -450, z: 390, nx: 1, nz: 0 },
+    { x: -255, z: -650, nx: 0, nz: 1 }, { x: 255, z: -650, nx: 0, nz: 1 },
+    { x: 450, z: -470, nx: -1, nz: 0 }, { x: 450, z: -40, nx: -1, nz: 0 }, { x: 450, z: 390, nx: -1, nz: 0 },
+  ];
   D.forEach((d, i) => {
-    const a = -Math.PI / 2 + i * (2 * Math.PI / D.length);
-    d.angle = a;
-    d.cx = Math.cos(a) * ringR; d.cz = Math.sin(a) * ringR;
+    const s = SLOTS[i % SLOTS.length];
+    d.cx = s.x; d.cz = s.z; d.nx = s.nx; d.nz = s.nz;
     const zone = new THREE.Group(); zone.position.set(d.cx, 0, d.cz); world.add(zone); d.groupObj = zone;
 
-    /* district glow disc on the base */
+    /* district glow on the floor */
     const disc = new THREE.Mesh(
-      new THREE.CircleGeometry(150, 48),
-      new THREE.MeshBasicMaterial({ color: hsl(d.hue, .55, .5), transparent: true, opacity: .10, depthWrite: false })
+      new THREE.CircleGeometry(155, 48),
+      new THREE.MeshBasicMaterial({ color: hsl(d.hue, .55, .5), transparent: true, opacity: .11, depthWrite: false })
     );
     disc.rotation.x = -Math.PI / 2; disc.position.y = .6; disc.userData = { kind: 'zone', dept: d.id };
     zone.add(disc); zoneDiscs.push(disc);
 
-    const zl = makeLabel(d.label, { size: 78, serif: true, sub: d.tagline || '' });
-    zl.position.set(0, 168, 0); zone.add(zl);
+    /* zone nameplate painted on the wall behind the district */
+    const zl = makePlate(d.label, { size: 78, serif: true, sub: d.tagline || '', hue: d.hue, scale: .5 });
+    /* pushed flush to the wall plane, rotated to face into the room */
+    if (s.nx === 1) { zl.position.set(-ROOM.hw - d.cx + 3, 320, 0); zl.rotation.y = Math.PI / 2; }
+    else if (s.nx === -1) { zl.position.set(ROOM.hw - d.cx - 3, 320, 0); zl.rotation.y = -Math.PI / 2; }
+    else { zl.position.set(0, 320, -ROOM.depth - d.cz + 3); }
+    zone.add(zl);
+    d.plate = zl; zl.userData = { kind: 'zone', dept: d.id };
+    zoneDiscs.push(zl);
 
-    /* checkpoints — big monuments standing on the base */
+    /* checkpoints — monuments standing on the floor along the wall */
     const gs = groupsByDept[d.id] || [];
     d.hubs = {};
     gs.forEach((g, gi) => {
-      const ga = a + ((gi - (gs.length - 1) / 2) * (Math.PI * 2 / Math.max(6, gs.length * 2.6)));
-      const hr = 86;
-      const hx = Math.cos(ga) * hr, hz = Math.sin(ga) * hr;
+      const tx = s.nx === 0 ? 1 : 0, tz = s.nx === 0 ? 0 : 1;   // wall tangent
+      const span = Math.min(300, gs.length * 95);
+      const along = gs.length > 1 ? (gi / (gs.length - 1) - .5) * span : 0;
+      const stagger = (gi % 2) * 58 - 22;
+      const hx = tx * along + s.nx * stagger;
+      const hz = tz * along + s.nz * stagger;
       const H = 64 + (g.id.length % 3) * 10;
       const pillar = new THREE.Mesh(
         new THREE.CylinderGeometry(7, 10, H, 24),
@@ -470,8 +526,8 @@ function buildWorld() {
 
       /* beam: checkpoint cap → brain */
       const from = new THREE.Vector3(d.cx + hx, H + 8, d.cz + hz);
-      const to = new THREE.Vector3(0, 120, 0);
-      const mid = from.clone().lerp(to, .5); mid.y += 90;
+      const to = new THREE.Vector3(0, 300, -640);
+      const mid = from.clone().lerp(to, .5); mid.y += 110;
       const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
       const pts = curve.getPoints(40);
       const bg = new THREE.BufferGeometry().setFromPoints(pts);
@@ -552,12 +608,14 @@ function animateAgents(t) {
 function frame(now) {
   const t = now || performance.now();
   if (tour) tourStep(t);
-  if (camGoal.active) {
-    camera.position.lerp(camGoal.pos, .06);
-    controls.target.lerp(camGoal.tgt, .08);
-    if (camera.position.distanceTo(camGoal.pos) < 2) camGoal.active = false;
-  }
-  controls.update();
+  camBase.lerp(camGoal.pos, .06);
+  tgtBase.lerp(camGoal.tgt, .08);
+  /* mouse parallax around the base position — this is what makes the screen read as depth */
+  const pk = reel ? 0 : (level === 0 ? 1 : .45);
+  par.sx += (par.x - par.sx) * .05;
+  par.sy += (par.y - par.sy) * .05;
+  camera.position.set(camBase.x + par.sx * 85 * pk, camBase.y - par.sy * 48 * pk, camBase.z);
+  camera.lookAt(tgtBase);
   if (!reduced) brain.rotation.y = t * .00012;
   for (const d of deptList) if (d.hubs) for (const h of Object.values(d.hubs)) {
     if (!reduced && h.ring) { h.ring.rotation.z = t * .0004 * h.ring.userData.spin; h.ring.position.y = h.ring.userData.baseY + Math.sin(t * .0009 + h.ring.userData.spin * 9) * 2.5; }
@@ -588,18 +646,16 @@ function setLevel(lv, di, gid) {
   level = lv; deptIdx = di === undefined ? deptIdx : di; groupId = gid || null;
   const focus = level >= 1 ? deptList[deptIdx] : null;
   if (level === 0) {
-    flyTo(0, 780, 1150, 0, 40, 0);
+    flyTo(0, 260, 810, 0, 170, -350);
     setDeptnav('A L L', 'the whole ecosystem');
   } else if (level === 1) {
     const d = focus;
-    const out = 1.95;
-    flyTo(d.cx * out, 340, d.cz * out, d.cx, 50, d.cz);
+    flyTo(d.cx + d.nx * 420, 240, d.cz + d.nz * 420, d.cx, 90, d.cz);
     setDeptnav(d.label.split('').join(' '), d.tagline || '');
     $('live').textContent = d.label + ' zone — ' + d.nodes.length + ' agents, ' + Object.keys(d.hubs).length + ' checkpoints';
   } else if (level === 2) {
     const d = focus, hub = d.hubs[groupId];
-    const dir = new THREE.Vector2(hub.x, hub.z).normalize();
-    flyTo(hub.x + dir.x * 130, hub.y + 60, hub.z + dir.y * 130, hub.x, hub.y - 14, hub.z);
+    flyTo(hub.x + d.nx * 180, hub.y + 46, hub.z + d.nz * 180, hub.x, hub.y - 14, hub.z);
     setDeptnav(d.label.split('').join(' '), hub.label);
     openGroup(d, hub);
   }
@@ -691,10 +747,7 @@ function open(n) {
   $('card').classList.add('open');
   $('live').textContent = `${n.label}, ${d.label}, ${b.text}`;
   const hub = d.hubs[n.group] || Object.values(d.hubs)[0];
-  if (hub) {
-    const dir = new THREE.Vector2(hub.x, hub.z).normalize();
-    flyTo(hub.x + dir.x * 110, hub.y + 40, hub.z + dir.y * 110, hub.x, hub.y - 20, hub.z);
-  }
+  if (hub) flyTo(hub.x + d.nx * 130, hub.y + 26, hub.z + d.nz * 130, hub.x, hub.y - 18, hub.z);
   kick();
 }
 
@@ -753,7 +806,8 @@ search.addEventListener('input', () => {
 
 /* ============================== reel mode ============================== */
 function tourKeys() {
-  const K = [{ t: 0, pos: [0, 880, 1320], tgt: [0, 40, 0] }];
+  /* fly IN through the open face, visit two rooms, pull back out */
+  const K = [{ t: 0, pos: [0, 300, 1560], tgt: [0, 200, -350] }];
   let t = 4200;
   const stops = [];
   const ig = deptList.find(d => Object.keys(d.hubs || {}).some(g => /instagram/.test(g)));
@@ -762,19 +816,18 @@ function tourKeys() {
   if (selfD) stops.push([selfD, 'healing']);
   if (!stops.length && deptList[0]) stops.push([deptList[0], Object.keys(deptList[0].hubs)[0]]);
   for (const [d, gid] of stops) {
-    K.push({ t, pos: [d.cx * 1.95, 340, d.cz * 1.95], tgt: [d.cx, 50, d.cz], act: () => { close(); setLevelSilent(1, deptList.indexOf(d)); } });
+    K.push({ t, pos: [d.cx + d.nx * 420, 240, d.cz + d.nz * 420], tgt: [d.cx, 90, d.cz], act: () => { close(); setLevelSilent(1, deptList.indexOf(d)); } });
     t += 5200;
     const hub = d.hubs[gid];
     if (hub) {
-      const dir = new THREE.Vector2(hub.x, hub.z).normalize();
-      K.push({ t, pos: [hub.x + dir.x * 130, hub.y + 60, hub.z + dir.y * 130], tgt: [hub.x, hub.y - 14, hub.z], act: () => setLevelSilent(2, deptList.indexOf(d), gid) });
+      K.push({ t, pos: [hub.x + d.nx * 180, hub.y + 46, hub.z + d.nz * 180], tgt: [hub.x, hub.y - 14, hub.z], act: () => setLevelSilent(2, deptList.indexOf(d), gid) });
       t += 4800;
       const star = d.nodes.find(n => n.group === gid && n.replaces) || d.nodes.find(n => n.group === gid);
-      if (star) { K.push({ t, pos: [hub.x + dir.x * 90, hub.y + 30, hub.z + dir.y * 90], tgt: [hub.x, hub.y - 20, hub.z], act: () => open(star) }); t += 5600; }
+      if (star) { K.push({ t, pos: [hub.x + d.nx * 125, hub.y + 24, hub.z + d.nz * 125], tgt: [hub.x, hub.y - 18, hub.z], act: () => open(star) }); t += 5600; }
     }
   }
-  K.push({ t, pos: [0, 780, 1150], tgt: [0, 40, 0], act: () => { close(); setLevelSilent(0); } });
-  K.push({ t: t + 5000, pos: [0, 940, 1420], tgt: [0, 40, 0] });
+  K.push({ t, pos: [0, 260, 810], tgt: [0, 170, -350], act: () => { close(); setLevelSilent(0); } });
+  K.push({ t: t + 5000, pos: [0, 290, 1350], tgt: [0, 190, -350] });
   return K;
 }
 function setLevelSilent(lv, di, gid) { setLevel(lv, di, gid); camGoal.active = false; }
@@ -798,17 +851,17 @@ function tourStep(now) {
   const a = K[i], b = K[Math.min(i + 1, K.length - 1)];
   if (a.act && !a.done) { a.done = true; a.act(); }
   const u = smooth(Math.min(1, (el - a.t) / Math.max(1, b.t - a.t)));
-  camera.position.set(
+  camBase.set(
     a.pos[0] + (b.pos[0] - a.pos[0]) * u,
     a.pos[1] + (b.pos[1] - a.pos[1]) * u,
     a.pos[2] + (b.pos[2] - a.pos[2]) * u
   );
-  controls.target.set(
+  tgtBase.set(
     a.tgt[0] + (b.tgt[0] - a.tgt[0]) * u,
     a.tgt[1] + (b.tgt[1] - a.tgt[1]) * u,
     a.tgt[2] + (b.tgt[2] - a.tgt[2]) * u
   );
-  camGoal.active = false;
+  camGoal.pos.copy(camBase); camGoal.tgt.copy(tgtBase);
 }
 $('rec').addEventListener('click', startReel);
 
@@ -818,7 +871,7 @@ function enter() {
   if (entered) return; entered = true;
   intro.classList.add('gone');
   intro.setAttribute('aria-hidden', 'true');
-  if (!reduced) { camera.position.set(0, 1100, 1900); flyTo(0, 780, 1150, 0, 40, 0); }
+  if (!reduced) { camBase.set(0, 280, 1650); flyTo(0, 260, 810, 0, 170, -350); }
   setTimeout(() => intro.remove(), 1000);
   canvas.focus();
 }
