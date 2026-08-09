@@ -32,6 +32,11 @@ other cycle should ship something a viewer can SEE improved.
 6. **VERIFY** — the bar, non-negotiable:
    - synthetic frames clean (`window.__step` loop, zero `__errs`)
    - screenshots READ (not just taken) — overview + the changed surface
+   - **force frames before EVERY screenshot**: `for(k=1..30) __step(performance.now()+k*16)`.
+     A background-throttled tab pauses rAF and serves a STALE canvas — the
+     screenshot shows an old frame (e.g. pre-morph orb) while JS state reads
+     healthy. Three false alarms on 2026-08-09 from this alone. Probe state
+     (`__orb`, `__lvl`, `location.search`) in the SAME eval, never a separate one.
    - tour steps clean through exit
    - after deploy: live SHA256 == local SHA256, redirects off
 7. **SHIP** — deploy-lock acquire → `vercel deploy --prod --yes` → hash check →
