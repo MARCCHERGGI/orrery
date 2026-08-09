@@ -1748,6 +1748,23 @@ const BADGE = {
 const STATUS_SHORT = { ok: 'ok', running: 'running', flag: 'flagged', dormant: 'dormant' };
 const DOT = { ok: '#e9e7f4', running: '#8be2b9', flag: '#e08a7c', dormant: 'rgba(140,141,171,.5)' };
 
+/* relative time from the scheduler's real per-lane timestamps */
+const relAgo = t => {
+  const s = (Date.now() - new Date(t)) / 1000;
+  if (isNaN(s) || s < 0) return null;
+  if (s < 90) return 'just now';
+  if (s < 5400) return Math.round(s / 60) + ' min ago';
+  if (s < 129600) return Math.round(s / 3600) + ' h ago';
+  return Math.round(s / 86400) + ' d ago';
+};
+const relIn = t => {
+  const s = (new Date(t) - Date.now()) / 1000;
+  if (isNaN(s) || s <= 0) return null;
+  if (s < 5400) return 'in ' + Math.round(s / 60) + ' min';
+  if (s < 129600) return 'in ' + Math.round(s / 3600) + ' h';
+  return 'in ' + Math.round(s / 86400) + ' d';
+};
+
 function open(n) {
   selected = n; focusIdx = nodes.indexOf(n);
   const d = depts[n.dept];
@@ -1763,7 +1780,10 @@ function open(n) {
   $('card-replaces').textContent = n.replaces || '';
   ['rung-led', 'rung-assist', 'rung-auto'].forEach(id => $(id).classList.remove('on'));
   $(n.status === 'dormant' ? 'rung-led' : 'rung-auto').classList.add('on');
-  $('card-detail').textContent = n.detail || '—';
+  const when = [];
+  if (n.last) { const r = relAgo(n.last); if (r) when.push('ran ' + r); }
+  if (n.next) { const r = relIn(n.next); if (r) when.push('next ' + r); }
+  $('card-detail').textContent = (n.detail || '—') + (when.length ? ' · ' + when.join(' · ') : '');
   $('card').classList.add('open');
   $('live').textContent = `${n.label}, ${d.label}, ${b.text}`;
   const hub = d.hubs[n.group] || Object.values(d.hubs)[0];

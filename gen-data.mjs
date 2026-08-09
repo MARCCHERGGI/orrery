@@ -3,6 +3,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const src = process.argv[2] || path.join(process.env.USERPROFILE || process.env.HOME, '.claude/state/fleet-health.md');
@@ -113,6 +114,33 @@ const CADENCE = {
   ClaudeIgLocalTick: 'every 15 min',
 };
 
+// per-lane last/next run times straight from the scheduler (best-effort;
+// lanes that aren't schtasks simply get no timestamps)
+const parseCsvLine = l => {
+  const out = []; let cur = '', inQ = false;
+  for (let i = 0; i < l.length; i++) {
+    const ch = l[i];
+    if (inQ) { if (ch === '"') { if (l[i + 1] === '"') { cur += '"'; i++; } else inQ = false; } else cur += ch; }
+    else if (ch === '"') inQ = true;
+    else if (ch === ',') { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur); return out;
+};
+const sched = {};
+try {
+  const csv = execSync('schtasks /query /fo CSV /v', { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+  const toIso = s => { if (!s || s === 'N/A') return null; const d = new Date(s); return isNaN(d) ? null : d.toISOString(); };
+  for (const line of csv.split('\n')) {
+    if (!line.startsWith('"')) continue;
+    const f = parseCsvLine(line.trim());
+    if (f.length < 7 || f[1] === 'TaskName') continue;
+    const name = f[1].replace(/^\\/, '');
+    const entry = { last: toIso(f[5]), next: toIso(f[2]) };
+    if (!sched[name] || (entry.last && !sched[name].last)) sched[name] = entry;
+  }
+} catch { /* no scheduler access — fleet still exports without timestamps */ }
+
 const lines = text.split('\n').filter(l => /^- [✓·✗] /.test(l.trim()));
 const nodes = [];
 for (const raw of lines) {
@@ -137,6 +165,8 @@ for (const raw of lines) {
     detail: result.trim(),
     ...(CADENCE[id] ? { cadence: CADENCE[id] } : {}),
     ...(REPLACES[id] ? { replaces: REPLACES[id] } : {}),
+    ...(sched[id]?.last ? { last: sched[id].last } : {}),
+    ...(sched[id]?.next ? { next: sched[id].next } : {}),
     mass: REPLACES[id] ? 3 : status === 'dormant' ? 1 : 2,
   });
 }
