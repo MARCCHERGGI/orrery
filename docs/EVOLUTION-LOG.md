@@ -285,3 +285,20 @@ next-observe: after the next hourly ClaudeOrreryRefresh fires (~:00), watch an
 idle open tab of the PROD site actually rebuild to the new export (the full
 loop: schtask -> deploy -> page self-refreshes). Then round-2 backlog: DEPTH
 contact shadows, portrait tap measure, or the instancing plan.
+
+## 18 · 2026-08-09 · systemic · DEPTH (shadows)
+scores: U9 L8 D8->9 De9 A10 P8
+shipped: shadows actually render. The pipeline looked wired (shadowMap on, key
+light castShadow, floor/walls receiveShadow, pillars/agents cast) but the
+DirectionalLight's shadow camera was never sized - the three.js default is a
++-5-unit ortho box in a +-620-unit room, so no visible shadow ever rendered.
+Sized it to the room (l/r +-1000, t 1200, b -1000, near 100 far 2400), mapSize
+2048, bias -5e-4. Monuments and agent clusters now sit in soft contact pools -
+grounding the portal illusion has been missing since v8.
+evidence: before/after screenshots at the same frozen frame read side by side -
+contact pools visible at pillar bases after, floor/wall legibility unchanged;
+draw calls 376->375 (shadow pass existed both sides - it was just aimed at a
+10-unit box); 11s sweep + full tour zero __errs; live hash==local redirects-off.
+next-observe: the top-of-hour full-autonomy check (refresh task -> deploy ->
+open prod tab self-rebuilds) - next cycle straddles 08:00 local. Then portrait
+tap measure or the instancing plan.
