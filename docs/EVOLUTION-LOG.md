@@ -208,3 +208,18 @@ evidence: frozen mid-dive screenshot read: "Telegram Bridge - 17m", "Fleet Warde
 sweep + 2 full tours zero __errs; live hash==local redirects-off.
 next-observe: does the ledger crowd the centre at zone level? PERF pass (draw calls
 +13 sprites now) with label sprite merge, or LEGIBLE at ALL distance.
+
+## 14 · 2026-08-09 · systemic · USEFUL
+scores: U9 L8 D8 De9 A9 P8
+shipped: ledger plates are clickable - tapping a floor plate opens that lane's card
+(ledgerPlates raycast in pointerup, after tiles, before zone discs; downward rays
+terminate at the floor so ordering is safe in practice). Crowding check PASSED
+first: at zone level the ledger sits behind the camera, zone views unchanged.
+Zone-level draw calls measured 158 (frustum culling keeps zones light).
+evidence: probe-click grid on the live-layout centre hit a plate at (580,500) and
+opened "Telegram Bridge - REQUEST_REFUSED (running) - ran 25 min ago" - the
+freshest lane, exactly what sits at spiral centre; zone screenshot read (no
+crowding); 11s sweep + 2 full tours zero __errs; live hash==local redirects-off.
+next-observe: PERF full-room measure at ALL (was 352 + 13 plate sprites now).
+Candidates: monument-trio instancing with a careful plan, or LEGIBLE at ALL
+distance, or a mobile re-check of the new clickable surfaces (tap targets).
