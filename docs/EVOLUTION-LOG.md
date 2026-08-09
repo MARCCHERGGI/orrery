@@ -302,3 +302,23 @@ draw calls 376->375 (shadow pass existed both sides - it was just aimed at a
 next-observe: the top-of-hour full-autonomy check (refresh task -> deploy ->
 open prod tab self-rebuilds) - next cycle straddles 08:00 local. Then portrait
 tap measure or the instancing plan.
+
+## 19 · 2026-08-09 · research · (no site change)
+scores: unchanged (U9 L8 D9 De9 A10 P8)
+shipped: docs only - no deploy. (a) Pipeline finding: the 11:00Z hourly refresh
+DID fire and deploy ("7:00:15 deployed" in refresh.log); the page's "data 38 min
+old" is honest warden-audit age, not staleness - apparent age = warden lag
+(<=15 min) + hourly refresh cadence, worst case ~75 min. Not a bug. (b) The
+armed prod tab (export 10:48Z recorded in window.__exportAt0) must sit untouched
+until the 08:00 local deploy for the end-to-end self-rebuild proof, which makes
+ALL browser verification impossible this cycle - so no site change was shipped
+rather than shipping one unverified. (c) Wrote docs/INSTANCING-PLAN.md: the
+de-risked two-cycle route (rings+caps first 87->31 calls, pillars behind an
+instanceId remap second), the instanceColor breathe fallback, and the 29/29
+click verify bar.
+evidence: refresh.log tail read; export stamp cross-checked against warden
+cadence; plan file committed.
+next-observe: NEXT CYCLE (straddles 08:00): check window.__exportAt0 vs the
+armed tab's current fleet.meta.exported + header age - if the tab rebuilt
+itself, the whole loop (schtask -> deploy -> self-refresh) is closed. Then
+portrait tap measure or instancing cycle A.
