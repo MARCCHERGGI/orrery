@@ -195,6 +195,7 @@
   @media (max-width: 900px) { #legend { display: none; } }
 
   body.reel header, body.reel #deptnav, body.reel #legend, body.reel #crumbs, body.reel #search { display: none; }
+  body.reel #card { opacity: 0; pointer-events: none; } /* level-2 opens the group card — footage stays clean */
   #live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>
 </head>
@@ -1604,7 +1605,10 @@ function frame(now) {
   }
   composer.render();
 }
-renderer.setAnimationLoop(reduced ? null : (t) => { try { frame(t); } catch (e) { /* a bad frame must not stop the world */ } });
+const liveLoop = (t) => { try { frame(t); } catch (e) { /* a bad frame must not stop the world */ } };
+renderer.setAnimationLoop(reduced ? null : liveLoop);
+/* verification: freeze the live loop so __step-driven state can be captured deterministically */
+window.__hold = (v) => { renderer.setAnimationLoop(v ? null : (reduced ? null : liveLoop)); return v ? 'held' : 'released'; };
 const kick = () => { if (reduced) { try { frame(performance.now()); } catch (e) {} } };
 window.__step = (ms) => { try { frame(ms ?? performance.now()); } catch (e) { return String(e); } return 'ok'; };
 
