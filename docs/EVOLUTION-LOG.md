@@ -417,3 +417,9 @@ shipped: (a) CORE contact-shadow pool — radial-gradient decal (FIB(4)·2 plane
 evidence: node --check clean · close-up v41-pool.png read (also live-proved panel age columns: 18d/51d/74d amber) · Scope Weekly card now reads "NEVER_RAN" with no invented age · header ◔ 90 → ◔ 88 (sentinel lanes no longer counted) · sweep + tour {reel:false, errs:0} · live SHA256 == local (C87DF229…).
 finding: the verification bar keeps paying — three of the last six cycles found a real defect only because a screenshot got READ at close range.
 next-observe: gen-data could drop the sentinel at source too (display now guards regardless). Parked: instancing cycle B.
+
+## 32 · 2026-08-09 · systemic · VISUAL (Marco steer encoded)
+scores: U10 L9 D9 De9 A9 P9
+shipped: Marco's live steer — "make it fast, efficient and awesome looking" — written into EVOLUTION.md as a co-primary visual axis (at least every other cycle ships a visible look upgrade). This cycle's visible upgrade: every zone's luminous wall now bleeds its hue onto the floor — 8 additive gradient strips (F(6)×F(3), shared alpha texture, per-zone tint, opacity .38) at wall bases, oriented by slot normal. The floor stops being flat navy at the edges; the room's light behaves like light.
+evidence: node --check clean · v42-bleed.png (close) + v42-bleed-home.png (home) read — hue pools at GROWTH/MARKETING/DATA/WORLD-CUP bases, gradient falls room-ward, strongest near walls · __perf 330 calls (+8, as budgeted; was 322) · sweep + tour {reel:false, errs:0} · live SHA256 == local (94EAC4E9…).
+next-observe: next visual candidates ranked — (1) monument ring/cap specular pop (cheap material upgrade), (2) orb chroma pulse tied to running count, (3) starfield density/parallax layer. Hold perf ≤ ~350 calls. Instancing cycle B still parked as the perf reserve.
