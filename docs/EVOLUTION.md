@@ -72,9 +72,12 @@ Round 2 (seeded iter 17 from accumulated next-observes):
 2. **MARCO DECISION — repo link**: the site is OSS and the repo is the IG
    comment magnet, but nothing on the page points to it. Needs Marco-authored
    placement/copy; do not auto-ship. Hand him the option.
-3. **Portrait tile tap targets** (USEFUL, mobile): tiles are small at 390px.
-   Search now covers card access, so this is polish — measure real tap accuracy
-   before building anything.
+3. ~~Portrait tile tap targets~~ CLOSED iter 26, RULES-OUT: frozen-frame probe
+   at 390×844 hit 4/5 tile centers exactly (Affiliate Tick / Hundred Today /
+   Stage Batch; gap tap leaned to the adjacent cell as designed). Hit mapping is
+   correct; earlier "wrong tile" readings were the probe racing idle camera
+   drift. Only the far receding-edge column is tight — inherent to an angled
+   wall; ⌕ search covers precision access. No fix needed.
 4. **Monument trio instancing** (PERF): 29× pillar/ring/cap → 3 InstancedMesh,
    ~379→~300 est. Deferred twice for interaction risk — needs a careful plan
    (per-instance emissive via instanceColor, raycast instanceId remap).
