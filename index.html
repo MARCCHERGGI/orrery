@@ -319,6 +319,13 @@ camera.position.set(0, 260, 1500);
 
 /* cinematic pipeline — bloom is what separates "a render" from "footage".
    Threshold .82 keeps text crisp; only true emitters glow (sun, orb, neon, pulses). */
+window.__perf = (ms) => {   /* draw calls + triangles across ONE full composer frame */
+  renderer.info.autoReset = false; renderer.info.reset();
+  window.__step(ms ?? performance.now());
+  const r = JSON.stringify({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geoms: renderer.info.memory.geometries, tex: renderer.info.memory.textures });
+  renderer.info.autoReset = true;
+  return r;
+};
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .38, .45, .82);
@@ -762,7 +769,7 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = [], pillarAnims = [], terms = [], junRings = [], tilePanels = [];
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, pillarAnims = [], terms = [], junRings = [], tilePanels = [];
 const brain = new THREE.Group(); scene.add(brain);
 
 const BEAM_OP = .38;
@@ -1037,7 +1044,7 @@ const STATUS_COLOR = {
 };
 
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = []; pillarAnims = []; terms = []; junRings = []; tilePanels = [];
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; pillarAnims = []; terms = []; junRings = []; tilePanels = [];
 
   /* every agent is an app tile on its zone's wall — in the reference the walls
      ARE the OS: icon grids covering luminous surfaces. 5 columns, cells on the
@@ -1376,12 +1383,18 @@ function buildWorld() {
   agentMesh.instanceColor && (agentMesh.instanceColor.needsUpdate = true);
 
   /* pulses — F(2) packets on the network; speed quantized to powers of φ,
-     phases seeded by the golden ratio (low-discrepancy), routes fixed */
-  for (let i = 0; i < FIB(2); i++) {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(2.1, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xeceaf6, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false }));
-    m.userData = { beam: i % Math.max(1, beams.length), p: (i * PHI) % 1, sp: .0013 * Math.pow(PHI, (i % 5) - 2) };
-    scene.add(m); pulseMeshes.push(m);
+     phases seeded by the golden ratio (low-discrepancy), routes fixed.
+     ONE instanced draw, not 55 meshes. */
+  {
+    const PC = FIB(2);
+    const inst = new THREE.InstancedMesh(new THREE.SphereGeometry(2.1, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xeceaf6, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false }), PC);
+    inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    inst.frustumCulled = false;
+    world.add(inst);
+    pulseMeshes = { inst, data: [] };
+    for (let i = 0; i < PC; i++)
+      pulseMeshes.data.push({ beam: i % Math.max(1, beams.length), p: (i * PHI) % 1, sp: .0013 * Math.pow(PHI, (i % 5) - 2) });
   }
 
   /* wall terminals — live system log rendered from the real fleet, like the floating
@@ -1548,11 +1561,18 @@ function frame(now) {
     if (!reduced && h.ring) { h.ring.rotation.z = t * .0004 * h.ring.userData.spin; h.ring.position.y = h.ring.userData.baseY + Math.sin(t * .0009 + h.ring.userData.spin * 9) * 2.5; }
   }
   animateAgents(t);
-  if (!reduced) for (const p of pulseMeshes) {
-    p.userData.p += p.userData.sp;
-    if (p.userData.p >= 1) p.userData.p = 0;   /* fixed route — constant flows, not shuffles */
-    const b = beams[p.userData.beam];
-    if (b) b.curve.getPoint(p.userData.p, p.position);
+  if (!reduced && pulseMeshes && pulseMeshes.inst) {
+    pulseMeshes.data.forEach((pd, i) => {
+      pd.p += pd.sp;
+      if (pd.p >= 1) pd.p = 0;   /* fixed route — constant flows, not shuffles */
+      const b = beams[pd.beam];
+      if (b) {
+        b.curve.getPoint(pd.p, dummy.position);
+        dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.updateMatrix();
+        pulseMeshes.inst.setMatrixAt(i, dummy.matrix);
+      }
+    });
+    pulseMeshes.inst.instanceMatrix.needsUpdate = true;
   }
   composer.render();
 }
