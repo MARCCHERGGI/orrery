@@ -1477,8 +1477,9 @@ function buildWorld() {
       const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
       const pts = curve.getPoints(40);
       const bg = new THREE.BufferGeometry().setFromPoints(pts);
-      const line = new THREE.Line(bg, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .6), transparent: true, opacity: BEAM_OP, blending: THREE.AdditiveBlending, depthWrite: false }));
-      scene.add(line); beams.push({ line, curve, dept: d.id, group: g.id });
+      /* a flagged checkpoint tints its beam — trouble is visible from the doorway */
+      const line = new THREE.Line(bg, new THREE.LineBasicMaterial({ color: flg.length ? 0xe08a7c : hsl(d.hue, .5, .6), transparent: true, opacity: flg.length ? BEAM_OP * PHI : BEAM_OP, blending: THREE.AdditiveBlending, depthWrite: false }));
+      scene.add(line); beams.push({ line, curve, dept: d.id, group: g.id, op: flg.length ? BEAM_OP * PHI : BEAM_OP });
       /* the same packet also travels the floor: monument → zone junction */
       beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx + hx, 1.6, d.cz + hz), new THREE.Vector3(d.cx, 1.6, d.cz)), dept: d.id, group: g.id });
     });
@@ -2079,7 +2080,7 @@ function setHover(i) {
   const si = i >= 0 ? i : selMonIdx();
   const u = si >= 0 ? monRings[si] : null;
   for (const b of beams) if (b.line)
-    b.line.material.opacity = (u && b.group === u.group && b.dept === u.dept) ? .85 : BEAM_OP;
+    b.line.material.opacity = (u && b.group === u.group && b.dept === u.dept) ? .85 : (b.op || BEAM_OP);
   const g = monInst && monInst.ghost;
   if (g) {
     g.visible = !!u;
