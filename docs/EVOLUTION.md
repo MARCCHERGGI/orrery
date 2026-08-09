@@ -75,34 +75,45 @@ checkpoint readouts · mobile gyro/portrait · search + find button · reel
 variants + clean footage · draw calls 478→352 · per-lane timestamps · floor
 ledger · cell-scaled labels · __hold harness.
 
-Round 2 (seeded iter 17 from accumulated next-observes):
+Round 3 (truth pass, iter 79 — everything below reflects reality as of then;
+rounds 1-2 history lives in the log):
 
-1. **Live refresh** (ALIVE): page re-pulls fleet.json on a 233 s tick, rebuilds
-   on newer export when idle at level 0; header age counts instead of freezing.
-   (Shipped iter 17.)
-2. **MARCO DECISION — repo link**: the site is OSS and the repo is the IG
-   comment magnet, but nothing on the page points to it. Needs Marco-authored
-   placement/copy; do not auto-ship. Hand him the option.
-3. ~~Portrait tile tap targets~~ CLOSED iter 26, RULES-OUT: frozen-frame probe
-   at 390×844 hit 4/5 tile centers exactly (Affiliate Tick / Hundred Today /
-   Stage Batch; gap tap leaned to the adjacent cell as designed). Hit mapping is
-   correct; earlier "wrong tile" readings were the probe racing idle camera
-   drift. Only the far receding-edge column is tight — inherent to an angled
-   wall; ⌕ search covers precision access. No fix needed.
-4. **Monument trio instancing** (PERF): 29× pillar/ring/cap → 3 InstancedMesh,
-   ~379→~300 est. Deferred twice for interaction risk — needs a careful plan
-   (per-instance emissive via instanceColor, raycast instanceId remap).
-5. **DEPTH pass**: contact shadows / grounding under monuments and orb; the
-   portal illusion's weakest remaining link.
-6. ~~Stale-ok surfacing~~ CLOSED iter 49: already implemented — `isStale()`
-   (age > cadence·φ² with a φ³-hour floor) ambers the card's "ran X ago" line;
-   "next in…" renders beside it. RULES-OUT anything louder: 90/118 lanes read
-   "stale" by schtasks `last`, but the ~206 h cluster (incl. CrowResident,
-   which provably runs every 10 min) is the Aug-1 bus-migration artifact —
-   schtasks froze when lanes moved to the :7799 event bus. The page cannot
-   distinguish stopped-on-purpose from bus-migrated; the card's quiet amber on
-   a factual timestamp is the honest ceiling. A truer fix is warden/gen-data
-   side (bus-aware last-run), not page side.
+**Shipped and verified through iter 78** (do not re-derive; grep the log
+first): live refresh (17) · selection shell (58) · URL deep links incl.
+agents (59/61) · wall-panel fit (60) · portrait scrim + 820 breakpoint
+(62/70) · THE RECORD on card dots / group rollup / tile strips / member
+tails / status rows (55-56/63-65) · flag beams (66) · tour verified
+end-to-end (67) · search Enter=GO TO (68/69) · boot preconnect +
+modulepreload (71) · OG card + dims/alt (72/78) · dead-tap fix (73) · run
+columns (74) · fleet cardiogram over the atrium (75) · parse-time data
+fetch (76) · favicon (77) · theme-color (78). Monument instancing and
+contact shadows: shipped back in 44-50s (pillars are 8 per-dept instanced
+draws; pools/shadows instanced). Wall panels are already recency-sorted
+feeds. Header counters are already status filters.
+
+**RULES-OUT (settled verdicts — do not reopen without new data):**
+- Bus-aware staleness (◔ counter): no per-lane fire ledger exists anywhere
+  gen-data can read (bus.mjs writes none; checked state/, logs/). The amber
+  cadence-honest counter is the ceiling. Fix belongs in warden/bus, not here.
+- Outcomes-on-the-page (iter 79): fleet.json carries scheduler result codes
+  only. Real outcomes (posts, applications, revenue) live in private ledgers;
+  publishing them on a public OSS page crosses a privacy boundary only Marco
+  can authorize. The machinery-only view is the CORRECT public scope, not a
+  gap. Status flips over time (the public-safe proxy) are already the
+  cardiogram.
+
+**MARCO-GATED doors (hand him the menu; never auto-ship):**
+1. Repo link on the page — placement + copy his.
+2. A public "produced today" outcomes lane — his privacy call + his copy.
+3. CORE far-wall banner copy · FACE-button tooltip copy.
+
+**Standing observation duties (the loop's recurring value at this cadence):**
+- Verify pending deploys land (quota-trickle pattern; hash first, API second).
+- Watch THE RECORD mature: strips/cardiogram as hist → 21 samples; check
+  rendering at 13 and 21 columns.
+- Fresh-eyes pass at breakpoints after any layout-adjacent change.
+- Ship only observation-driven fixes or genuinely-more-useful additions;
+  the plateau is principled — "merely different" is the failure mode now.
 
 ## Log
 
