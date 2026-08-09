@@ -2239,7 +2239,17 @@ function boot(data) {
   buildWorld(); hud(); setLevel(0);
   if (reduced) { enter(); kick(); }
 }
-fetch('data/fleet.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw 0; return r.json(); }).then(boot).catch(() => boot(SAMPLE));
+/* data comes from the repo itself (raw.githubusercontent CDN, ~5 min cache) so
+   freshness never depends on a redeploy; the relative path is the fallback for
+   forks and offline use. Forks: point the first URL at your own repo. */
+const DATA_SRC = ['https://raw.githubusercontent.com/MARCCHERGGI/orrery/main/data/fleet.json', 'data/fleet.json'];
+const pullFleet = async () => {
+  for (const u of DATA_SRC) {
+    try { const r = await fetch(u, { cache: 'no-cache' }); if (r.ok) return await r.json(); } catch (e) {}
+  }
+  return null;
+};
+pullFleet().then(d => boot(d || SAMPLE));
 
 /* live refresh — re-pull the fleet every 233 s; rebuild only on a newer export
    and only while idle at the front of the room (no card, no reel, no filter,
@@ -2249,8 +2259,7 @@ setInterval(() => {
   if (document.hidden) return;
   setAge(fleet.meta && fleet.meta.exported);
   if (reel || tour || level !== 0 || query || $('card').classList.contains('open')) return;
-  fetch('data/fleet.json', { cache: 'no-cache' })
-    .then(r => r.ok ? r.json() : null)
+  pullFleet()
     .then(d => { if (d && d.meta && d.meta.exported && d.meta.exported !== fleet.meta.exported) boot(d); })
     .catch(() => {});
 }, 233000);
