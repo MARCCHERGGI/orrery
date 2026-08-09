@@ -264,3 +264,24 @@ during part of SocialWatch's run - its 10:4xZ snapshot may have scraped mobile
 layouts; restore the viewport BEFORE yielding the tab next time.
 next-observe: LEGIBLE at ALL distance (wall stat strips) or portrait tile tap
 targets. Reel is fully serviceable for Marco's recording session.
+
+## 17 · 2026-08-09 · fundamental · ALIVE (live refresh) + backlog reseed
+scores: U9 L8 D8 De9 A9->10 P8
+shipped: (a) LEGIBLE-at-ALL audit first - PASS, no change needed: titles read,
+walls read as luminous icon grids (the reference's intent), ledger reads as
+living texture at distance. (b) The fundamental: the page loaded fleet.json once
+and aged forever - "data N min old" froze at load, and an open tab drifted from
+the truth. Now a 233 s (F(13) s) tick re-pulls the fleet, rebuilds via boot()
+only when a NEWER export arrives AND the viewer is idle at level 0 (no card, no
+reel, no filter) so state is never yanked mid-interaction; between rebuilds the
+header age keeps counting. Hidden tabs skip the tick. (c) EVOLUTION.md backlog
+round 2 seeded - round 1 (all 7 items) fully shipped by iter 16. Flagged as
+MARCO DECISION: a repo link on the page (the IG comment magnet) - placement and
+copy are his to author, not auto-shipped.
+evidence: age text observed "data 23 min old" -> "data 27 min old" across a real
+233 s tick on the live-layout local build, zero __errs; 11 s sweep + full tour
+clean; live hash==local redirects-off.
+next-observe: after the next hourly ClaudeOrreryRefresh fires (~:00), watch an
+idle open tab of the PROD site actually rebuild to the new export (the full
+loop: schtask -> deploy -> page self-refreshes). Then round-2 backlog: DEPTH
+contact shadows, portrait tap measure, or the instancing plan.
