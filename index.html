@@ -261,6 +261,10 @@
 /* runs before the module chain — on a slow connection the module (three.js)
    takes seconds; a tap in that window must not feel dead */
 document.getElementById('intro').addEventListener('click', function () { this.classList.add('waking'); });
+/* kick the data fetch at parse time so it rides alongside the three.js
+   download instead of queuing behind it — the module consumes this once */
+window.__fleetP = fetch('https://raw.githubusercontent.com/MARCCHERGGI/orrery/main/data/fleet.json', { cache: 'no-cache' })
+  .then(r => r.ok ? r.json() : null).catch(() => null);
 </script>
 
 <header>
@@ -2620,6 +2624,13 @@ function boot(data) {
    forks and offline use. Forks: point the first URL at your own repo. */
 const DATA_SRC = ['https://raw.githubusercontent.com/MARCCHERGGI/orrery/main/data/fleet.json', 'data/fleet.json'];
 const pullFleet = async () => {
+  /* first boot rides the parse-time fetch (see the inline script above the
+     module) — consumed once so the 233 s refresh always re-pulls live */
+  if (window.__fleetP) {
+    const early = await window.__fleetP;
+    window.__fleetP = null;
+    if (early) return early;
+  }
   for (const u of DATA_SRC) {
     try { const r = await fetch(u, { cache: 'no-cache' }); if (r.ok) return await r.json(); } catch (e) {}
   }
