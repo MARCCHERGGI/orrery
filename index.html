@@ -1085,8 +1085,11 @@ function buildWorld() {
       g.font = `600 ${Math.round(th * .44)}px Inter, system-ui, sans-serif`;
       g.textAlign = 'center'; g.fillStyle = 'rgba(236,234,246,.82)';
       g.fillText((nd.label || '?')[0].toUpperCase(), x + 9 + tw / 2, y + 5 + th * .7);
-      g.font = '500 13px Inter, system-ui, sans-serif'; g.fillStyle = 'rgba(202,205,232,.88)';
-      g.fillText(String(nd.label).slice(0, 12), x + cell / 2, y + th + 22);
+      /* label sized to its cell (φ⁻⁴), char budget from the same width — big
+         cells earn bigger type, dense walls stop colliding with neighbours */
+      const lf = Math.max(11, Math.round(cell / Math.pow(PHI, 4)));
+      g.font = `600 ${lf}px Inter, system-ui, sans-serif`; g.fillStyle = 'rgba(212,215,240,.95)';
+      g.fillText(String(nd.label).slice(0, Math.floor(cell / (lf * .58))), x + cell / 2, y + th + Math.round(lf * 1.55));
       g.globalAlpha = 1;
     });
     T.tex.needsUpdate = true;
