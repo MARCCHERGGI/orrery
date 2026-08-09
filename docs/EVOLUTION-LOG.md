@@ -31,3 +31,16 @@ opened "Weather Oracle" card at level ALL with pointer cursor and no level chang
 read; tour frames clean 21000-32200ms; live hash==local after deploy.
 next-observe: whether tile hover feels precise at grazing wall angles; then backlog
 #3 (checkpoint last-result readouts) or #5 (search palette).
+
+## 3 · 2026-08-09 · systemic · USEFUL
+scores: U7->8 L7 D8 De7 A8 P7
+shipped: header counters are live filters. Click "18 flagged" -> card lists all 18
+real lanes with their actual last results (REQUEST_REFUSED, FLOOR_BREACHED,
+CTRL_C_EXIT...), each row drills into the agent card; the whole room + wall tiles
+dim to the filtered set (reuses the search _hit dim path). ok/running counters same.
+Fixed the borrowed group-card heading to "lane - last result" for system views.
+evidence: scripted click opened "18 flagged / 18 of 145 lanes" with real reasons,
+row click -> Bot Evolve card; screenshot read (dimmed room + list); tour clean
+700-11600ms; zero errors; live hash==local.
+next-observe: whether the dotted-underline affordance on counters is discoverable;
+then backlog #4 (mobile/touch) or #7 (draw-call audit) - PERF untouched so far.
