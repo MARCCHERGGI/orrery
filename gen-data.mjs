@@ -9,14 +9,14 @@ const src = process.argv[2] || path.join(process.env.USERPROFILE || process.env.
 const text = fs.readFileSync(src, 'utf8');
 
 const DEPTS = [
-  { id: 'revenue',  label: 'REVENUE',  hue: 28,  tagline: 'money in, fires staged' },
-  { id: 'content',  label: 'CONTENT',  hue: 285, tagline: 'channels, reels, the diary' },
-  { id: 'hunt',     label: 'HUNT',     hue: 175, tagline: 'jobs, grants, luck, rooms' },
-  { id: 'senses',   label: 'SENSES',   hue: 150, tagline: 'screen, phone, city, weather' },
-  { id: 'self',     label: 'SELF',     hue: 48,  tagline: 'the loop that sharpens the loop' },
-  { id: 'empire',   label: 'EMPIRE',   hue: 260, tagline: 'goals, oaths, discoveries' },
-  { id: 'bridge',   label: 'BRIDGE',   hue: 12,  tagline: 'the two-way line to Marco' },
-  { id: 'markets',  label: 'MARKETS',  hue: 210, tagline: 'odds watched, never fired' },
+  { id: 'revenue',  label: 'REVENUE',        hue: 28,  tagline: 'money in, fires staged' },
+  { id: 'content',  label: 'MARKETING',      hue: 285, tagline: 'channels, reels, the diary' },
+  { id: 'hunt',     label: 'GROWTH',         hue: 175, tagline: 'jobs, grants, luck, rooms' },
+  { id: 'senses',   label: 'DATA',           hue: 150, tagline: 'screen, phone, city, weather' },
+  { id: 'self',     label: 'OPERATIONS',     hue: 48,  tagline: 'the loop that sharpens the loop' },
+  { id: 'empire',   label: 'STRATEGY',       hue: 260, tagline: 'goals, oaths, discoveries' },
+  { id: 'bridge',   label: 'COMMUNICATIONS', hue: 12,  tagline: 'the two-way line to Marco' },
+  { id: 'markets',  label: 'FINANCE',        hue: 210, tagline: 'odds watched, never fired' },
 ];
 
 const MAP = [
@@ -153,8 +153,8 @@ for (const d of DEPTS) {
 const exported = (text.match(/Fleet health — ([0-9T:.\-Z]+)/) || [])[1] || null;
 const fleet = {
   meta: {
-    title: 'ORRERY',
-    subtitle: 'a live map of a one-person AI company',
+    title: 'AI COMMAND CENTER',
+    subtitle: 'one company · run live by autonomous AI agents',
     operator: 'Marco Hergi · NYC',
     exported,
     source: 'warden fleet-health',

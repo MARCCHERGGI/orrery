@@ -1,9 +1,9 @@
 {
  "meta": {
-  "title": "ORRERY",
-  "subtitle": "a live map of a one-person AI company",
+  "title": "AI COMMAND CENTER",
+  "subtitle": "one company · run live by autonomous AI agents",
   "operator": "Marco Hergi · NYC",
-  "exported": "2026-08-08T18:18:15.491Z",
+  "exported": "2026-08-09T05:16:38.319Z",
   "source": "warden fleet-health"
  },
  "departments": [
@@ -15,43 +15,43 @@
   },
   {
    "id": "content",
-   "label": "CONTENT",
+   "label": "MARKETING",
    "hue": 285,
    "tagline": "channels, reels, the diary"
   },
   {
    "id": "hunt",
-   "label": "HUNT",
+   "label": "GROWTH",
    "hue": 175,
    "tagline": "jobs, grants, luck, rooms"
   },
   {
    "id": "senses",
-   "label": "SENSES",
+   "label": "DATA",
    "hue": 150,
    "tagline": "screen, phone, city, weather"
   },
   {
    "id": "self",
-   "label": "SELF",
+   "label": "OPERATIONS",
    "hue": 48,
    "tagline": "the loop that sharpens the loop"
   },
   {
    "id": "empire",
-   "label": "EMPIRE",
+   "label": "STRATEGY",
    "hue": 260,
    "tagline": "goals, oaths, discoveries"
   },
   {
    "id": "bridge",
-   "label": "BRIDGE",
+   "label": "COMMUNICATIONS",
    "hue": 12,
    "tagline": "the two-way line to Marco"
   },
   {
    "id": "markets",
-   "label": "MARKETS",
+   "label": "FINANCE",
    "hue": 210,
    "tagline": "odds watched, never fired"
   }
@@ -901,6 +901,15 @@
    "status": "dormant",
    "detail": "TERMINATED",
    "mass": 1
+  },
+  {
+   "id": "ClaudeOrreryRefresh",
+   "label": "Orrery Refresh",
+   "dept": "self",
+   "group": "field",
+   "status": "ok",
+   "detail": "OK",
+   "mass": 2
   },
   {
    "id": "ClaudeOutcomeWitness",

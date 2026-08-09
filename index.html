@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ORRERY — a live AI ecosystem in 3D</title>
+<title>AI COMMAND CENTER — a one-person company run live by AI agents</title>
 <meta name="description" content="Zones, checkpoints, agent swarms — a real fleet standing on a base you can fly through. Open source.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,6 +41,11 @@
     content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 4;
     background: radial-gradient(ellipse 130% 105% at 50% 42%, transparent 52%, rgba(8,10,24,.5) 100%);
   }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 5;
+    opacity: .05; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 
   #intro {
     position: fixed; inset: 0; display: grid; place-items: center; text-align: center;
@@ -49,8 +54,8 @@
   }
   #intro.gone { opacity: 0; pointer-events: none; }
   #intro h1 {
-    font-family: var(--serif); font-weight: 500; letter-spacing: .42em; text-indent: .42em;
-    font-size: clamp(34px, 7vw, 64px);
+    font-family: var(--serif); font-weight: 500; letter-spacing: .3em; text-indent: .3em;
+    font-size: clamp(26px, 4.8vw, 54px);
     text-shadow: 0 0 44px rgba(139,226,185,.28);
   }
   #intro p.sub { margin-top: 14px; color: var(--ink-dim); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
@@ -195,14 +200,14 @@
 
 <div id="intro" role="button" tabindex="0" aria-label="Enter the world">
   <div>
-    <h1 id="intro-title">ORRERY</h1>
-    <p class="sub" id="intro-sub">a live AI ecosystem</p>
+    <h1 id="intro-title">AI COMMAND CENTER</h1>
+    <p class="sub" id="intro-sub">one company · run live by autonomous AI agents</p>
     <p class="hint">tap anywhere · every light is a real agent</p>
   </div>
 </div>
 
 <header>
-  <span class="wordmark">ORRERY</span>
+  <span class="wordmark">AI COMMAND CENTER</span>
   <span class="counts" id="counts">—</span>
   <span class="right">
     <span class="age" id="age"></span>
@@ -405,6 +410,15 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   }
   g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
   scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xdfe2f8, size: 1.6, transparent: true, opacity: .35 })));
+  /* a second, coarser layer — two dust depths parallax at different rates */
+  const N2 = 150, g2 = new THREE.BufferGeometry(), arr2 = new Float32Array(N2 * 3);
+  for (let i = 0; i < N2; i++) {
+    arr2[i * 3] = (Math.random() * 2 - 1) * ROOM.hw * .95;
+    arr2[i * 3 + 1] = Math.random() * ROOM.h;
+    arr2[i * 3 + 2] = (Math.random() * 2 - 1) * ROOM.depth * .97;
+  }
+  g2.setAttribute('position', new THREE.BufferAttribute(arr2, 3));
+  scene.add(new THREE.Points(g2, new THREE.PointsMaterial({ color: 0xc7cbf0, size: 3.4, transparent: true, opacity: .16, blending: THREE.AdditiveBlending, depthWrite: false })));
 }
 
 /* THE PORTAL — the screen is literally the opening of the room.
@@ -491,9 +505,10 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = [], pillarAnims = [], terms = [];
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = [], pillarAnims = [], terms = [], junRings = [];
 const brain = new THREE.Group(); scene.add(brain);
 
+const BEAM_OP = .38;
 function hsl(h, s, l) { const c = new THREE.Color(); c.setHSL(h / 360, s, l); return c; }
 const STATUS_COLOR = {
   ok: new THREE.Color(0xe9e7f4), running: new THREE.Color(0x8be2b9),
@@ -501,7 +516,7 @@ const STATUS_COLOR = {
 };
 
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = []; pillarAnims = []; terms = [];
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = []; pillarAnims = []; terms = []; junRings = [];
 
   /* THE CORE — bigger, structured: particle cloud + wireframe heart + orbital rings +
      a light column wiring it to the floor bus. Counters under it are real. */
@@ -557,7 +572,7 @@ function buildWorld() {
       new THREE.CircleGeometry(155, 48),
       new THREE.MeshBasicMaterial({ color: hsl(d.hue, .55, .5), transparent: true, opacity: .11, depthWrite: false })
     );
-    disc.rotation.x = -Math.PI / 2; disc.position.y = .6; disc.userData = { kind: 'zone', dept: d.id };
+    disc.rotation.x = -Math.PI / 2; disc.position.y = .6; disc.userData = { kind: 'zone', dept: d.id, breathe: true, phase: i * .9 };
     zone.add(disc); zoneDiscs.push(disc);
 
     /* zone nameplate painted on the wall behind the district */
@@ -584,6 +599,16 @@ function buildWorld() {
     jun.rotation.x = -Math.PI / 2; jun.position.y = 1.2; zone.add(jun);
     const junRing = new THREE.Mesh(new THREE.TorusGeometry(14, .9, 6, 32), new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .5 }));
     junRing.rotation.x = Math.PI / 2; junRing.position.y = 1.2; zone.add(junRing);
+    junRing.userData.pulsePhase = i * 1.3; junRings.push(junRing);
+
+    /* soft light shaft over the district — a depth layer the eye reads instantly */
+    const shaft = new THREE.Mesh(
+      new THREE.ConeGeometry(125, ROOM.h - 44, 24, 1, true),
+      new THREE.MeshBasicMaterial({ color: hsl(d.hue, .5, .62), transparent: true, opacity: .05, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    shaft.position.y = (ROOM.h - 44) / 2 + 22; zone.add(shaft);
+    const fixture = new THREE.Mesh(new THREE.CircleGeometry(16, 24),
+      new THREE.MeshBasicMaterial({ color: hsl(d.hue, .5, .75), transparent: true, opacity: .35, blending: THREE.AdditiveBlending, depthWrite: false }));
+    fixture.rotation.x = Math.PI / 2; fixture.position.y = ROOM.h - 2; zone.add(fixture);
 
     /* zone junction → back bus → CORE column: the visible wiring of the system */
     const trace = new THREE.BufferGeometry().setFromPoints([
@@ -591,7 +616,11 @@ function buildWorld() {
       new THREE.Vector3(d.cx, 1.2, -640),
       new THREE.Vector3(0, 1.2, -640),
     ]);
-    scene.add(new THREE.Line(trace, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .6), transparent: true, opacity: .5 })));
+    scene.add(new THREE.Line(trace, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .6), transparent: true, opacity: .72, blending: THREE.AdditiveBlending, depthWrite: false })));
+    /* packets ride the bus into the CORE column */
+    beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx, 1.6, d.cz), new THREE.Vector3(d.cx, 1.6, -640)), dept: d.id });
+    beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx, 1.6, -640), new THREE.Vector3(0, 1.6, -640)), dept: d.id });
+    beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(0, 1.6, -640), new THREE.Vector3(0, 300, -640)), dept: d.id });
 
     /* checkpoints — monuments standing on the floor along the wall */
     const gs = groupsByDept[d.id] || [];
@@ -621,7 +650,7 @@ function buildWorld() {
       const tr = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(hx, 1.2, hz), new THREE.Vector3(0, 1.2, 0),
       ]);
-      zone.add(new THREE.Line(tr, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .62), transparent: true, opacity: .45 })));
+      zone.add(new THREE.Line(tr, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .62), transparent: true, opacity: .68, blending: THREE.AdditiveBlending, depthWrite: false })));
 
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(15, 1.4, 10, 48),
@@ -654,8 +683,10 @@ function buildWorld() {
       const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
       const pts = curve.getPoints(40);
       const bg = new THREE.BufferGeometry().setFromPoints(pts);
-      const line = new THREE.Line(bg, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .6), transparent: true, opacity: .14 }));
+      const line = new THREE.Line(bg, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .6), transparent: true, opacity: BEAM_OP, blending: THREE.AdditiveBlending, depthWrite: false }));
       scene.add(line); beams.push({ line, curve, dept: d.id, group: g.id });
+      /* the same packet also travels the floor: monument → zone junction */
+      beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx + hx, 1.6, d.cz + hz), new THREE.Vector3(d.cx, 1.6, d.cz)), dept: d.id, group: g.id });
     });
   });
 
@@ -690,9 +721,10 @@ function buildWorld() {
   });
   agentMesh.instanceColor && (agentMesh.instanceColor.needsUpdate = true);
 
-  /* pulses along beams */
-  for (let i = 0; i < 26; i++) {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(1.7, 8, 8), new THREE.MeshBasicMaterial({ color: 0xeceaf6, transparent: true, opacity: .9 }));
+  /* pulses — the packets that make the net read as ALIVE, on beams and floor circuits */
+  for (let i = 0; i < 72; i++) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(2.1, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xeceaf6, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false }));
     m.userData = { beam: Math.floor(Math.random() * beams.length), p: Math.random(), sp: .0016 + Math.random() * .003 };
     scene.add(m); pulseMeshes.push(m);
   }
@@ -820,9 +852,12 @@ function frame(now) {
   const dy = reduced ? 0 : Math.sin(t * .00042 + 2) * 4;
   applyCamera(dx, dy);
   if (!reduced) {
-    for (const pa of pillarAnims) if (pa.running) pa.mat.emissiveIntensity = .9 + Math.sin(t * .004 + pa.phase) * .38;
+    for (const pa of pillarAnims) if (pa.running && pa.mat !== hover.mat) pa.mat.emissiveIntensity = .9 + Math.sin(t * .004 + pa.phase) * .38;
     if (terms.tick) terms.tick(t);
+    for (const jr of junRings) jr.material.opacity = .4 + Math.sin(t * .0022 + jr.userData.pulsePhase) * .25;
+    for (const zd of zoneDiscs) if (zd.userData.breathe) zd.material.opacity = .105 + Math.sin(t * .0007 + zd.userData.phase) * .04;
   }
+  updateHover();
   if (!reduced) brain.rotation.y = t * .00012;
   for (const d of deptList) if (d.hubs) for (const h of Object.values(d.hubs)) {
     if (!reduced && h.ring) { h.ring.rotation.z = t * .0004 * h.ring.userData.spin; h.ring.position.y = h.ring.userData.baseY + Math.sin(t * .0009 + h.ring.userData.spin * 9) * 2.5; }
@@ -897,6 +932,26 @@ $('dept-name').addEventListener('keydown', e => { if (e.key === 'Enter') { close
 /* ============================== picking ============================== */
 const ray = new THREE.Raycaster();
 const ptr = new THREE.Vector2();
+
+/* hover — the net answers the cursor: checkpoint lights up, its beam brightens */
+const hover = { hub: null, mat: null };
+function updateHover() {
+  if (reel || !entered) { setHover(null); return; }
+  ptr.set(par.x, -par.y);
+  ray.setFromCamera(ptr, camera);
+  const h = ray.intersectObjects(hubMeshes);
+  setHover(h.length ? h[0].object : null);
+}
+function setHover(mesh) {
+  if (hover.hub === mesh) return;
+  if (hover.hub) hover.hub.material.emissiveIntensity = .9;
+  hover.hub = mesh; hover.mat = mesh ? mesh.material : null;
+  canvas.style.cursor = mesh ? 'pointer' : '';
+  const u = mesh && mesh.userData;
+  for (const b of beams) if (b.line)
+    b.line.material.opacity = (u && b.group === u.group && b.dept === u.dept) ? .85 : BEAM_OP;
+  if (mesh) mesh.material.emissiveIntensity = 1.8;
+}
 let downAt = null;
 canvas.addEventListener('pointerdown', e => { if (reel) { exitReel(); return; } downAt = [e.clientX, e.clientY]; });
 canvas.addEventListener('pointerup', e => {
@@ -1104,7 +1159,7 @@ function boot(data) {
   buildWorld(); hud(); setLevel(0);
   if (reduced) { enter(); kick(); }
 }
-fetch('data/fleet.json').then(r => { if (!r.ok) throw 0; return r.json(); }).then(boot).catch(() => boot(SAMPLE));
+fetch('data/fleet.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw 0; return r.json(); }).then(boot).catch(() => boot(SAMPLE));
 </script>
 </body>
 </html>
