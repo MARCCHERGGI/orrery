@@ -90,3 +90,20 @@ zero errors; live hash==local.
 next-observe: remaining call bulk = 29 monument trios (pillar/ring/cap mergeable to
 3 InstancedMesh), ~60 label sprites, 29 beam Lines (hover-coupled, riskier). Also
 overdue: re-check LEGIBLE axis on the wall stat strips at distance.
+
+## 7 · 2026-08-09 · systemic · USEFUL (reel)
+scores: U8 L7 D8 De7 A8 P8
+shipped: tour v2 - the 10.0s reel path now showcases what iters 2-6 built. Old path
+orbited the room center and never approached a wall; new keys: portal dive -> glancing
+sweep along a tile-grid wall (side walls use nx-offset eye, back walls z-offset) ->
+INSTAGRAM monument close (level 2, agents visible) -> JARVIS orb close-up -> pull out.
+Same 10.0s total, same rec workflow.
+evidence: syntax clean; every synthetic frame stepped zero-errors across the full
+tour; tour self-ran to completion in real time and exited to chrome; sweep + monument
+keyframes read in stills (v21-sweep4/v21-orb2: readable tile labels, INSTAGRAM
+"8 agents - 8 ok", OUTPUT wall stats). CAVEAT: the orb close-up key (t7400-8600)
+stepped clean but no still captured - relay tab is unoccluded so real rAF advances
+the tour between MCP calls; exact-keyframe stills are now unreliable in this harness.
+live hash==local.
+next-observe: watch the tour once on the live site end-to-end. Then backlog #3
+(checkpoint last-result readouts) or monument-trio instancing (352 -> ~290 est).
