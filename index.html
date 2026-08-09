@@ -537,6 +537,13 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
     m.position.set(x, ROOM.h / 2, -ROOM.depth); scene.add(m);
   };
   vstrip(-ROOM.hw); vstrip(ROOM.hw);
+  /* cove trim tracing the atrium opening — the rim reads as architecture, not void */
+  const atr = (w, x, z, rotY) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2.6, 2.6), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .45 }));
+    m.position.set(x, ROOM.h - 1.4, z); m.rotation.y = rotY || 0; scene.add(m);
+  };
+  atr(800, 0, 400); atr(800, 0, -600);
+  atr(1000, -400, -100, Math.PI / 2); atr(1000, 400, -100, Math.PI / 2);
 
   /* one fine dust layer — depth cue under parallax, nothing more */
   const N = FIB(4), g = new THREE.BufferGeometry(), arr = new Float32Array(N * 3);
