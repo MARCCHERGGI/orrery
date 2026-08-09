@@ -1581,7 +1581,10 @@ function buildWorld() {
       new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: .94 }));
     return { c, g: c.getContext('2d'), tex, mesh, title, row: 0 };
   };
-  const byStatus = st => nodes.filter(n => st.includes(n.status));
+  /* recency-first: what happened most recently leads every panel; months-dead
+     lanes stay listed but sink — the wall tells today's truth before history */
+  const byStatus = st => nodes.filter(n => st.includes(n.status))
+    .sort((a, b) => new Date(b.last || 0) - new Date(a.last || 0));
   const TCOL = { running: '#8be2b9', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
   const ageShort = t => {
     if (!t) return '';
@@ -1624,7 +1627,7 @@ function buildWorld() {
   /* panels FLOAT off the walls like the reference's windows — parallax separates
      them from the surface, tilted slightly into the room */
   panel('LIVE NOW', byStatus(['running', 'ok']), -ROOM.hw + 34, 160, 660, Math.PI / 2 - .09);
-  panel('SYSTEM LOG', [...nodes], ROOM.hw - 34, 160, 660, -Math.PI / 2 + .09);
+  panel('SYSTEM LOG', byStatus(['running', 'ok', 'flag', 'dormant']), ROOM.hw - 34, 160, 660, -Math.PI / 2 + .09);
   panel('ALERTS', byStatus(['flag', 'dormant']), -480, 196, -ROOM.depth + 34, .07);
   panel('ACTIVITY', byStatus(['running', 'flag', 'ok']), 480, 196, -ROOM.depth + 34, -.07);
   terms.forEach(drawTerm);
@@ -1784,6 +1787,7 @@ const kick = () => { if (reduced) { try { frame(performance.now()); } catch (e) 
 window.__step = (ms) => { try { frame(ms ?? performance.now()); } catch (e) { return String(e); } return 'ok'; };
 window.__age = (iso) => { setAge(iso); return $('age').style.color || 'clean'; };
 window.__pool = (i) => { const c = new THREE.Color(); monInst.gi2.getColorAt(i, c); return { run: monRings[i].run, hex: c.getHexString() }; };
+window.__panel = (t) => (terms.find(T => T.title === t) || { list: [] }).list.slice(0, 5).map(n => `${n.label}|${n.status}|${n.last || 'never'}`);
 
 function resize() {
   const w = innerWidth, h = innerHeight;
