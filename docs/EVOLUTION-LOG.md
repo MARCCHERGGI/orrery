@@ -75,3 +75,18 @@ next-observe: 424 is still high - the remaining bulk is ~45 dial/spoke/arc line 
 (mergeable into 2-3 vertex-colored LineSegments), 29x monument trios, and label sprites.
 Next PERF round: merge static floor lines. Or swing back to USEFUL if something reads
 wrong on Marco's phone test.
+
+## 6 · 2026-08-09 · systemic · PERF
+scores: U8 L7 D8 De7 A8 P8
+shipped: perf round 2. All ~74 static floor-line objects (zone dial circles+ticks,
+spokes+graduation dashes, monument traces, Fibonacci arcs) merged into TWO
+vertex-colored LineSegments - one normal-blend, one additive. Per-line opacity baked
+into vertex color (exact under additive; near-exact for thin lines over the dark
+floor). 424 -> 352 calls/frame, geometries 327 -> 255. Cumulative from baseline:
+478 -> 352 (-26%).
+evidence: __perf on identical scene state; screenshot vs iter-5 shows visual parity
+(dials/ticks/spokes/traces/arcs all present, same hues); tour clean 2200-13400ms;
+zero errors; live hash==local.
+next-observe: remaining call bulk = 29 monument trios (pillar/ring/cap mergeable to
+3 InstancedMesh), ~60 label sprites, 29 beam Lines (hover-coupled, riskier). Also
+overdue: re-check LEGIBLE axis on the wall stat strips at distance.
