@@ -398,3 +398,9 @@ scores: U9 L9 D8 De8 A9 P9
 shipped: the header data-age now holds the site to its own amber standard — setAge() tints "data N old" #e2b878 when export age exceeds the hourly refresh cadence by φ² (~2.6 h). If gen-data/the schtask ever dies, the top-right corner says so instead of quietly counting up. window.__age(iso) test hook added alongside __hold/__step.
 evidence: node --check clean · branch test {old: rgb(226,184,120) at "data 4 h old", fresh: clean at "data 20 min old", errs: 0} · observed the 09:00Z-hour refresh land during the cycle (data 1 h → 14 min, counts 6→5 running, 17→18 flagged — pipeline alive end-to-end) · sweep + tour {reel:false, errs:0} · live SHA256 == local (4D8773F3…).
 next-observe: freshness language is now complete (cards → lists → header counter → the site itself). Parked: instancing cycle B. Fresh candidates: ALERTS wall panel could carry ages; DEPTH grounding under the orb.
+
+## 29 · 2026-08-09 · systemic · DENSITY/TRUTH
+scores: U9 L9 D8 De9 A9 P9
+shipped: all four wall terminals (LIVE NOW / SYSTEM LOG / ALERTS / ACTIVITY) gain a right-aligned compact age column per row (ageShort: Nm/Nh/Nd from n.last), amber #e2b878 when isStale(n), dim grey otherwise; detail column trimmed 24→19 chars to make room. ALERTS now answers "broken for how long" — 18d vs 3h flags are different priorities and the wall says so.
+evidence: node --check clean · v39-panels.png + 10x crop v39-alerts-zoom.png read — every row shows label · detail · right-aligned age, amber on stale rows, clean column separation at 622px within the 640px canvas · sweep + tour {reel:false, errs:0} · live SHA256 == local (136B3E12…).
+next-observe: freshness/truth arc genuinely complete now across every surface. Next candidates: DEPTH orb grounding, instancing cycle B (parked), or a fresh fundamental question (~due next cycle: what does a first-time IG visitor still not GET in 10 s?).
