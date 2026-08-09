@@ -19,3 +19,15 @@ evidence: /run fired end-to-end (log: gen-data -> lock -> push -> deployed -> re
 exit 0); live fleet.json exported 08:18Z, ~7 min old at check; next run hourly.
 next-observe: header data-age on the live page through a full hour; then backlog #2
 (tiles are dead - click a wall tile should open that agent's card).
+
+## 2 · 2026-08-09 · systemic · USEFUL
+scores: U6->7 L7 D8 De7 A8 P7
+shipped: wall tiles are live. Hovering a tile highlights it (white border, brighter
+fill, pointer cursor); clicking opens that agent's full card. UV->cell mapping via
+shared tileGrid/tileAt on the 8 zone canvases; hover state survives the blink redraw.
+evidence: observed prod "data 11 min old" (iter-1 confirmed on live page); click test
+opened "Weather Oracle" card at level ALL with pointer cursor and no level change
+(tile path by elimination - hubs change level, orbs don't set cursor); screenshot
+read; tour frames clean 21000-32200ms; live hash==local after deploy.
+next-observe: whether tile hover feels precise at grazing wall angles; then backlog
+#3 (checkpoint last-result readouts) or #5 (search palette).
