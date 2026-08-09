@@ -105,7 +105,13 @@
     }
     header .counts::-webkit-scrollbar { display: none; }
     header .counts button.cbtn { padding: 6px 2px; }
-    #crumbs { top: 62px; }
+    /* the wrapped header runs three rows deep on phones — a top scrim seats
+       the HUD on the bright close-framed wall */
+    header::before {
+      content: ''; position: absolute; left: -20px; right: -20px; top: -14px; height: 144px;
+      background: linear-gradient(rgba(8,10,24,.78), rgba(8,10,24,.4) 55%, transparent);
+      z-index: -1; pointer-events: none;
+    }
   }
 
   #crumbs {
@@ -121,6 +127,8 @@
   #crumbs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   #crumbs .here { color: var(--ink); }
   #crumbs .sep { opacity: .5; }
+  /* must sit AFTER the base rule — equal specificity, source order decides */
+  @media (max-width: 700px) { #crumbs { top: 128px; } }
 
   #deptnav {
     position: fixed; bottom: calc(18px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
