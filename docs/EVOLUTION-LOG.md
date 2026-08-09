@@ -617,3 +617,10 @@ shipped: the record moved INTO the room — every wall tile now carries a 21-slo
 evidence: node --check OK; local 8613 — #hunt then #hunt/job-engine (deep links as verify harness), strips ambiguous at 1366 so re-verified honestly at 1920×1080: paired grey segments visible bottom-right on every tile; errs 0; viewport restored 1366×768. hist append CONFIRMED AGAIN: 19:48Z export → {3:145}.
 deploy cadence: quota window trickles roughly one build per ~10 min — iter-62 (63824473) went LIVE while 63 was building; 35D636BA now pending. Batched-push protocol handles it.
 next-observe: FIRST live==35D636BA (strips live). Watch a flag lane's strip show salmon (17 flagged exist — find one's tile at level 2 and read the strip). Systemic next; visual steer satisfied by strips when they land.
+
+## 64 · 2026-08-09 · systemic · DENSITY/USEFUL
+scores: U10 L10 D10 De10 A10 P10
+shipped: member record strips — each agent row in the group card carries the last-8 tail of its record (.hist-mini, 4px cells, newest right). The record now reads at every altitude: tiles (63) → group rollup (56) → member rows (64) → full agent card (55).
+evidence: local ?v=95 same-eval probe {host:127.0.0.1:8613, strips:7, cells:21, errs:0} + screenshot read (··· after each name). Prod after deploy: #content/newsroom — flagged lane ClaudeConvoDaily renders 3×var(--danger) cells, ok lanes var(--ink); same-eval host verified. LIVE MATCH ACA52B1F after 2 polls (carried 63+64; quota window flowing again).
+incident: mid-verify the shared relay tab was navigated to prod by an outside actor (sibling/task) — a stale-DOM probe read strips:0 and a screenshot caught the attract reel. Root-caused via location.search in a follow-up probe. RULE REINFORCED: capture location/host in the SAME eval as every probe AND every screenshot-adjacent step; a probe without provenance is not evidence.
+next-observe: all record surfaces live. Fundamental due ~67. Candidates: tour refresh to showcase current visual state (research reel timing first), search→group nav, CORE banner still parked for Marco copy.
