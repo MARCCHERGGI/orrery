@@ -3,7 +3,7 @@
   "title": "AI COMMAND CENTER",
   "subtitle": "one company · run live by autonomous AI agents",
   "operator": "Marco Hergi · NYC",
-  "exported": "2026-08-09T09:46:23.487Z",
+  "exported": "2026-08-09T10:48:13.618Z",
   "source": "warden fleet-health"
  },
  "departments": [
@@ -497,7 +497,7 @@
    "detail": "OK",
    "replaces": "an ops director — drives a 20-goal life portfolio forward daily",
    "last": "2026-08-09T07:50:10.000Z",
-   "next": "2026-08-10T07:38:45.000Z",
+   "next": "2026-08-10T07:34:41.000Z",
    "mass": 3
   },
   {
@@ -540,8 +540,8 @@
    "detail": "STILL_RUNNING (running)",
    "cadence": "every 15 min",
    "replaces": "an SRE on-call — audits, heals and restarts 144 scheduled lanes every 15 minutes",
-   "last": "2026-08-09T09:46:19.000Z",
-   "next": "2026-08-09T10:02:02.000Z",
+   "last": "2026-08-09T10:48:10.000Z",
+   "next": "2026-08-09T11:03:35.000Z",
    "mass": 3
   },
   {
@@ -562,7 +562,7 @@
    "status": "ok",
    "detail": "OK",
    "last": "2026-08-09T08:08:45.000Z",
-   "next": "2026-08-10T08:09:48.000Z",
+   "next": "2026-08-10T08:05:28.000Z",
    "mass": 2
   },
   {
@@ -676,7 +676,7 @@
    "cadence": "daily 07:45",
    "replaces": "a social media assistant — triages Instagram DMs every morning, drafts gated replies",
    "last": "2026-08-09T06:17:52.000Z",
-   "next": "2026-08-09T11:49:42.000Z",
+   "next": "2026-08-09T12:22:45.000Z",
    "mass": 3
   },
   {
@@ -707,8 +707,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 15 min",
-   "last": "2026-08-09T09:57:01.000Z",
-   "next": "2026-08-09T10:12:00.000Z",
+   "last": "2026-08-09T10:57:01.000Z",
+   "next": "2026-08-09T11:12:00.000Z",
    "mass": 2
   },
   {
@@ -895,8 +895,8 @@
    "status": "ok",
    "detail": "OK",
    "replaces": "a store manager — watches the merch reserve rail",
-   "last": "2026-08-09T09:58:08.000Z",
-   "next": "2026-08-09T10:13:06.000Z",
+   "last": "2026-08-09T10:58:07.000Z",
+   "next": "2026-08-09T11:13:06.000Z",
    "mass": 3
   },
   {
@@ -944,7 +944,7 @@
    "detail": "OK",
    "replaces": "a newsletter staff — the NYC tech index, sourced and probed before send",
    "last": "2026-08-08T17:17:53.000Z",
-   "next": "2026-08-09T11:00:00.000Z",
+   "next": "2026-08-10T11:00:00.000Z",
    "mass": 3
   },
   {
@@ -994,8 +994,8 @@
    "group": "field",
    "status": "ok",
    "detail": "OK",
-   "last": "2026-08-09T10:00:01.000Z",
-   "next": "2026-08-09T11:00:00.000Z",
+   "last": "2026-08-09T11:00:01.000Z",
+   "next": "2026-08-09T12:00:00.000Z",
    "mass": 2
   },
   {
@@ -1007,7 +1007,7 @@
    "detail": "OK",
    "replaces": "a project manager checking claims — verifies each \"shipped\" against commits, deploys and Stripe",
    "last": "2026-08-08T17:17:34.000Z",
-   "next": "2026-08-09T11:51:57.000Z",
+   "next": "2026-08-09T11:32:46.000Z",
    "mass": 3
   },
   {
@@ -1108,8 +1108,8 @@
    "group": "healing",
    "status": "ok",
    "detail": "OK",
-   "last": "2026-08-09T09:56:07.000Z",
-   "next": "2026-08-09T10:18:07.000Z",
+   "last": "2026-08-09T10:57:37.000Z",
+   "next": "2026-08-09T11:18:04.000Z",
    "mass": 2
   },
   {
@@ -1119,8 +1119,8 @@
    "group": "healing",
    "status": "ok",
    "detail": "OK",
-   "last": "2026-08-09T09:43:01.000Z",
-   "next": "2026-08-09T10:13:00.000Z",
+   "last": "2026-08-09T10:43:01.000Z",
+   "next": "2026-08-09T11:13:00.000Z",
    "mass": 2
   },
   {
@@ -1130,8 +1130,8 @@
    "group": "relays",
    "status": "ok",
    "detail": "OK",
-   "last": "2026-08-09T09:55:49.000Z",
-   "next": "2026-08-09T10:05:14.000Z",
+   "last": "2026-08-09T10:53:42.000Z",
+   "next": "2026-08-09T11:04:50.000Z",
    "mass": 2
   },
   {
@@ -1196,7 +1196,7 @@
    "cadence": "daily 05:20",
    "replaces": "a weekly retro — reads its own telemetry and ships one self-improvement daily at 05:20",
    "last": "2026-08-09T09:27:26.000Z",
-   "next": "2026-08-10T09:43:46.000Z",
+   "next": "2026-08-10T09:45:37.000Z",
    "mass": 3
   },
   {
@@ -1228,8 +1228,8 @@
    "detail": "OK",
    "cadence": "every 6 h",
    "replaces": "a social analyst — snapshots five platforms every 6 hours",
-   "last": "2026-08-09T04:06:06.000Z",
-   "next": "2026-08-09T10:40:11.000Z",
+   "last": "2026-08-09T10:03:45.000Z",
+   "next": "2026-08-09T16:19:10.000Z",
    "mass": 3
   },
   {
@@ -1310,8 +1310,8 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "replaces": "a pocket assistant — the phone-side line into everything here",
-   "last": "2026-08-09T09:59:52.000Z",
-   "next": "2026-08-09T10:00:51.000Z",
+   "last": "2026-08-09T10:59:52.000Z",
+   "next": "2026-08-09T11:00:51.000Z",
    "mass": 3
   },
   {
@@ -1321,8 +1321,8 @@
    "group": "telegram",
    "status": "ok",
    "detail": "OK",
-   "last": "2026-08-09T10:00:01.000Z",
-   "next": "2026-08-09T10:05:00.000Z",
+   "last": "2026-08-09T11:00:01.000Z",
+   "next": "2026-08-09T11:05:00.000Z",
    "mass": 2
   },
   {
@@ -1477,7 +1477,7 @@
    "status": "ok",
    "detail": "OK",
    "last": "2026-08-08T17:17:34.000Z",
-   "next": "2026-08-09T14:11:00.000Z",
+   "next": "2026-08-09T14:11:29.000Z",
    "mass": 2
   },
   {
@@ -1649,7 +1649,7 @@
    "status": "ok",
    "detail": "OK",
    "last": "2026-08-08T17:17:34.000Z",
-   "next": "2026-08-09T11:16:40.000Z",
+   "next": "2026-08-09T11:32:18.000Z",
    "mass": 2
   },
   {
@@ -1669,8 +1669,8 @@
    "group": "operators",
    "status": "ok",
    "detail": "OK",
-   "last": "2026-08-09T09:59:11.000Z",
-   "next": "2026-08-09T10:00:10.000Z",
+   "last": "2026-08-09T10:59:11.000Z",
+   "next": "2026-08-09T11:00:10.000Z",
    "mass": 2
   },
   {
@@ -1740,7 +1740,7 @@
    "group": "the-house",
    "status": "running",
    "detail": "STILL_RUNNING (running)",
-   "last": "2026-08-09T07:48:04.000Z",
+   "last": "2026-08-09T10:18:52.000Z",
    "mass": 2
   }
  ]
