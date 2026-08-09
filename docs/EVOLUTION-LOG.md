@@ -322,3 +322,23 @@ next-observe: NEXT CYCLE (straddles 08:00): check window.__exportAt0 vs the
 armed tab's current fleet.meta.exported + header age - if the tab rebuilt
 itself, the whole loop (schtask -> deploy -> self-refresh) is closed. Then
 portrait tap measure or instancing cycle A.
+
+## 20 · 2026-08-09 · systemic · USEFUL/TRUTH (cadence)
+scores: U9->10 L8 D9 De9 A10 P8
+shipped: real cadence for every lane. The curated CADENCE dict covered 10/145;
+every other card showed no schedule. gen-data now derives cadence from the
+scheduler's own columns (Schedule Type / Start Time / Repeat: Every):
+"0 Hour(s), 15 Minute(s)" -> "every 15 min", Daily+start -> "daily 22:45",
+"At system start up" -> "at boot". Curated wording wins where present.
+Coverage 10 -> 139/145. This also gives the stale-ok tension its context: a
+card can now read "every 5 min" next to "ran 8 d ago" (Screen Activity) -
+the contradiction is visible without any invented status logic (backlog #6
+half-solved by honest data adjacency).
+evidence: node-only verify (armed prod tab untouched): coverage counted
+139/145; spot-checks match known truth exactly (FleetWarden every 15 min,
+SocialWatch every 6 h, NycScout daily 22:45, OrreryRefresh every 1 h, ACP
+dashboard at boot); live fleet.json probed redirects-off: exported 11:31:45Z
++ 139 cadences. index.html unchanged this cycle - no page verify needed.
+next-observe: the armed tab (export-at-arm 10:48Z, 233s tick) should have
+self-rebuilt to 11:31Z ~4 min after this deploy - check the header age on
+wake. That closes schtask->deploy->self-refresh end to end.
