@@ -91,6 +91,13 @@
     pointer-events: none;
   }
   header .wordmark { font-family: var(--serif); font-weight: 600; font-size: 17px; letter-spacing: .34em; }
+  /* top scrim at every width — at level 2 the camera sits close to a lit wall
+     and tile labels bleed through the counters without it */
+  header::before {
+    content: ''; position: absolute; left: -20px; right: -20px; top: -14px; height: 89px;
+    background: linear-gradient(rgba(8,10,24,.78), rgba(8,10,24,.4) 55%, transparent);
+    z-index: -1; pointer-events: none;
+  }
   header .counts { font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; letter-spacing: .04em; pointer-events: auto; }
   header .counts b { color: var(--ink); font-weight: 600; }
   header .counts button.cbtn {
@@ -123,13 +130,8 @@
     }
     header .counts::-webkit-scrollbar { display: none; }
     header .counts button.cbtn { padding: 6px 2px; }
-    /* the wrapped header runs three rows deep on phones — a top scrim seats
-       the HUD on the bright close-framed wall */
-    header::before {
-      content: ''; position: absolute; left: -20px; right: -20px; top: -14px; height: 144px;
-      background: linear-gradient(rgba(8,10,24,.78), rgba(8,10,24,.4) 55%, transparent);
-      z-index: -1; pointer-events: none;
-    }
+    /* the wrapped header runs three rows deep on phones — taller scrim */
+    header::before { height: 144px; }
   }
 
   #crumbs {
