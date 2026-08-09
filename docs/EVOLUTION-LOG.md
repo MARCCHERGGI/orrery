@@ -737,3 +737,9 @@ scores: U10 L10 D10 De10 A10 P10
 shipped: nothing — clean walk. Flagged status view exercised on PROD: 18/18 rows, all with 6-dot salmon strips, honest ages (9d-74d), real failure codes (REQUEST_REFUSED / GENERIC_FAILURE / FLOOR_BREACHED / CTRL_C_EXIT); rows with no last-run show code only (never-ran sentinel correctly stripped). Iter-81 header scrim visible in the same shot doing its job. errs 0; standing sweep clean.
 evidence: screenshot READ (system view over the room); probe {card:true, rows:18, minis:18, errs:0}.
 next-observe: 7th cardiogram column (00:00Z refresh imminent). Iter 83 = FUNDAMENTAL — candidate question: none urgent; if research yields nothing genuinely more useful, the honest fundamental is a no-op verdict. Strips at 13 columns ~05:00Z.
+
+## 83 · 2026-08-09 · fundamental · (verdict — mobile funnel RULES-OUT)
+scores: U10 L10 D10 De10 A10 P10
+shipped: verdict only. Research question: does the first-time MOBILE tap-through flow (the actual IG-viewer path) work end-to-end on prod? Walked at 390×844: intro tap → enter → tap first visible monument (the-pocket, screen 52,563; 5 monuments tappable on first screen) → level 2 + checkpoint card open + deep link #senses/the-pocket written → errs 0. RULES-OUT mobile-interaction rework. The funnel chain is now verified end-to-end across cycles: OG unfurl (72/78/80) → fast boot (71/76) → dead-tap ack (73) → tap-through + deep link (83, this). Gotcha: __mon(j) throws past monRings.length — probe loops need try/catch; left as-is (verify-only hook).
+evidence: prod probe {visN:5, tapped:{g:"the-pocket"}, lvl:{level:2,groupId:"the-pocket"}, card:true, hash:"#senses/the-pocket", errs:0}; viewport restored 1366×768; sweep clean.
+next-observe: 7th cardiogram column (00:00Z refresh due now — check next cycle). Strips at 13 columns ~05:00Z. Iters 84+ systemic observation duties; fundamental ~87.
