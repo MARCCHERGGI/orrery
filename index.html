@@ -1854,17 +1854,25 @@ search.addEventListener('input', () => {
 
 /* ============================== reel mode ============================== */
 function tourKeys() {
-  /* exactly 10 seconds: dive in → one room → one monument → pull out */
+  /* exactly 10 seconds: dive through the portal → glancing sweep along the
+     icon-grid wall → the INSTAGRAM monument → JARVIS close → pull back out */
   const d = deptList.find(x => Object.keys(x.hubs || {}).some(g => /instagram/.test(g))) || deptList[0];
   const gid = Object.keys(d.hubs).find(g => /instagram/.test(g)) || Object.keys(d.hubs)[0];
   const hub = d.hubs[gid];
+  /* wall point + sweep frame for this zone, side- or back-wall */
+  const side = d.nx !== 0;
+  const wx = side ? Math.sign(d.cx) * ROOM.hw : d.cx;
+  const wz = side ? d.cz : -ROOM.depth;
+  const sweepPos = side ? [wx + d.nx * 250, 165, d.cz + 330] : [d.cx + 330, 165, wz + 250];
+  const sweepTgt = side ? [wx, 150, d.cz - 90] : [d.cx - 90, 150, wz];
   return [
     { t: 0, pos: [0, 310, 1580], tgt: [0, 200, -350] },
-    { t: 2200, pos: [0, 250, 830], tgt: [0, 160, -350], act: () => { close(); setLevelSilent(0); } },
-    { t: 4200, pos: [d.cx + d.nx * 420, 240, d.cz + d.nz * 420], tgt: [d.cx, 90, d.cz], act: () => { close(); setLevelSilent(1, deptList.indexOf(d)); } },
-    { t: 6400, pos: [hub.x + d.nx * 170, hub.y + 42, hub.z + d.nz * 170], tgt: [hub.x, hub.y - 14, hub.z], act: () => setLevelSilent(2, deptList.indexOf(d), gid) },
-    { t: 8300, pos: [0, 250, 830], tgt: [0, 160, -350], act: () => { close(); setLevelSilent(0); } },
-    { t: 10000, pos: [0, 280, 1040], tgt: [0, 175, -350] },
+    { t: 2000, pos: [0, 250, 830], tgt: [0, 160, -350], act: () => { close(); setLevelSilent(0); } },
+    { t: 3600, pos: sweepPos, tgt: sweepTgt, act: () => { close(); setLevelSilent(1, deptList.indexOf(d)); } },
+    { t: 5600, pos: [hub.x + d.nx * 170, hub.y + 42, hub.z + d.nz * 170], tgt: [hub.x, hub.y - 14, hub.z], act: () => setLevelSilent(2, deptList.indexOf(d), gid) },
+    { t: 7400, pos: [0, 315, -250], tgt: [0, 300, -640], act: () => { close(); setLevelSilent(0); } },
+    { t: 8600, pos: [0, 250, 830], tgt: [0, 175, -350] },
+    { t: 10000, pos: [0, 280, 1060], tgt: [0, 175, -350] },
   ];
 }
 function setLevelSilent(lv, di, gid) { setLevel(lv, di, gid); camGoal.active = false; }
