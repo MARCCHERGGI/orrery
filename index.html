@@ -279,6 +279,7 @@
     <div class="sect" id="card-hist-sect" style="display:none"><div class="k">the record</div><div id="card-hist"></div></div>
   </div>
   <div id="group-only" style="display:none">
+    <div class="sect" id="card-ghist-sect" style="display:none"><div class="k">the record</div><div id="card-ghist"></div></div>
     <div class="sect"><div class="k" id="card-members-k">agents at this checkpoint</div><ul class="members" id="card-members"></ul></div>
   </div>
 </aside>
@@ -2069,6 +2070,8 @@ canvas.addEventListener('pointerup', e => {
 });
 
 /* ============================== cards ============================== */
+/* record dot colors — the room's status palette */
+const HISTC = { o: 'var(--ink)', r: 'var(--accent)', f: 'var(--danger)', d: 'var(--ink-faint)' };
 const BADGE = {
   ok:      { text: 'fully autonomous', color: 'var(--accent)' },
   running: { text: 'running now',      color: 'var(--accent)' },
@@ -2129,13 +2132,10 @@ function open(n) {
   /* the record — one dot per hourly export, oldest→newest, room status colors */
   const hs = $('card-hist'); hs.innerHTML = '';
   $('card-hist-sect').style.display = n.hist ? '' : 'none';
-  if (n.hist) {
-    const HC = { o: 'var(--ink)', r: 'var(--accent)', f: 'var(--danger)', d: 'var(--ink-faint)' };
-    for (const ch of n.hist) {
-      const dot = document.createElement('span');
-      dot.className = 'hist-dot'; dot.style.background = HC[ch] || HC.o;
-      hs.appendChild(dot);
-    }
+  if (n.hist) for (const ch of n.hist) {
+    const dot = document.createElement('span');
+    dot.className = 'hist-dot'; dot.style.background = HISTC[ch] || HISTC.o;
+    hs.appendChild(dot);
   }
   const cd = $('card-detail'); cd.textContent = n.detail || '—';
   if (n.last) { const r = relAgo(n.last); if (r) {
@@ -2162,6 +2162,20 @@ function openGroup(d, hub) {
   $('card-dept').textContent = d.label.toLowerCase();
   $('card-name').textContent = hub.label.replace(/-/g, ' ');
   $('card-lede').textContent = (hub.blurb || '') + ` — ${c('ok')} ok · ${c('running')} running · ${c('flag')} flagged · ${c('dormant')} dormant.`;
+  /* checkpoint record — per sample (aligned newest-last), the worst member
+     status wins the dot: any flag → danger, else any running → accent,
+     else all-dormant → faint, else ok */
+  const gh = $('card-ghist'); gh.innerHTML = '';
+  const HL = Math.max(0, ...members.map(m => (m.hist || '').length));
+  $('card-ghist-sect').style.display = HL ? '' : 'none';
+  for (let i = HL; i >= 1; i--) {
+    const col = members.map(m => { const h = m.hist || ''; return h[h.length - i]; }).filter(Boolean);
+    if (!col.length) continue;
+    const ch = col.includes('f') ? 'f' : col.includes('r') ? 'r' : col.every(c2 => c2 === 'd') ? 'd' : 'o';
+    const dot = document.createElement('span');
+    dot.className = 'hist-dot'; dot.style.background = HISTC[ch];
+    gh.appendChild(dot);
+  }
   $('card-members-k').textContent = 'agents at this checkpoint';
   const ul = $('card-members'); ul.innerHTML = '';
   for (const m of members) {
