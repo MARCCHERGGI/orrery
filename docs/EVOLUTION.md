@@ -6,6 +6,12 @@ live site, with independent freedom of direction, under ONE constraint:
 **maximum deliberate usefulness** — every shipped change must make the thing
 more useful to a real viewer or to Marco, not merely different.
 
+Marco's steer (2026-08-09, verbatim intent): **"make it fast, efficient and
+awesome looking."** Visual advancement is a co-primary axis with usefulness:
+lean toward cycles that visibly upgrade the look (light, material, atmosphere,
+motion) while holding perf (draw calls bounded, mobile smooth). At least every
+other cycle should ship something a viewer can SEE improved.
+
 ## The loop (one iteration, every cycle)
 
 1. **OBSERVE** — open the live site, take screenshots (overview + one zone +

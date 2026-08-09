@@ -1211,6 +1211,13 @@ function buildWorld() {
 
   /* zones live along the walls — 3 left, 2 back, 3 right, like rooms in the reference */
   const D = deptList;
+  /* luminous walls bleed light onto the floor — shared alpha gradient, tinted per zone */
+  const bc = document.createElement('canvas'); bc.width = 4; bc.height = 128;
+  const bg2 = bc.getContext('2d');
+  const bgr = bg2.createLinearGradient(0, 0, 0, 128);
+  bgr.addColorStop(0, 'rgba(255,255,255,.5)'); bgr.addColorStop(.55, 'rgba(255,255,255,.14)'); bgr.addColorStop(1, 'rgba(255,255,255,0)');
+  bg2.fillStyle = bgr; bg2.fillRect(0, 0, 4, 128);
+  const bleedTex = new THREE.CanvasTexture(bc);
   /* universal system-role keywords — readable anywhere in the world */
   const ROLE = { revenue: 'OUTPUT', content: 'MEDIA', hunt: 'SEARCH', senses: 'INPUT', self: 'REPAIR', empire: 'GOALS', bridge: 'LINK', markets: 'SIGNALS' };
   const SLOTS = [
@@ -1230,6 +1237,18 @@ function buildWorld() {
       new THREE.MeshBasicMaterial({ color: hsl(d.hue, .55, .5), transparent: true, opacity: .04, depthWrite: false })
     );
     disc.rotation.x = -Math.PI / 2; disc.position.y = .6; disc.userData = { kind: 'zone', dept: d.id };
+
+    /* the zone's wall light pools on the floor at its base (F(6) × F(3)) */
+    const bleed = new THREE.Mesh(new THREE.PlaneGeometry(FIB(6), FIB(3)),
+      new THREE.MeshBasicMaterial({ map: bleedTex, color: hsl(d.hue, .6, .5), transparent: true, opacity: .38, blending: THREE.AdditiveBlending, depthWrite: false }));
+    if (s.nz === 1) {
+      bleed.rotation.set(-Math.PI / 2, 0, 0);
+      bleed.position.set(d.cx, .7, -ROOM.depth + FIB(3) / 2);
+    } else {
+      bleed.rotation.set(-Math.PI / 2, 0, s.nx === 1 ? Math.PI / 2 : -Math.PI / 2);
+      bleed.position.set(s.nx === 1 ? -ROOM.hw + FIB(3) / 2 : ROOM.hw - FIB(3) / 2, .7, d.cz);
+    }
+    world.add(bleed);
     zone.add(disc); zoneDiscs.push(disc);
     const dialCol = hsl(d.hue, .5, .62), dialFaintCol = hsl(d.hue, .4, .55);
     circSeg(d.cx, d.cz, FIB(4), .8, dialCol, .5);
