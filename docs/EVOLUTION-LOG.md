@@ -157,3 +157,20 @@ evidence: COMMUNICATIONS wall before/after read - labels now cell-contained
 full rec tour zero __errs; live hash==local redirects-off.
 next-observe: monument-trio instancing (PERF, 352 -> ~290 est) or reel variants.
 LEGIBLE re-check at ALL distance after this label change.
+
+## 11 · 2026-08-09 · systemic · USEFUL (reel)
+scores: U9 L8 D8 De8 A9 P8
+shipped: backlog #6 - reel variants. The 10s tour was hard-pinned to the INSTAGRAM
+monument; every recording was the same take. Now each run rotates its hero: run 1
+instagram, then every zone's biggest checkpoint in zone order (tourRun counter, mod
+cycle). Same choreography, timings and math - only the hero changes. Marco presses
+tour repeatedly and gets 9 different takes for the IG reel. Monument instancing
+DEFERRED again: per-instance emissive animation + hub raycast/hover rework is too
+much risk for one cycle at this cadence.
+evidence: 8 full tours stepped frame-by-frame with zero __errs; rotation PROVEN by
+reading the HUD crumb synchronously mid-tour across 4 runs: all>operations>healing,
+all>strategy>oracles, all>communications>relays, all>finance>crypto - a different
+hero each run; live hash==local redirects-off.
+next-observe: LEGIBLE at ALL distance post-label-change; whether non-IG heroes
+frame well (healing/relays monuments sit at different wall offsets). PERF backlog
+still queued behind a lower-risk plan (label sprite merge first, then trios).
