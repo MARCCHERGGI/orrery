@@ -124,3 +124,21 @@ zero __errs, rec returned to idle; live hash==local redirects-off.
 next-observe: fundamental cycle is due (iters 5-8 all systemic). Candidates: LEGIBLE
 paradigm pass (wall stat strips at distance), or the room's story for a first-time
 phone visitor. Perf backlog (monument-trio instancing) stays queued.
+
+## 9 · 2026-08-09 · fundamental · ALIVE/USEFUL (data pipeline)
+scores: U9 L7 D8 De8 A8->9 P8
+shipped: per-lane truth timestamps. The pipeline had no time at the lane level -
+nothing could say WHEN a lane last ran. gen-data.mjs now bulk-queries the Windows
+scheduler (schtasks CSV /v, quoted-comma-safe parser, best-effort try/catch) and
+merges real last/next run times into every node; the agent card's LAST RESULT line
+becomes e.g. "STILL_RUNNING (running) - ran 11 min ago - next in 4 min". 145/145
+lanes got a last-run, 25 have a next-run. Hourly refresh re-exports automatically.
+evidence: exported times cross-check known truth (SocialWatch last==its own log
+header to the second; FleetWarden 15-min spacing; OrreryRefresh on the hour); local
+card read in screenshot (Fleet Warden, running, ran 11 min - next 4 min); honest
+side-effect visible: several "ok" lanes show "ran 14 d ago" - real disabled-lane
+truth the room previously hid. 11s sweep + full rec tour zero __errs; live
+index hash==local; live fleet.json confirmed carrying "last" timestamps.
+next-observe: whether stale-but-ok lanes ("ok" + ran weeks ago) should read as
+dormant in status logic - the timestamps now make that computable. Then LEGIBLE
+wall-strip pass or monument-trio instancing.
