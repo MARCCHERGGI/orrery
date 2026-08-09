@@ -359,3 +359,10 @@ scores: U9 L8 D8 De8 A9 P9
 shipped: backlog #6 stale-ok surfacing — cadSecs() parses the lane's own cadence ("every N min/h", daily, weekly; boot/logon/idle = no expectation), isStale() flags age > cadence·φ² with a φ³-hour floor (absorbs hourly-export + warden lag), and the card's "ran X ago" span tints amber (#e2b878) when stale. Zero invented words — the amber age reads directly against the cadence chip above it.
 evidence: node --check clean · in-page probe: Screen Activity ("every 5 min", ran 8 d ago) → tint rgb(226,184,120); Fleet Warden ("every 15 min", ran 28 min ago) → no tint · v32-stale-card.png read — amber "ran 8 d ago" beside "every 5 min" chip, unambiguous · sweep 120 frames + full tour enter/exit {reel:false, errs:0} · live SHA256 == local (7498A004…).
 next-observe: instancing cycle B (pillars, 29/29 click bar per INSTANCING-PLAN.md) is the remaining planned item; also consider whether stale tint should reach the floor ledger / member rows once card-level proves useful.
+
+## 23 · 2026-08-09 · systemic · USEFUL/TRUTH
+scores: U9 L8 D8 De8 A9 P9
+shipped: stale amber extended from the card to both list surfaces — group-card member rows and status-view rows append the lane's age in amber (#e2b878) inside the .st span when isStale(). Same φ² rule, zero new words; a scan of "106 ok" now shows which ok lanes are actually ancient.
+evidence: node --check clean · status view probe: 106 rows, 66 amber (honest — jobhunt/board lanes are deliberately disabled and 4-21 d old) · v33-status-view.png read — amber "8 d ago · OK" vs clean "OK", at-boot lanes correctly untinted · group card probe via real pillar click at GROWTH: "job engine" 7/7 members amber with true ages · sweep + tour {reel:false, errs:0} · live SHA256 == local (64E3CC86…).
+finding: 66/106 "ok" lanes exceed their own cadence by φ² — the fleet's ok column is mostly dormant-in-practice. That is now visible instead of buried.
+next-observe: instancing cycle B (pillars, 29/29 click bar) remains the planned perf item; a fundamental cycle is due soon (last research was iter 19). Consider whether the header "106 ok" counter itself should hint how many of those are stale.
