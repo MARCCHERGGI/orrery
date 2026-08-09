@@ -603,3 +603,10 @@ shipped: agent deep links — #a/<nodeId> boots straight to the lane's card at i
 evidence: local 8613 — boot #a/ClaudeBoardScan → level 2 job-engine + Board Scan card + hash intact; close → #hunt at level 1; hashchange #a/ClaudeAffiliateTick → card swaps; errs 0. Prod after deploy: same boot probe clean. node --check OK.
 deploy note: iter-60's PENDING-DEPLOY root-caused via Vercel API — no deployment records were minted for those pushes (deployment-creation quota window), not a build failure; the 61 push landed A3D351EE carrying 60+61, LIVE MATCH after 2 polls. Rule confirmed: batched pushes resolve stalled windows; check list_deployments before suspecting the build.
 next-observe: hist should be {3:145} after the 20:00Z refresh (or {2}+{3} mix mid-cache). Visual steer: next visible ship candidates — CORE column polish, portrait spot-check of card hash flows. Fundamental due ~63.
+
+## 62 · 2026-08-09 · systemic · LEGIBLE
+scores: U10 L10 D10 De10 A10 P10
+shipped: portrait HUD repair — (1) top scrim (header::before, 144px gradient) seats wordmark/controls/counts on the bright close-framed wall; (2) crumbs drop to 128px clearing the three wrapped header rows; (3) found + killed a LATENT DEAD RULE: the old portrait "#crumbs { top: 62px }" lived in a media block ABOVE the base rule — equal specificity, later source wins, so it never applied. New override placed after the base rule with a comment.
+evidence: local 8613 portrait 390×844 — before: crumbs y46 colliding with age/FACE/TOUR row; after: crumbsTop probe 128, screenshot shows four clean rows on the scrim; landscape restored 1366×768 probe: crumbsTop 46, scrim absent, errs 0 both. node --check OK. Agent deep link re-verified in portrait during OBSERVE (card clean).
+ship status: PENDING-DEPLOY — pushed 63824473, live still A3D351EE (quota window, same as iter 60; rule: check list_deployments before suspecting build).
+next-observe: FIRST live==63824473 (or successor). hist expect {3:145} after 20:00Z refresh. Fundamental due ~63 — research first; candidate paradigms: time-in-the-room, search→checkpoint nav, tour+deep-link composition.
