@@ -1502,6 +1502,12 @@ function buildWorld() {
   };
   const byStatus = st => nodes.filter(n => st.includes(n.status));
   const TCOL = { running: '#8be2b9', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
+  const ageShort = t => {
+    if (!t) return '';
+    const s = (Date.now() - new Date(t)) / 1000;
+    if (!(s >= 0)) return '';
+    return s < 5400 ? Math.round(s / 60) + 'm' : s < 129600 ? Math.round(s / 3600) + 'h' : Math.round(s / 86400) + 'd';
+  };
   function drawTerm(T) {
     const { g, c } = T;
     g.fillStyle = 'rgba(10,12,26,.96)'; g.fillRect(0, 0, c.width, c.height);
@@ -1517,7 +1523,14 @@ function buildWorld() {
       const line = `${n.status === 'running' ? '►' : n.status === 'flag' ? '✕' : '●'} ${n.label}`;
       g.fillText(line.slice(0, 26), 18, y);
       g.fillStyle = 'rgba(140,140,171,.85)';
-      g.fillText(String(n.detail || n.cadence || '').slice(0, 24), 330, y);
+      g.fillText(String(n.detail || n.cadence || '').slice(0, 19), 330, y);
+      const a = ageShort(n.last);
+      if (a) {
+        g.textAlign = 'right';
+        g.fillStyle = isStale(n) ? '#e2b878' : 'rgba(140,140,171,.6)';
+        g.fillText(a, 622, y);
+        g.textAlign = 'left';
+      }
     }
     T.tex.needsUpdate = true;
   }
