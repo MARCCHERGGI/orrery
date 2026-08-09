@@ -2313,7 +2313,15 @@ $('find').addEventListener('click', () => {
 addEventListener('keydown', e => {
   if (e.target === search) {
     if (e.key === 'Escape') { search.value = ''; query = ''; nodes.forEach(n => n._hit = false); search.classList.remove('show'); canvas.focus(); kick(); }
-    if (e.key === 'Enter') { const hit = nodes.find(n => n._hit); if (hit) { open(hit); search.blur(); } }
+    if (e.key === 'Enter') {
+      /* a query that NAMES a checkpoint or zone navigates there; otherwise
+         Enter opens the first matching lane as before */
+      const g = (fleet.groups || []).find(x => x.id === query || (x.label || '').toLowerCase() === query);
+      if (g) { const di = deptList.findIndex(d => d.id === g.dept); if (di >= 0 && deptList[di].hubs[g.id]) { close(); setLevel(2, di, g.id); search.blur(); return; } }
+      const dd = deptList.findIndex(d => d.label.toLowerCase() === query);
+      if (dd >= 0) { close(); setLevel(1, dd); search.blur(); return; }
+      const hit = nodes.find(n => n._hit); if (hit) { open(hit); search.blur(); }
+    }
     return;
   }
   if (reel) { if (e.key === 'Escape' || e.key.toLowerCase() === 'r') exitReel(); return; }
