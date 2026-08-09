@@ -783,7 +783,7 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, pillarAnims = [], terms = [], junRings = [], tilePanels = [], ledgerPlates = [];
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, pillarAnims = [], terms = [], junRings = [], tilePanels = [], ledgerPlates = [], monRings = [], monInst = null;
 const brain = new THREE.Group(); scene.add(brain);
 
 const BEAM_OP = .38;
@@ -1058,7 +1058,7 @@ const STATUS_COLOR = {
 };
 
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; pillarAnims = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = [];
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; pillarAnims = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = []; monRings = []; monInst = null;
 
   /* every agent is an app tile on its zone's wall — in the reference the walls
      ARE the OS: icon grids covering luminous surfaces. 5 columns, cells on the
@@ -1305,20 +1305,15 @@ function buildWorld() {
       /* monument → zone junction trace on the floor */
       seg(true, d.cx + hx, 1.2, d.cz + hz, d.cx, 1.2, d.cz, hsl(d.hue, .5, .62), .68);
 
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(13, 1.1, 10, 48),
-        new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .9 })
-      );
-      ring.rotation.x = Math.PI / 2;
-      ring.position.set(hx, H + 8, hz);
-      ring.userData = { spin: Math.pow(PHI, gi % 3 - 1) * .4, baseY: H + 8 };
-      zone.add(ring);
-
-      const cap = new THREE.Mesh(
-        new THREE.SphereGeometry(5, 16, 16),
-        new THREE.MeshBasicMaterial({ color: hsl(d.hue, .65, .75) })
-      );
-      cap.position.set(hx, H + 8, hz); zone.add(cap);
+      /* ring + cap are instanced after the zone loop (29 monuments → 2 draw
+         calls). The old per-ring z-spin was invisible — a torus is symmetric
+         about that axis — so only the bob is animated. */
+      monRings.push({
+        x: d.cx + hx, z: d.cz + hz, baseY: H + 8,
+        spin: Math.pow(PHI, gi % 3 - 1) * .4,
+        col: new THREE.Color(hsl(d.hue, .6, .66)),
+        capCol: new THREE.Color(hsl(d.hue, .65, .75)),
+      });
 
       /* checkpoint readout — real member counts + the group's actual last failure
          code from fleet.json. Flagged groups get a third line and a raised stack
@@ -1339,7 +1334,7 @@ function buildWorld() {
       }
 
       /* the phyllotaxis formation around this monument rotates rigidly, rate from φ */
-      d.hubs[g.id] = { ...g, x: d.cx + hx, z: d.cz + hz, y: H + 8, localX: hx, localZ: hz, H, ring,
+      d.hubs[g.id] = { ...g, x: d.cx + hx, z: d.cz + hz, y: H + 8, localX: hx, localZ: hz, H,
         omega: .00013 * Math.pow(PHI, gi % 3 - 1) };
 
       /* beam: checkpoint cap → brain */
@@ -1355,6 +1350,27 @@ function buildWorld() {
       beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx + hx, 1.6, d.cz + hz), new THREE.Vector3(d.cx, 1.6, d.cz)), dept: d.id, group: g.id });
     });
   });
+
+  /* monument rings + caps: 29 trios → 2 instanced draws */
+  if (monRings.length) {
+    const ri = new THREE.InstancedMesh(
+      new THREE.TorusGeometry(13, 1.1, 10, 48),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 }),
+      monRings.length);
+    const ci = new THREE.InstancedMesh(
+      new THREE.SphereGeometry(5, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xffffff }),
+      monRings.length);
+    const M4 = new THREE.Matrix4(), P = new THREE.Vector3(), S = new THREE.Vector3(1, 1, 1);
+    const QX = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
+    monRings.forEach((r, i) => {
+      M4.compose(P.set(r.x, r.baseY, r.z), QX, S);
+      ri.setMatrixAt(i, M4); ri.setColorAt(i, r.col);
+      ci.setMatrixAt(i, M4); ci.setColorAt(i, r.capCol);
+    });
+    world.add(ri); world.add(ci);
+    monInst = { ri, M4, P, S, QX };
+  }
 
   /* one riser: CORE foot → CORE (was duplicated once per zone before) */
   beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(0, 1.6, -640), new THREE.Vector3(0, 300, -640)), dept: 'core' });
@@ -1622,8 +1638,13 @@ function frame(now) {
     u.uMomentum.value += jdt * amp * .08;
     u.uMorph.value    = Math.min(1, Math.max(0, u.uMorph.value + jdt * .5));
   }
-  for (const d of deptList) if (d.hubs) for (const h of Object.values(d.hubs)) {
-    if (!reduced && h.ring) { h.ring.rotation.z = t * .0004 * h.ring.userData.spin; h.ring.position.y = h.ring.userData.baseY + Math.sin(t * .0009 + h.ring.userData.spin * 9) * 2.5; }
+  if (!reduced && monInst) {
+    const { ri, M4, P, S, QX } = monInst;
+    monRings.forEach((r, i) => {
+      M4.compose(P.set(r.x, r.baseY + Math.sin(t * .0009 + r.spin * 9) * 2.5, r.z), QX, S);
+      ri.setMatrixAt(i, M4);
+    });
+    ri.instanceMatrix.needsUpdate = true;
   }
   animateAgents(t);
   if (!reduced && pulseMeshes && pulseMeshes.inst) {
