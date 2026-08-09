@@ -1093,6 +1093,23 @@ function buildWorld() {
   }
   tilePanels.tileAt = tileAt; tilePanels.draw = drawTilePanel;
 
+  /* merged static floor lines — every dial, tick, spoke, dash, trace and arc
+     collects into TWO LineSegments (one per blend mode) instead of ~74 objects.
+     Per-line opacity is baked into vertex color (exact under additive, near-
+     exact for thin lines over the dark floor). */
+  const segPos = [], segCol = [], segPosA = [], segColA = [];
+  const seg = (add, x1, y1, z1, x2, y2, z2, color, op) => {
+    const r = color.r * op, g2 = color.g * op, b = color.b * op;
+    (add ? segPosA : segPos).push(x1, y1, z1, x2, y2, z2);
+    (add ? segColA : segCol).push(r, g2, b, r, g2, b);
+  };
+  const circSeg = (cx, cz, r, y, color, op, n = 96) => {
+    for (let a = 0; a < n; a++) {
+      const t0 = a / n * Math.PI * 2, t1 = (a + 1) / n * Math.PI * 2;
+      seg(false, cx + Math.cos(t0) * r, y, cz + Math.sin(t0) * r, cx + Math.cos(t1) * r, y, cz + Math.sin(t1) * r, color, op);
+    }
+  };
+
   /* THE CORE — bigger, structured: particle cloud + wireframe heart + orbital rings +
      a light column wiring it to the floor bus. Counters under it are real. */
   {
@@ -1174,21 +1191,14 @@ function buildWorld() {
     );
     disc.rotation.x = -Math.PI / 2; disc.position.y = .6; disc.userData = { kind: 'zone', dept: d.id };
     zone.add(disc); zoneDiscs.push(disc);
-    const dialM = new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .62), transparent: true, opacity: .5, depthWrite: false });
-    const dialFaint = new THREE.LineBasicMaterial({ color: hsl(d.hue, .4, .55), transparent: true, opacity: .22, depthWrite: false });
-    const circ = (r, mat) => {
-      const pts = [];
-      for (let a = 0; a <= 96; a++) { const th = a / 96 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(th) * r, .8, Math.sin(th) * r)); }
-      zone.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
-    };
-    circ(FIB(4), dialM); circ(FIB(3), dialFaint);
-    const tickPts = [];
+    const dialCol = hsl(d.hue, .5, .62), dialFaintCol = hsl(d.hue, .4, .55);
+    circSeg(d.cx, d.cz, FIB(4), .8, dialCol, .5);
+    circSeg(d.cx, d.cz, FIB(3), .8, dialFaintCol, .22);
     for (let k = 0; k < M; k++) {
       const th = k * GA;
-      tickPts.push(new THREE.Vector3(Math.cos(th) * (FIB(4) - 8), .8, Math.sin(th) * (FIB(4) - 8)),
-                   new THREE.Vector3(Math.cos(th) * FIB(4), .8, Math.sin(th) * FIB(4)));
+      seg(false, d.cx + Math.cos(th) * (FIB(4) - 8), .8, d.cz + Math.sin(th) * (FIB(4) - 8),
+                 d.cx + Math.cos(th) * FIB(4), .8, d.cz + Math.sin(th) * FIB(4), dialCol, .5);
     }
-    zone.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tickPts), dialM));
 
     /* zone nameplate painted on the wall behind the district */
     const zl = makePlate(d.label, { size: 78, serif: true, sub: d.tagline || '', hue: d.hue, scale: .5 });
@@ -1240,17 +1250,13 @@ function buildWorld() {
        every F(1) units — the wiring reads as an etched instrument, not cabling */
     const CF = new THREE.Vector3(0, .9, -640);
     const J = new THREE.Vector3(d.cx, .9, d.cz);
-    world.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([J, CF]),
-      new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .6), transparent: true, opacity: .5, depthWrite: false })));
+    seg(false, J.x, J.y, J.z, CF.x, CF.y, CF.z, hsl(d.hue, .5, .6), .5);
     const dir = CF.clone().sub(J), len = dir.length(); dir.normalize();
     const perp = new THREE.Vector3(-dir.z, 0, dir.x);
-    const dashPts = [];
     for (let s2 = FIB(1); s2 < len; s2 += FIB(1)) {
       const p0 = J.clone().addScaledVector(dir, s2);
-      dashPts.push(p0.clone().addScaledVector(perp, -3), p0.clone().addScaledVector(perp, 3));
+      seg(false, p0.x - perp.x * 3, .9, p0.z - perp.z * 3, p0.x + perp.x * 3, .9, p0.z + perp.z * 3, hsl(d.hue, .4, .55), .35);
     }
-    world.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(dashPts),
-      new THREE.LineBasicMaterial({ color: hsl(d.hue, .4, .55), transparent: true, opacity: .35, depthWrite: false })));
     /* packets ride the spoke into the CORE column */
     beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx, 1.6, d.cz), new THREE.Vector3(0, 1.6, -640)), dept: d.id });
 
@@ -1280,10 +1286,7 @@ function buildWorld() {
       zone.add(pillar); hubMeshes.push(pillar);
       pillarAnims.push({ mat: pillar.material, running: members.some(n => n.status === 'running'), phase: gi * GA });
       /* monument → zone junction trace on the floor */
-      const tr = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(hx, 1.2, hz), new THREE.Vector3(0, 1.2, 0),
-      ]);
-      zone.add(new THREE.Line(tr, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .62), transparent: true, opacity: .68, blending: THREE.AdditiveBlending, depthWrite: false })));
+      seg(true, d.cx + hx, 1.2, d.cz + hz, d.cx, 1.2, d.cz, hsl(d.hue, .5, .62), .68);
 
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(13, 1.1, 10, 48),
@@ -1331,18 +1334,16 @@ function buildWorld() {
   /* THE FLOOR INSTRUMENT — concentric arcs at F(4)..F(8) centred on the CORE
      foot, each labelled with its radius. The whole room stands on one dial. */
   {
-    const arcM = new THREE.LineBasicMaterial({ color: 0x8a90c0, transparent: true, opacity: .2, depthWrite: false });
+    const arcCol = new THREE.Color(0x8a90c0);
     const inside = (x, z) => Math.abs(x) < ROOM.hw - 6 && z > -ROOM.depth + 6 && z < ROOM.depth - 6;
     for (let n = 4; n <= 8; n++) {
-      const r = FIB(n), segs = [];
-      const S = 256;
+      const r = FIB(n), S = 256;
       for (let a = 0; a < S; a++) {
         const t0 = a / S * Math.PI * 2, t1 = (a + 1) / S * Math.PI * 2;
         const x0 = Math.cos(t0) * r, z0 = -640 + Math.sin(t0) * r;
         const x1 = Math.cos(t1) * r, z1 = -640 + Math.sin(t1) * r;
-        if (inside(x0, z0) && inside(x1, z1)) segs.push(new THREE.Vector3(x0, .7, z0), new THREE.Vector3(x1, .7, z1));
+        if (inside(x0, z0) && inside(x1, z1)) seg(false, x0, .7, z0, x1, .7, z1, arcCol, .2);
       }
-      if (segs.length) world.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(segs), arcM));
       const zNum = -640 + r;
       if (zNum < ROOM.depth - 30) {
         const num = makePlate(String(r), { size: 24, scale: .2 });
@@ -1352,6 +1353,19 @@ function buildWorld() {
       }
     }
   }
+
+  /* build the two merged line objects */
+  const mkMerged = (pos, col, add) => {
+    if (!pos.length) return;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    const m = new THREE.LineBasicMaterial(add
+      ? { vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }
+      : { vertexColors: true });
+    world.add(new THREE.LineSegments(g, m));
+  };
+  mkMerged(segPos, segCol, false); mkMerged(segPosA, segColA, true);
 
   /* agents — an instanced swarm, orbiting their checkpoint (working) */
   const count = nodes.length;
