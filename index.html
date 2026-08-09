@@ -438,7 +438,22 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   };
   const floorT = gridTex(false); floorT.repeat.set(8, 11);
   const wallT = gridTex(true); wallT.repeat.set(8, 3);
-  const backT = gridTex(true); backT.repeat.set(6, 3);
+  /* the back wall is a MURAL, not a surface — in the reference every wall is a
+     luminous screen. Aurora glows drawn once, lit by nothing, glowing on its own. */
+  const auroraC = document.createElement('canvas'); auroraC.width = 1024; auroraC.height = 512;
+  const ag = auroraC.getContext('2d');
+  ag.fillStyle = '#12142c'; ag.fillRect(0, 0, 1024, 512);
+  const aglow = (x, y, r, col) => {
+    const gr = ag.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    ag.fillStyle = gr; ag.fillRect(0, 0, 1024, 512);
+  };
+  aglow(300, 400, 540, 'rgba(96,68,205,.5)');
+  aglow(790, 290, 580, 'rgba(38,140,185,.42)');
+  aglow(540, 90, 430, 'rgba(196,66,150,.26)');
+  ag.fillStyle = 'rgba(215,220,255,.09)';
+  for (let y = 16; y < 512; y += 32) for (let x = 16; x < 1024; x += 32) { ag.beginPath(); ag.arc(x, y, 1.4, 0, 7); ag.fill(); }
+  const backT = new THREE.CanvasTexture(auroraC); backT.colorSpace = THREE.SRGBColorSpace;
   /* DoubleSide everywhere: with the off-axis portal, edge rays can graze past a
      surface's front face — a culled backface reads as a hole torn in the room */
   const mat = (t) => new THREE.MeshStandardMaterial({ map: t, color: 0x8286ad, roughness: .82, metalness: .2, side: THREE.DoubleSide });
@@ -463,8 +478,9 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   left.rotation.y = Math.PI / 2; left.position.set(-ROOM.hw, ROOM.h / 2, 0); left.receiveShadow = true; scene.add(left);
   const right = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.depth * 2, ROOM.h), mat(wallT));
   right.rotation.y = -Math.PI / 2; right.position.set(ROOM.hw, ROOM.h / 2, 0); right.receiveShadow = true; scene.add(right);
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.h), mat(backT));
-  back.position.set(0, ROOM.h / 2, -ROOM.depth); back.receiveShadow = true; scene.add(back);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.h),
+    new THREE.MeshBasicMaterial({ map: backT, side: THREE.DoubleSide }));
+  back.position.set(0, ROOM.h / 2, -ROOM.depth); scene.add(back);
 
   /* neon edge strips where surfaces meet — the box reads as a box */
   const strip = (w, x, y, z, rotY) => {
@@ -735,7 +751,7 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = [], pillarAnims = [], terms = [], junRings = [];
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = [], pillarAnims = [], terms = [], junRings = [], tilePanels = [];
 const brain = new THREE.Group(); scene.add(brain);
 
 const BEAM_OP = .38;
@@ -1010,7 +1026,38 @@ const STATUS_COLOR = {
 };
 
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = []; pillarAnims = []; terms = []; junRings = [];
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = []; pillarAnims = []; terms = []; junRings = []; tilePanels = [];
+
+  /* every agent is an app tile on its zone's wall — in the reference the walls
+     ARE the OS: icon grids covering luminous surfaces. 5 columns, cells on the
+     module, status is the border, running tiles blink. All 145 are real lanes. */
+  function drawTilePanel(T, blink) {
+    const { g, c, d } = T;
+    g.clearRect(0, 0, c.width, c.height);
+    const COL = { running: '#8be2b9', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
+    const cols = 5, rows = Math.ceil(d.nodes.length / cols);
+    const cell = Math.min(96, Math.floor((c.height - 21) / Math.max(1, rows)));
+    const ox = (c.width - cols * cell) / 2, oy = (c.height - rows * cell) / 2;
+    d.nodes.forEach((nd, i) => {
+      const x = ox + (i % cols) * cell, y = oy + Math.floor(i / cols) * cell;
+      const tw = cell - 18, th = cell - 34;
+      const col = COL[nd.status] || COL.ok;
+      g.globalAlpha = nd.status === 'dormant' ? .35 : .92;
+      g.fillStyle = `hsla(${d.hue},52%,62%,.15)`;
+      g.beginPath(); g.roundRect(x + 9, y + 5, tw, th, 8); g.fill();
+      g.strokeStyle = col; g.lineWidth = nd.status === 'running' && blink ? 3 : 1.4;
+      g.stroke();
+      g.fillStyle = col;
+      g.beginPath(); g.arc(x + 9 + tw - 9, y + 14, 3.6, 0, 7); g.fill();
+      g.font = `600 ${Math.round(th * .44)}px Inter, system-ui, sans-serif`;
+      g.textAlign = 'center'; g.fillStyle = 'rgba(236,234,246,.82)';
+      g.fillText((nd.label || '?')[0].toUpperCase(), x + 9 + tw / 2, y + 5 + th * .7);
+      g.font = '500 13px Inter, system-ui, sans-serif'; g.fillStyle = 'rgba(202,205,232,.88)';
+      g.fillText(String(nd.label).slice(0, 12), x + cell / 2, y + th + 22);
+      g.globalAlpha = 1;
+    });
+    T.tex.needsUpdate = true;
+  }
 
   /* THE CORE — bigger, structured: particle cloud + wireframe heart + orbital rings +
      a light column wiring it to the floor bus. Counters under it are real. */
@@ -1127,6 +1174,25 @@ function buildWorld() {
       { size: 26, hue: d.hue, scale: .34 });
     strip.position.copy(zl.position); strip.position.y = 246; strip.rotation.copy(zl.rotation);
     zone.add(strip);
+
+    /* zone color wash — the box interior glows in bands, one hue per district */
+    const wash = new THREE.Mesh(new THREE.PlaneGeometry(FIB(6), ROOM.h - 30),
+      new THREE.MeshBasicMaterial({ color: hsl(d.hue, .5, .55), transparent: true, opacity: .09, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    wash.position.copy(zl.position); wash.position.y = ROOM.h / 2 - 10; wash.rotation.copy(zl.rotation);
+    if (s.nx === 1) wash.position.x -= .5; else if (s.nx === -1) wash.position.x += .5; else wash.position.z -= .5;
+    zone.add(wash);
+
+    /* the agent tile grid on this zone's wall — every lane, an icon on the OS */
+    const tc = document.createElement('canvas'); tc.width = 512; tc.height = 512;
+    const ttex = new THREE.CanvasTexture(tc); ttex.anisotropy = 4;
+    const tmesh = new THREE.Mesh(new THREE.PlaneGeometry(FIB(5), FIB(5)),
+      new THREE.MeshBasicMaterial({ map: ttex, transparent: true, depthWrite: false }));
+    if (s.nx === 1) { tmesh.position.set(-ROOM.hw - d.cx + 5, 140, 0); tmesh.rotation.y = Math.PI / 2; }
+    else if (s.nx === -1) { tmesh.position.set(ROOM.hw - d.cx - 5, 140, 0); tmesh.rotation.y = -Math.PI / 2; }
+    else { tmesh.position.set((d.cx > 0 ? FIB(5) : -FIB(5)) - d.cx, 140, -ROOM.depth - d.cz + 5); }
+    zone.add(tmesh);
+    const TP = { c: tc, g: tc.getContext('2d'), tex: ttex, d };
+    tilePanels.push(TP); drawTilePanel(TP, true);
 
     /* circuit junction at the district center — everything in this zone wires here */
     const jun = new THREE.Mesh(new THREE.CircleGeometry(9, 24), new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .85, depthWrite: false }));
@@ -1326,15 +1392,19 @@ function buildWorld() {
     T.mesh.position.set(x, y, z); T.mesh.rotation.y = rotY;
     scene.add(T.mesh); terms.push(T);
   };
-  panel('LIVE NOW', byStatus(['running', 'ok']), -ROOM.hw + 2.5, 160, 620, Math.PI / 2);
-  panel('SYSTEM LOG', [...nodes], ROOM.hw - 2.5, 160, 620, -Math.PI / 2);
-  panel('ALERTS', byStatus(['flag', 'dormant']), -462, 196, -ROOM.depth + 2.5, 0);
-  panel('ACTIVITY', byStatus(['running', 'flag', 'ok']), 462, 196, -ROOM.depth + 2.5, 0);
+  /* panels FLOAT off the walls like the reference's windows — parallax separates
+     them from the surface, tilted slightly into the room */
+  panel('LIVE NOW', byStatus(['running', 'ok']), -ROOM.hw + 34, 160, 660, Math.PI / 2 - .09);
+  panel('SYSTEM LOG', [...nodes], ROOM.hw - 34, 160, 660, -Math.PI / 2 + .09);
+  panel('ALERTS', byStatus(['flag', 'dormant']), -480, 196, -ROOM.depth + 34, .07);
+  panel('ACTIVITY', byStatus(['running', 'flag', 'ok']), 480, 196, -ROOM.depth + 34, -.07);
   terms.forEach(drawTerm);
   terms.tick = (t) => {
     if (!terms.last || t - terms.last > 1400) {
       terms.last = t;
       for (const T of terms) { if (T.list.length) { T.row = (T.row + 1) % T.list.length; drawTerm(T); } }
+      const blink = Math.floor(t / 1400) % 2 === 0;
+      for (const TP of tilePanels) drawTilePanel(TP, blink);
     }
   };
 }
