@@ -196,6 +196,20 @@ for (const d of DEPTS) {
 }
 
 const exported = (text.match(/Fleet health — ([0-9T:.\-Z]+)/) || [])[1] || null;
+
+// rolling per-lane history — one status sample per FRESH export (dedup on the
+// export stamp so a stale warden file can't pad the record), newest last,
+// F(4)=21 samples kept. Compact string: o=ok r=running f=flag d=dormant.
+const SCH = { ok: 'o', running: 'r', flag: 'f', dormant: 'd' };
+try {
+  const old = JSON.parse(fs.readFileSync(path.join(here, 'data/fleet.json'), 'utf8'));
+  const prev = Object.fromEntries((old.nodes || []).map(n => [n.id, n]));
+  const fresh = old.meta?.exported !== exported;
+  for (const n of nodes) {
+    const h = prev[n.id]?.hist || '';
+    n.hist = fresh ? (h + SCH[n.status]).slice(-21) : (h || SCH[n.status]);
+  }
+} catch { for (const n of nodes) n.hist = SCH[n.status]; }
 const fleet = {
   meta: {
     title: 'AI COMMAND CENTER',

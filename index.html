@@ -167,6 +167,7 @@
   #card .pill-dl b { color: var(--ink); font-weight: 600; }
   #card .sect { border-top: 1px solid var(--line); padding: 12px 0; }
   #card .sect .k { font-size: 11px; letter-spacing: .22em; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 6px; }
+  .hist-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 5px 0 0; vertical-align: middle; }
   #card .sect .v { font-size: 13px; color: var(--ink); max-width: 60ch; }
   #card .sect .v.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--ink-dim); overflow-wrap: anywhere; }
   #card .ladder { display: grid; gap: 8px; }
@@ -275,6 +276,7 @@
       </div>
     </div>
     <div class="sect"><div class="k">last result</div><div class="v mono" id="card-detail"></div></div>
+    <div class="sect" id="card-hist-sect" style="display:none"><div class="k">the record</div><div id="card-hist"></div></div>
   </div>
   <div id="group-only" style="display:none">
     <div class="sect"><div class="k" id="card-members-k">agents at this checkpoint</div><ul class="members" id="card-members"></ul></div>
@@ -2124,6 +2126,17 @@ function open(n) {
   $('card-replaces').textContent = n.replaces || '';
   ['rung-led', 'rung-assist', 'rung-auto'].forEach(id => $(id).classList.remove('on'));
   $(n.status === 'dormant' ? 'rung-led' : 'rung-auto').classList.add('on');
+  /* the record — one dot per hourly export, oldest→newest, room status colors */
+  const hs = $('card-hist'); hs.innerHTML = '';
+  $('card-hist-sect').style.display = n.hist ? '' : 'none';
+  if (n.hist) {
+    const HC = { o: 'var(--ink)', r: 'var(--accent)', f: 'var(--danger)', d: 'var(--ink-faint)' };
+    for (const ch of n.hist) {
+      const dot = document.createElement('span');
+      dot.className = 'hist-dot'; dot.style.background = HC[ch] || HC.o;
+      hs.appendChild(dot);
+    }
+  }
   const cd = $('card-detail'); cd.textContent = n.detail || '—';
   if (n.last) { const r = relAgo(n.last); if (r) {
     const sp = document.createElement('span'); sp.textContent = ' · ran ' + r;
