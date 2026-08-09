@@ -865,6 +865,7 @@ uniform float uBandHigh;
 uniform float uWaveSeed;
 uniform float uMomentum;
 uniform float uMorph;
+uniform float uFlag;
 
 mat2 rot2(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
 
@@ -1075,6 +1076,12 @@ void main() {
   alpha += keyHalo    * 0.20;
   alpha = clamp(alpha, 0.0, 1.0);
 
+  /* health chroma: the orb warms with the fleet's flagged fraction — a slow
+     ember pulse, never a full recolor. uFlag is 0 when flags are ≤5% of units. */
+  float ember = uFlag * (0.72 + 0.28 * sin(uNoiseTime * 2.6));
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  col = mix(col, vec3(1.0, 0.36, 0.10) * (lum * 2.2), ember * 0.75);
+
   col   *= uMorph;
   alpha *= uMorph * edgeAA;
 
@@ -1178,6 +1185,7 @@ function buildWorld() {
         uWaveSeed:  { value: 7.3 },
         uMomentum:  { value: 0 },
         uMorph:     { value: 0 },
+        uFlag:      { value: 0 },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -1196,10 +1204,13 @@ function buildWorld() {
     brain.add(orb);
     window.__orb = () => JSON.stringify({
       morph: +orbMat.uniforms.uMorph.value.toFixed(3), amp: +orbMat.uniforms.uAmp.value.toFixed(3),
-      nt: +orbMat.uniforms.uNoiseTime.value.toFixed(2), vis: orb.visible,
+      nt: +orbMat.uniforms.uNoiseTime.value.toFixed(2), vis: orb.visible, flag: +orbMat.uniforms.uFlag.value.toFixed(3),
       world: orb.getWorldPosition(new THREE.Vector3()).toArray().map(v => Math.round(v)),
     });
-    jarvis = { mat: orbMat, noiseTime: 0, lastT: 0, load: Math.min(.35, nodes.filter(n => n.status === 'running').length * .05) };
+    window.__orbFlag = v => { orbMat.uniforms.uFlag.value = v; return v; };
+    jarvis = { mat: orbMat, noiseTime: 0, lastT: 0, load: Math.min(.35, nodes.filter(n => n.status === 'running').length * .05),
+      flag: Math.min(1, Math.max(0, (nodes.filter(n => n.status === 'flag').length / (nodes.length || 1) - .05) * 2.2)) };
+    orbMat.uniforms.uFlag.value = jarvis.flag;
     /* orbital rings at F(3)·φ⁰·¹·² = 89 · 144 · 233 — the Fibonacci triple */
     const ring0 = new THREE.Mesh(new THREE.TorusGeometry(FIB(3), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .3 }));
     ring0.rotation.x = Math.PI / 2.1; ring0.rotation.y = -.4; brain.add(ring0);
