@@ -342,3 +342,8 @@ dashboard at boot); live fleet.json probed redirects-off: exported 11:31:45Z
 next-observe: the armed tab (export-at-arm 10:48Z, 233s tick) should have
 self-rebuilt to 11:31Z ~4 min after this deploy - check the header age on
 wake. That closes schtask->deploy->self-refresh end to end.
+CLOSED (same cycle, +5 min): the untouched armed tab reads "data 10 min old" -
+export-at-arm 10:48Z, live export 11:31Z, no human touch between. Page
+self-rebuild PROVEN. With refresh.log's autonomous "7:00:15 deployed", the
+whole loop is verified: schtask -> gen-data -> deploy -> open tabs refresh
+themselves. The site is now fully self-updating end to end.
