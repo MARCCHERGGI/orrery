@@ -669,6 +669,10 @@ function fitPortal() {
   PORTAL.h = Math.min(ROOM.h, (ROOM.hw * 2) / a);
   PORTAL.w = PORTAL.h * a;
   PORTAL.cy = Math.min(ROOM.h - PORTAL.h / 2, Math.max(PORTAL.h / 2, 244));
+  /* portrait: the slot narrows, so the eye steps back (wider view through it)
+     and lateral travel shrinks in proportion — otherwise it's tunnel-onto-wall */
+  PORTAL.dist = a >= 1 ? 560 : Math.min(1400, 560 / a * .9);
+  PORTAL.gain = Math.min(1, a);
   aperture.clear();
   const L = -PORTAL.w / 2, R = PORTAL.w / 2, B = PORTAL.cy - PORTAL.h / 2, T = PORTAL.cy + PORTAL.h / 2;
   /* fascia: the front face of the screen, with the room cut out of it */
@@ -1480,7 +1484,8 @@ function applyCamera(t, dx, dy) {
     idle.k += (idleTgt - idle.k) * .02;
     const swx = Math.sin(t * .0006) * 105 * idle.k;
     const swy = Math.cos(t * .00047) * 48 * idle.k;
-    const ex = par.sx * 400 + dx * .8 + swx;
+    const gk = PORTAL.gain ?? 1;
+    const ex = par.sx * 400 * gk + dx * .8 + swx * gk;
     const ey = PORTAL.cy + 20 - par.sy * 240 + dy * .8 + swy;
     _pp.set(ex, ey, PORTAL.z + PORTAL.dist); _qp.identity();
     const d = PORTAL.dist;
@@ -1873,6 +1878,31 @@ function enter() {
   if (!reduced) { camBase.set(0, 280, 1650); flyTo(0, 260, 810, 0, 170, -350); }
   setTimeout(() => intro.remove(), 1000);
   canvas.focus();
+  armGyro();   /* inside the tap gesture — iOS permission prompts need that */
+}
+
+/* the portal on a phone: tilting the device moves the eye. The hold angle when
+   tracking starts is neutral; a slow re-baseline absorbs posture drift. */
+const gyro = { on: false, b0: null, g0: null };
+async function armGyro() {
+  if (gyro.on || typeof DeviceOrientationEvent === 'undefined') return;
+  try {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      if (await DeviceOrientationEvent.requestPermission() !== 'granted') return;
+    }
+  } catch { return; }
+  gyro.on = true;
+  const clamp = (x, m) => Math.max(-m, Math.min(m, x));
+  addEventListener('deviceorientation', e => {
+    if (e.beta == null || e.gamma == null || faceState.on || reel) return;
+    if (gyro.b0 === null) { gyro.b0 = e.beta; gyro.g0 = e.gamma; return; }
+    gyro.b0 += (e.beta - gyro.b0) * .002;   /* drift toward current posture */
+    gyro.g0 += (e.gamma - gyro.g0) * .002;
+    par.x = clamp((e.gamma - gyro.g0) / 13, 1.6);
+    par.y = clamp((e.beta - gyro.b0) / 13, 1.4);
+    idle.lastMove = performance.now();
+    window.__gyro = { x: +par.x.toFixed(3), y: +par.y.toFixed(3) };
+  });
 }
 intro.addEventListener('click', enter);
 intro.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') enter(); });
