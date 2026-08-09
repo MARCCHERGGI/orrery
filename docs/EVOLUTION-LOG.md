@@ -44,3 +44,20 @@ row click -> Bot Evolve card; screenshot read (dimmed room + list); tour clean
 700-11600ms; zero errors; live hash==local.
 next-observe: whether the dotted-underline affordance on counters is discoverable;
 then backlog #4 (mobile/touch) or #7 (draw-call audit) - PERF untouched so far.
+
+## 4 · 2026-08-09 · fundamental · USEFUL/DEPTH (mobile)
+scores: U8 L7 D8 De7 A8 P7 (mobile D was ~2, now est 7 - phone-untested)
+shipped: the portal works on phones. (a) gyro parallax - tilting the device moves
+the eye; iOS permission requested inside the intro tap; baseline = hold angle with
+slow drift re-centering; face/reel take precedence. (b) portrait portal math was
+desktop-tuned tunnel-vision (240-unit slot, 560 eye dist, +-400 lateral): now eye
+distance scales 1/aspect (cap 1400) and lateral gain scales *aspect. Portrait
+screenshot went from "black sliver of wall" to a composed view (orb centered, tile
+walls, monuments, sky). Rationale: the repo link is the IG comment-magnet - most
+visitors arrive on phones.
+evidence: synthetic DeviceOrientationEvents drove par to (-1.538,-1.0) exactly per
+the gain math; 390x844 before/after screenshots read; desktop restored 1366px, tour
+clean 15000-26200ms, zero errors; live hash==local. CAVEAT: real-phone gyro (and the
+iOS permission prompt) not testable from this rig - code-verified only.
+next-observe: Marco opening it on his phone is the real test (tilt = the reel hook).
+Then backlog #7 draw-call audit (PERF never touched) or counter-affordance check.
