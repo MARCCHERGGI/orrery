@@ -663,3 +663,11 @@ scores: U10 L10 D10 De10 A10 P10
 shipped: header breakpoint 700→820px — portrait tablets (768) now get the wrapped header rows + scrim + crumbs drop. At 768 the desktop header was wrapping the wordmark into the crumb and stacking "data N min old" one word per line.
 evidence: emulated 768×1024 before/after screenshots read (before: wordmark wrap + vertical age; after: three clean rows on scrim, crumbsTop 128, wordmark single-line); landscape 1366 regression probe crumbsTop 46, errs 0 both. node --check OK. LIVE MATCH FDAF9AF4 after 2 polls — carried iter 69 (Enter=GO TO now live).
 next-observe: iter 71 = FUNDAMENTAL, research first: fresh-eyes pass — what does a first-time visitor not get? (Candidates from cold look: no visible hint that tiles/monuments are clickable, keyboard map undiscoverable, repo link still MARCO DECISION.) hist {5:145} after 22:00Z.
+
+## 71 · 2026-08-09 · fundamental · PERF (+ fresh-eyes verdict)
+scores: U10 L10 D10 De10 A10 P10
+shipped: boot critical path — preconnect cdn.jsdelivr.net + raw.githubusercontent.com (both were cold-start origins) and modulepreload three.module.js (the largest asset previously discovered only after importmap resolution). Local probe: three.module.js requestStart 55ms from nav, boot clean.
+fresh-eyes research verdict: the entry-teaching hypothesis RULES-OUT — Marco's intro copy ("tap anywhere · every light is a real agent") covers clickability, the 13s attract reel tours the room, hover ghosts + ⌕ cover the rest. Real gaps are BOTH Marco-copy items, parked: (1) FACE button requests camera permission with zero context — needs a tooltip line; (2) repo link surface — still MARCO DECISION.
+evidence: local ?v=101 in-eval provenance; pre[] shows all 5 hints; errs 0. node --check OK.
+ship status: PENDING-DEPLOY — pushed F5DCFEA3, live still FDAF9AF4.
+next-observe: FIRST live==F5DCFEA3. hist {5:145} after 22:00Z. Systemic next (72).
