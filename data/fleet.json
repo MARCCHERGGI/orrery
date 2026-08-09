@@ -3,7 +3,7 @@
   "title": "AI COMMAND CENTER",
   "subtitle": "one company · run live by autonomous AI agents",
   "operator": "Marco Hergi · NYC",
-  "exported": "2026-08-09T08:18:56.950Z",
+  "exported": "2026-08-09T08:48:03.880Z",
   "source": "warden fleet-health"
  },
  "departments": [
@@ -332,7 +332,7 @@
    "dept": "bridge",
    "group": "relays",
    "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "detail": "REQUEST_REFUSED (running)",
    "mass": 2
   },
   {
