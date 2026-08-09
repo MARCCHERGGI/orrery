@@ -1303,12 +1303,23 @@ function buildWorld() {
       );
       cap.position.set(hx, H + 8, hz); zone.add(cap);
 
-      const hl = makeLabel(g.label.toUpperCase(), { size: 34, hue: d.hue, scale: .22 });
-      hl.position.set(hx, H + 26, hz); zone.add(hl);
-      /* live readout under the name — real member counts, nothing invented */
+      /* checkpoint readout — real member counts + the group's actual last failure
+         code from fleet.json. Flagged groups get a third line and a raised stack
+         so the code clears the cap sphere. */
       const okN = members.filter(n => n.status === 'ok').length, runN = members.filter(n => n.status === 'running').length;
+      const flg = members.filter(n => n.status === 'flag');
+      const lift = flg.length ? 7 : 0;
+      const hl = makeLabel(g.label.toUpperCase(), { size: 34, hue: d.hue, scale: .22 });
+      hl.position.set(hx, H + 26 + lift, hz); zone.add(hl);
       const ro = makeLabel(`${members.length} agents · ${okN} ok${runN ? ' · ' + runN + ' live' : ''}`, { size: 22, scale: .2 });
-      ro.position.set(hx, H + 17, hz); zone.add(ro);
+      ro.position.set(hx, H + 17 + lift, hz); zone.add(ro);
+      if (flg.length) {
+        const tally = {};
+        flg.forEach(n => { const k = (n.detail || '?').replace(/\s*\(running\)$/, '').slice(0, 18); tally[k] = (tally[k] || 0) + 1; });
+        const [code, cn] = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
+        const fl = makeLabel(`${flg.length} flagged · ${code}${cn > 1 ? ' ×' + cn : ''}`, { size: 22, scale: .2, hue: 8 });
+        fl.position.set(hx, H + 15, hz); zone.add(fl);
+      }
 
       /* the phyllotaxis formation around this monument rotates rigidly, rate from φ */
       d.hubs[g.id] = { ...g, x: d.cx + hx, z: d.cz + hz, y: H + 8, localX: hx, localZ: hz, H, ring,
