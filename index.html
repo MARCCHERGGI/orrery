@@ -1958,7 +1958,23 @@ function setLevel(lv, di, gid) {
   }
   hover.i = -2; setHover(-1);   /* re-aim the selection shell at the new focus */
   crumbs(); kick();
+  /* the view is an address — zone/checkpoint state rides the URL hash so any
+     view can be shared; replaceState keeps the back button out of it */
+  const hh = level === 0 ? '' : '#' + deptList[deptIdx].id + (level === 2 ? '/' + groupId : '');
+  history.replaceState(null, '', hh || location.pathname + location.search);
 }
+/* deep links — #dept flies to the zone, #dept/group to the checkpoint */
+function applyHash() {
+  if (!deptList.length) return;
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (!h) { if (level !== 0) { close(); setLevel(0); } return; }
+  const [dp, gp] = h.split('/');
+  const di = deptList.findIndex(d => d.id === dp);
+  if (di < 0) return;
+  if (!gp) { close(); setLevel(1, di); }
+  else if (deptList[di].hubs[gp]) { close(); setLevel(2, di, gp); }
+}
+addEventListener('hashchange', applyHash);
 function setDeptnav(name, tag) { $('dept-name').textContent = name; $('dept-tag').textContent = tag; }
 function crumbs() {
   const el = $('crumbs'); el.innerHTML = '';
@@ -2433,7 +2449,9 @@ function boot(data) {
   /* schtasks reports never-ran as an epoch-era sentinel date — that is not a timestamp */
   nodes.forEach(n => { if (n.last && Date.now() - new Date(n.last) > 1e11) delete n.last; });
   nodes.forEach(n => { const d = depts[n.dept] || deptList[0]; n.dept = d.id; d.nodes.push(n); });
+  const h0 = location.hash;          /* setLevel(0) rewrites the hash — keep the deep link */
   buildWorld(); hud(); setLevel(0);
+  if (h0) { history.replaceState(null, '', h0); applyHash(); }
   if (reduced) { enter(); kick(); }
 }
 /* data comes from the repo itself (raw.githubusercontent CDN, ~5 min cache) so
