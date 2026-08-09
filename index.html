@@ -1348,6 +1348,15 @@ function buildWorld() {
     if (s.nx === 1) wash.position.x -= .5; else if (s.nx === -1) wash.position.x += .5; else wash.position.z -= .5;
     zone.add(wash);
 
+    /* uplight — floor light washing up the wall base (bleedTex flipped: the
+       bright edge sits at the floor). Light ON the surface, per the iter-53
+       lesson; joins the zone group so focus dimming carries it. */
+    const up = new THREE.Mesh(new THREE.PlaneGeometry(FIB(6), FIB(2) * 2),
+      new THREE.MeshBasicMaterial({ map: bleedTex, color: hsl(d.hue, .6, .55), transparent: true, opacity: .26, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    up.position.copy(zl.position); up.position.y = FIB(2); up.rotation.copy(zl.rotation); up.rotation.z += Math.PI;
+    if (s.nx === 1) up.position.x -= .8; else if (s.nx === -1) up.position.x += .8; else up.position.z -= .8;
+    zone.add(up);
+
     /* the agent tile grid on this zone's wall — every lane, an icon on the OS */
     const tc = document.createElement('canvas'); tc.width = 512; tc.height = 512;
     const ttex = new THREE.CanvasTexture(tc); ttex.anisotropy = 4;
