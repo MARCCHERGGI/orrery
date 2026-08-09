@@ -581,3 +581,11 @@ shipped: level-2 selection shell — the hover ghost + bright group beam now HOL
 evidence: local 8613 — click mon 6 → level 2, pointer parked at 60,60, screenshot shows shell+glow on JOB ENGINE only, errs 0; crumb back to ALL → shell gone, level-0 screenshot clean; node --check OK; pushed 58AFB6A3, LIVE MATCH after 2 polls; prod sweep {reel:false, errs:0}.
 hist-append: STILL UNPROVEN — git log confirms no scheduled refresh has committed since the b35d045 seed (18:02Z); pre-compaction "may have failed" worry resolved as premature. Next refresh 19:00Z.
 next-observe: FIRST check raw fleet.json hist distribution — expect {2:145} once a post-seed refresh lands; if a refresh committed and hist is still {1:...}, debug gen-data's fresh-path in the scheduled context. Fundamental due next cycle (~59), research first.
+
+## 59 · 2026-08-09 · fundamental · USEFUL
+scores: U10 L9 D10 De10 A10 P10
+shipped: deep links — the view is now an address. #dept flies to the zone, #dept/group to the checkpoint (boot + hashchange + replaceState on every setLevel; ?v cache-bust preserved; boot captures the hash before setLevel(0) can wipe it). Winner pattern: Maps @lat,lng / Figma node-id — spatial products treat view state as a URL. Marco can now drop a link straight to any checkpoint.
+evidence: local 8613 — boot with #hunt/job-engine → level 2 + card open + hash intact; location.hash="#revenue" → level 1 revenue; crumb ALL → hash cleared, search preserved; monument click → #content/instagram written; errs 0 all probes; node --check OK. Bus-truth fundamental re-examined and RULES-OUT again: 7799 answers nothing, fleet-health.md has no per-lane timestamps — no ground truth to render.
+THE RECORD APPEND PROVEN: refresh commit dd7a2fd (post-seed) → origin/main hist {2:145}, exported 18:48:34Z. Core loop closed.
+ship status: PENDING-DEPLOY — pushed 53FCEACE, live still 58AFB6A3 after ~5 min of polling (quota trickle); this log push rides the next build.
+next-observe: FIRST confirm live hash == 53FCEACE-successor blob (deep links live); spot-check a deep link on prod. The record now has 2 samples — group rollup dots should show 2. Systemic next; visual steer says ship something visible (candidates: wall-panel text truncation "STILL_RUNNING (runn" cleanup, CORE column polish).
