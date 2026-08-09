@@ -1472,7 +1472,21 @@ function buildWorld() {
       new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(pc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }), monRings.length);
     const QF = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
     monRings.forEach((r, i) => { M4.compose(P.set(r.x, .8, r.z), QF, S); gi2.setMatrixAt(i, M4); gi2.setColorAt(i, r.col); });
+    gi2.renderOrder = 2;
     world.add(gi2);
+    /* contact shadow under each pillar — grounds the monument (F(0) radius,
+       1 draw). Dark multiply blob below the additive pool; renderOrder keeps
+       shadow-then-pool stable at near-equal depth. */
+    const sc = document.createElement('canvas'); sc.width = sc.height = 64;
+    const sg = sc.getContext('2d');
+    const sgr = sg.createRadialGradient(32, 32, 2, 32, 32, 32);
+    sgr.addColorStop(0, 'rgba(0,0,0,.85)'); sgr.addColorStop(.45, 'rgba(0,0,0,.4)'); sgr.addColorStop(1, 'rgba(0,0,0,0)');
+    sg.fillStyle = sgr; sg.fillRect(0, 0, 64, 64);
+    const sh = new THREE.InstancedMesh(new THREE.PlaneGeometry(FIB(0) * 2, FIB(0) * 2),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, opacity: .6, depthWrite: false }), monRings.length);
+    monRings.forEach((r, i) => { M4.compose(P.set(r.x, .55, r.z), QF, S); sh.setMatrixAt(i, M4); });
+    sh.renderOrder = 1;
+    world.add(sh);
     /* pillars: 29 meshes → 8 per-dept instanced draws. The dept hue is each
        MATERIAL's own emissive (stock path — r161 ignores instanceColor on
        MeshStandard here, verified by a pure-red test that rendered white).
