@@ -671,3 +671,9 @@ fresh-eyes research verdict: the entry-teaching hypothesis RULES-OUT — Marco's
 evidence: local ?v=101 in-eval provenance; pre[] shows all 5 hints; errs 0. node --check OK.
 ship status: PENDING-DEPLOY — pushed F5DCFEA3, live still FDAF9AF4.
 next-observe: FIRST live==F5DCFEA3. hist {5:145} after 22:00Z. Systemic next (72).
+
+## 72 · 2026-08-09 · systemic · USEFUL
+scores: U10 L10 D10 De10 A10 P10
+shipped: OG/social card — og:title/og:description/og:image/og:type/og:url + twitter:card in head (strings reused verbatim from existing title/meta description — no new copy), backed by og.png: a 1200×630 live-room capture (emulated relay viewport, orb morph=1, level 0, errs 0) committed into the repo. Marco shares this link on IG/X/LinkedIn; it now unfurls as the room, not a bare text card.
+evidence: og.png read before ship (full room, all zones lit); node --check SYNTAX-OK; push 6f83ca7 live in ONE poll (24E732D5 == blob — batched build also carried iter 71's F5DCFEA3 preconnect work, quota-trickle pattern confirmed again); curl -sI live og.png → 200, Content-Length 395458 exact byte match; relay restored 1366×768, prod sweep {reel:false,errs:0}.
+next-observe: hist growth ({5:145} expected after 22:00Z refresh). Iter 73 systemic; fundamental due ~75. Candidate: DEPTH pass (contact shadows under monuments/orb — backlog #5) or monument trio instancing (#4, needs plan).
