@@ -61,3 +61,17 @@ clean 15000-26200ms, zero errors; live hash==local. CAVEAT: real-phone gyro (and
 iOS permission prompt) not testable from this rig - code-verified only.
 next-observe: Marco opening it on his phone is the real test (tilt = the reel hook).
 Then backlog #7 draw-call audit (PERF never touched) or counter-affordance check.
+
+## 5 · 2026-08-09 · systemic · PERF
+scores: U8 L7 D8 De7 A8 P7->8
+shipped: draw-call audit round 1. Added window.__perf(ms) - accumulates renderer.info
+across ONE full composer frame (autoReset off/reset/step/read; naive read only saw the
+final OutputPass = "1 call"). Baseline measured 478 calls / 143k tris. Converted the 55
+pulse packets from individual meshes to one InstancedMesh: 478 -> 424 calls, geometries
+381 -> 327. Same visuals - packets confirmed riding the beams in the screenshot.
+evidence: __perf before/after on identical scene state; tour clean 2200-13400ms; zero
+errors; screenshot read; live hash==local.
+next-observe: 424 is still high - the remaining bulk is ~45 dial/spoke/arc line objects
+(mergeable into 2-3 vertex-colored LineSegments), 29x monument trios, and label sprites.
+Next PERF round: merge static floor lines. Or swing back to USEFUL if something reads
+wrong on Marco's phone test.
