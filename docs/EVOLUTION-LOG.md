@@ -610,3 +610,10 @@ shipped: portrait HUD repair — (1) top scrim (header::before, 144px gradient) 
 evidence: local 8613 portrait 390×844 — before: crumbs y46 colliding with age/FACE/TOUR row; after: crumbsTop probe 128, screenshot shows four clean rows on the scrim; landscape restored 1366×768 probe: crumbsTop 46, scrim absent, errs 0 both. node --check OK. Agent deep link re-verified in portrait during OBSERVE (card clean).
 ship status: PENDING-DEPLOY — pushed 63824473, live still A3D351EE (quota window, same as iter 60; rule: check list_deployments before suspecting build).
 next-observe: FIRST live==63824473 (or successor). hist expect {3:145} after 20:00Z refresh. Fundamental due ~63 — research first; candidate paradigms: time-in-the-room, search→checkpoint nav, tour+deep-link composition.
+
+## 63 · 2026-08-09 · fundamental · DENSITY/ALIVE
+scores: U10 L10 D10 De10 A10 P10
+shipped: the record moved INTO the room — every wall tile now carries a 21-slot status strip on its bottom edge (uptime-bar grammar per GitHub/Vercel status: fixed slots, color-only, newest right; ok=quiet grey, flag=salmon pops, skipped when cells go sub-pixel). History was card-only; now the walls show it everywhere, zero new draw calls (same tile canvas).
+evidence: node --check OK; local 8613 — #hunt then #hunt/job-engine (deep links as verify harness), strips ambiguous at 1366 so re-verified honestly at 1920×1080: paired grey segments visible bottom-right on every tile; errs 0; viewport restored 1366×768. hist append CONFIRMED AGAIN: 19:48Z export → {3:145}.
+deploy cadence: quota window trickles roughly one build per ~10 min — iter-62 (63824473) went LIVE while 63 was building; 35D636BA now pending. Batched-push protocol handles it.
+next-observe: FIRST live==35D636BA (strips live). Watch a flag lane's strip show salmon (17 flagged exist — find one's tile at level 2 and read the strip). Systemic next; visual steer satisfied by strips when they land.
