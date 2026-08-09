@@ -1681,6 +1681,7 @@ renderer.setAnimationLoop(reduced ? null : liveLoop);
 window.__hold = (v) => { renderer.setAnimationLoop(v ? null : (reduced ? null : liveLoop)); return v ? 'held' : 'released'; };
 const kick = () => { if (reduced) { try { frame(performance.now()); } catch (e) {} } };
 window.__step = (ms) => { try { frame(ms ?? performance.now()); } catch (e) { return String(e); } return 'ok'; };
+window.__age = (iso) => { setAge(iso); return $('age').style.color || 'clean'; };
 
 function resize() {
   const w = innerWidth, h = innerHeight;
@@ -2114,12 +2115,18 @@ function fmtAge(iso) {
   const h = Math.floor(mins / 60);
   return 'data ' + (mins < 60 ? mins + ' min' : h < 48 ? h + ' h' : Math.floor(h / 24) + ' d') + ' old';
 }
+/* the site holds itself to the same amber standard: export cadence is hourly */
+function setAge(iso) {
+  $('age').textContent = fmtAge(iso);
+  const stale = iso && (Date.now() - new Date(iso)) > 3600e3 * PHI * PHI;
+  $('age').style.color = stale ? '#e2b878' : '';
+}
 function hud() {
   const c = s => nodes.filter(n => n.status === s).length;
   const sc = nodes.filter(isStale).length;
   $('counts').innerHTML = `<b>${nodes.length}</b> units · <b>${(fleet.groups || []).length}</b> checkpoints · <button class="cbtn" data-st="ok"><b>${c('ok')}</b> ok</button> · <button class="cbtn" data-st="running"><b>${c('running')}</b> running</button> · <button class="cbtn" data-st="flag">${c('flag')} flagged</button>${sc ? ` · <button class="cbtn" data-st="stale" title="ran less recently than its own cadence" style="color:#e2b878">◔ <b style="color:#e2b878">${sc}</b></button>` : ''}`;
   $('counts').querySelectorAll('.cbtn').forEach(b => b.addEventListener('click', () => openStatus(b.dataset.st)));
-  $('age').textContent = fmtAge(fleet.meta.exported);
+  setAge(fleet.meta.exported);
   if (fleet.meta.subtitle) $('intro-sub').textContent = fleet.meta.subtitle;
   if (fleet.meta.title) { $('intro-title').textContent = fleet.meta.title; document.querySelector('header .wordmark').textContent = fleet.meta.title; }
 }
@@ -2142,7 +2149,7 @@ fetch('data/fleet.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw 0; 
    rebuilds the header age keeps counting instead of freezing at load. */
 setInterval(() => {
   if (document.hidden) return;
-  $('age').textContent = fmtAge(fleet.meta && fleet.meta.exported);
+  setAge(fleet.meta && fleet.meta.exported);
   if (reel || tour || level !== 0 || query || $('card').classList.contains('open')) return;
   fetch('data/fleet.json', { cache: 'no-cache' })
     .then(r => r.ok ? r.json() : null)
