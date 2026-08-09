@@ -1419,11 +1419,11 @@ function buildWorld() {
   if (monRings.length) {
     const ri = new THREE.InstancedMesh(
       new THREE.TorusGeometry(13, 1.1, 10, 48),
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 }),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: .8, roughness: .3, emissive: 0xffffff, emissiveIntensity: .25, transparent: true, opacity: .95 }),
       monRings.length);
     const ci = new THREE.InstancedMesh(
       new THREE.SphereGeometry(5, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xffffff }),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: .65, roughness: .25, emissive: 0xffffff, emissiveIntensity: .3 }),
       monRings.length);
     const M4 = new THREE.Matrix4(), P = new THREE.Vector3(), S = new THREE.Vector3(1, 1, 1);
     const QX = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
