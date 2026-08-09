@@ -1833,6 +1833,22 @@ const relIn = t => {
   if (s < 129600) return 'in ' + Math.round(s / 3600) + ' h';
   return 'in ' + Math.round(s / 86400) + ' d';
 };
+/* expected gap in seconds from the lane's own cadence; null = no expectation (boot/logon/idle) */
+const cadSecs = c => {
+  if (!c) return null;
+  const m = String(c).match(/^every (\d+(?:\.\d+)?) (min|h)\b/);
+  if (m) return +m[1] * (m[2] === 'h' ? 3600 : 60);
+  if (/^daily/.test(c)) return 86400;
+  if (/^weekly/.test(c)) return 604800;
+  return null;
+};
+/* stale = age beats its own cadence by φ², with a φ³-hour floor to absorb export lag */
+const isStale = n => {
+  const cs = cadSecs(n.cadence);
+  if (!cs || !n.last) return false;
+  const age = (Date.now() - new Date(n.last)) / 1000;
+  return age > cs * PHI * PHI && age > 3600 * PHI * PHI * PHI;
+};
 
 function open(n) {
   selected = n; focusIdx = nodes.indexOf(n);
@@ -1849,10 +1865,13 @@ function open(n) {
   $('card-replaces').textContent = n.replaces || '';
   ['rung-led', 'rung-assist', 'rung-auto'].forEach(id => $(id).classList.remove('on'));
   $(n.status === 'dormant' ? 'rung-led' : 'rung-auto').classList.add('on');
-  const when = [];
-  if (n.last) { const r = relAgo(n.last); if (r) when.push('ran ' + r); }
-  if (n.next) { const r = relIn(n.next); if (r) when.push('next ' + r); }
-  $('card-detail').textContent = (n.detail || '—') + (when.length ? ' · ' + when.join(' · ') : '');
+  const cd = $('card-detail'); cd.textContent = n.detail || '—';
+  if (n.last) { const r = relAgo(n.last); if (r) {
+    const sp = document.createElement('span'); sp.textContent = ' · ran ' + r;
+    if (isStale(n)) sp.style.color = '#e2b878';
+    cd.appendChild(sp);
+  } }
+  if (n.next) { const r = relIn(n.next); if (r) cd.append(' · next ' + r); }
   $('card').classList.add('open');
   $('live').textContent = `${n.label}, ${d.label}, ${b.text}`;
   const hub = d.hubs[n.group] || Object.values(d.hubs)[0];
