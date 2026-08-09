@@ -373,3 +373,9 @@ shipped: freshness elevated to a first-class state. Research: Grafana and Datado
 evidence: node --check clean · header renders "◔ 90" (90/145 quiet — status-orthogonal: 66 ok + terminated/refused/failed ones) · click probe {open:true, name:"◔ 90", lede:"90 of 145 lanes", rows:90, amberCount:90, closed:true, errs:0} · v34-stale-view.png read — amber ages beside real last results (OK, TERMINATED, REQUEST_REFUSED, GENERIC_FAILURE), status dots intact · sweep + tour {reel:false, errs:0} · live SHA256 == local (CEC5B284…).
 finding: 90 of 145 lanes are quiet-in-practice. The room now says so at the top line instead of only under clicks.
 next-observe: whether ◔ deserves a legend row (Marco's copy call — legend words are his); instancing cycle B still parked; portrait tap-target measurement still unmeasured.
+
+## 25 · 2026-08-09 · systemic · LEGIBLE/mobile
+scores: U9 L9 D8 De8 A9 P9
+shipped: portrait observation found the whole counts line (145 units … ◔ 90) was display:none under 700px — phones (the reel audience) saw none of the live truth. Header now flex-wraps; counts become a third-row scrollable one-liner (11px, scrollbar hidden, cbtns padded 6px for touch); crumbs pushed to 62px. Iter-24's ◔ counter included.
+evidence: v35-portrait.png read (before: no counts) vs v35-portrait-fixed.png read (after: full line fits 390px, ◔ 90 amber at end) · portrait tap probe on ◔: {open:true, name:"◔ 90", rows:90, amberCount:90, closed:true, errs:0} · viewport restored 1366×768 (verified via innerWidth after an emulate 0×0 misstep clamped to 500×39) · desktop sweep + tour {reel:false, errs:0} · live SHA256 == local (69155F63…).
+next-observe: tile tap-target size on portrait remains unmeasured (the original backlog #3 question). Instancing cycle B still parked. Also check crumbs/buttons row spacing on a real phone when Marco next has one on the page.
