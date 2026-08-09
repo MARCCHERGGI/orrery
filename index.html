@@ -1710,9 +1710,11 @@ function buildWorld() {
       const y = 78 + i * 30;
       g.fillStyle = TCOL[n.status] || TCOL.ok;
       const line = `${n.status === 'running' ? '►' : n.status === 'flag' ? '✕' : '●'} ${n.label}`;
-      g.fillText(line.slice(0, 26), 18, y);
+      const fit = (s, m) => s.length > m ? s.slice(0, m - 1) + '…' : s;
+      g.fillText(fit(line, 26), 18, y);
       g.fillStyle = 'rgba(140,140,171,.85)';
-      g.fillText(String(n.detail || n.cadence || '').slice(0, 19), 330, y);
+      /* the ► glyph + row colour already say running — the suffix is noise */
+      g.fillText(fit(String(n.detail || n.cadence || '').replace(/\s*\(running\)$/, ''), 19), 330, y);
       const a = ageShort(n.last);
       if (a) {
         g.textAlign = 'right';
