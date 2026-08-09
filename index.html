@@ -314,6 +314,11 @@ addEventListener('pointermove', e => {
   par.y = (e.clientY / innerHeight - .5) * 2;
 });
 addEventListener('wheel', e => {
+  if (level === 0 && PORTAL.mix > .5) {
+    /* at the window: scroll leans you toward / away from the opening */
+    PORTAL.dist = Math.min(1100, Math.max(300, PORTAL.dist + e.deltaY * .5));
+    return;
+  }
   const dir = tgtBase.clone().sub(camBase).normalize();
   camGoal.pos.addScaledVector(dir, -e.deltaY * .45);
   camGoal.pos.z = Math.min(camGoal.pos.z, 830);
@@ -357,13 +362,17 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   const floorT = gridTex(false); floorT.repeat.set(8, 11);
   const wallT = gridTex(true); wallT.repeat.set(8, 3);
   const backT = gridTex(true); backT.repeat.set(6, 3);
-  const mat = (t) => new THREE.MeshStandardMaterial({ map: t, color: 0x8286ad, roughness: .82, metalness: .2 });
+  /* DoubleSide everywhere: with the off-axis portal, edge rays can graze past a
+     surface's front face — a culled backface reads as a hole torn in the room */
+  const mat = (t) => new THREE.MeshStandardMaterial({ map: t, color: 0x8286ad, roughness: .82, metalness: .2, side: THREE.DoubleSide });
 
   /* glossy floor — env reflections + received shadows anchor everything to it */
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2),
-    new THREE.MeshStandardMaterial({ map: floorT, color: 0x8e93c2, roughness: .36, metalness: .5 }));
+    new THREE.MeshStandardMaterial({ map: floorT, color: 0x8e93c2, roughness: .36, metalness: .5, side: THREE.DoubleSide }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
-  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2), new THREE.MeshStandardMaterial({ color: 0x10132a, roughness: .95 }));
+  const ceilT = gridTex(true); ceilT.repeat.set(8, 11);
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2),
+    new THREE.MeshStandardMaterial({ map: ceilT, color: 0x50557e, roughness: .9, metalness: .15, side: THREE.DoubleSide }));
   ceil.rotation.x = Math.PI / 2; ceil.position.y = ROOM.h; scene.add(ceil);
   const left = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.depth * 2, ROOM.h), mat(wallT));
   left.rotation.y = Math.PI / 2; left.position.set(-ROOM.hw, ROOM.h / 2, 0); left.receiveShadow = true; scene.add(left);
@@ -387,15 +396,57 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   };
   vstrip(-ROOM.hw); vstrip(ROOM.hw);
 
-  /* dust motes drifting in the volume — depth cue */
+  /* dust motes drifting in the volume — depth cue, all the way up to the opening */
   const N = 320, g = new THREE.BufferGeometry(), arr = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) {
     arr[i * 3] = (Math.random() * 2 - 1) * ROOM.hw * .95;
     arr[i * 3 + 1] = Math.random() * ROOM.h;
-    arr[i * 3 + 2] = -Math.random() * ROOM.depth;
+    arr[i * 3 + 2] = (Math.random() * 2 - 1) * ROOM.depth * .97;
   }
   g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
   scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xdfe2f8, size: 1.6, transparent: true, opacity: .35 })));
+}
+
+/* THE PORTAL — the screen is literally the opening of the room.
+   An off-axis (asymmetric) frustum is recomputed every frame from the eye to a fixed
+   portal rectangle at the room's mouth, so the opening stays glued to the viewport
+   edges while the eye moves. That is what makes the display read as a hole with real
+   depth behind it instead of a picture of one. The aperture gives the cut a physical
+   thickness you can see when you look in at an angle. */
+const PORTAL = { z: ROOM.depth, w: 900, h: ROOM.h, cy: ROOM.h / 2, dist: 640, mix: 0 };
+const aperture = new THREE.Group(); scene.add(aperture);
+function fitPortal() {
+  const a = innerWidth / Math.max(1, innerHeight);
+  PORTAL.h = Math.min(ROOM.h, (ROOM.hw * 2) / a);
+  PORTAL.w = PORTAL.h * a;
+  PORTAL.cy = Math.min(ROOM.h - PORTAL.h / 2, Math.max(PORTAL.h / 2, 244));
+  aperture.clear();
+  const L = -PORTAL.w / 2, R = PORTAL.w / 2, B = PORTAL.cy - PORTAL.h / 2, T = PORTAL.cy + PORTAL.h / 2;
+  /* fascia: the front face of the screen, with the room cut out of it */
+  const shape = new THREE.Shape();
+  shape.moveTo(-4200, -3000); shape.lineTo(4200, -3000); shape.lineTo(4200, 3200); shape.lineTo(-4200, 3200); shape.closePath();
+  const hole = new THREE.Path();
+  hole.moveTo(L, B); hole.lineTo(R, B); hole.lineTo(R, T); hole.lineTo(L, T); hole.closePath();
+  shape.holes.push(hole);
+  const fascia = new THREE.Mesh(new THREE.ShapeGeometry(shape),
+    new THREE.MeshBasicMaterial({ color: 0x07091a, side: THREE.DoubleSide }));
+  fascia.position.z = PORTAL.z; aperture.add(fascia);
+  /* reveal: the thickness of the cut, facing inward — parallax makes it visible */
+  const REV = 70, rm = new THREE.MeshStandardMaterial({ color: 0x1a1e3e, roughness: .9, metalness: .1 });
+  const rp = (w, h, x, y, z, rx, ry) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), rm);
+    m.position.set(x, y, z); m.rotation.x = rx || 0; m.rotation.y = ry || 0;
+    aperture.add(m);
+  };
+  rp(PORTAL.w, REV, 0, T, PORTAL.z - REV / 2, Math.PI / 2, 0);
+  if (B > 2) rp(PORTAL.w, REV, 0, B, PORTAL.z - REV / 2, -Math.PI / 2, 0);
+  rp(REV, PORTAL.h, L, PORTAL.cy, PORTAL.z - REV / 2, 0, Math.PI / 2);
+  rp(REV, PORTAL.h, R, PORTAL.cy, PORTAL.z - REV / 2, 0, -Math.PI / 2);
+  /* hairline light along the cut edge */
+  const edge = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.PlaneGeometry(PORTAL.w, PORTAL.h)),
+    new THREE.LineBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .28 }));
+  edge.position.set(0, PORTAL.cy, PORTAL.z); aperture.add(edge);
 }
 
 /* label sprites */
@@ -690,7 +741,7 @@ function buildWorld() {
   terms.tick = (t) => {
     if (!terms.last || t - terms.last > 1400) {
       terms.last = t;
-      for (const T of terms) { T.row = (T.row + 1) % termNodes.length; drawTerm(T); }
+      for (const T of terms) { if (T.list.length) { T.row = (T.row + 1) % T.list.length; drawTerm(T); } }
     }
   };
 }
@@ -726,20 +777,48 @@ function animateAgents(t) {
   agentMesh.instanceMatrix.needsUpdate = true;
 }
 
+/* dual camera rig — classic (inside the room, lookAt) blended with the portal rig
+   (eye outside the opening, asymmetric frustum pinned to the portal rectangle) */
+const _m4 = new THREE.Matrix4(), _qc = new THREE.Quaternion(), _qp = new THREE.Quaternion();
+const _pc = new THREE.Vector3(), _pp = new THREE.Vector3();
+function applyCamera(dx, dy) {
+  const pk = reel ? 0 : (level === 0 ? 1 : .45);
+  _pc.set(camBase.x + par.sx * 85 * pk + dx, camBase.y - par.sy * 48 * pk + dy, camBase.z);
+  _m4.lookAt(_pc, tgtBase, camera.up); _qc.setFromRotationMatrix(_m4);
+  const near = 1, fovT = near * Math.tan(THREE.MathUtils.degToRad(30));
+  let l = -fovT * camera.aspect, r = fovT * camera.aspect, tp = fovT, bt = -fovT;
+  const goal = (level === 0 && !reel && !tour) ? 1 : 0;
+  PORTAL.mix += (goal - PORTAL.mix) * .07;
+  if (PORTAL.mix < .001) PORTAL.mix = 0;
+  if (PORTAL.mix > 0) {
+    /* the eye — big lateral travel is what opens the depth; the frustum below
+       keeps the portal rectangle exactly on the screen edges no matter where it is */
+    const ex = par.sx * 250 + dx * .6;
+    const ey = PORTAL.cy + 20 - par.sy * 150 + dy * .6;
+    _pp.set(ex, ey, PORTAL.z + PORTAL.dist); _qp.identity();
+    const d = PORTAL.dist;
+    const pl = (-PORTAL.w / 2 - ex) * near / d, pr = (PORTAL.w / 2 - ex) * near / d;
+    const pt = (PORTAL.cy + PORTAL.h / 2 - ey) * near / d, pb = (PORTAL.cy - PORTAL.h / 2 - ey) * near / d;
+    const k = PORTAL.mix * PORTAL.mix * (3 - 2 * PORTAL.mix);
+    l += (pl - l) * k; r += (pr - r) * k; tp += (pt - tp) * k; bt += (pb - bt) * k;
+    _pc.lerp(_pp, k); _qc.slerp(_qp, k);
+  }
+  camera.position.copy(_pc); camera.quaternion.copy(_qc);
+  camera.projectionMatrix.makePerspective(l, r, tp, bt, near, 4000);
+  camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+}
+
 function frame(now) {
   const t = now || performance.now();
   if (tour) tourStep(t);
   camBase.lerp(camGoal.pos, .06);
   tgtBase.lerp(camGoal.tgt, .08);
-  /* mouse parallax around the base position — this is what makes the screen read as depth */
-  const pk = reel ? 0 : (level === 0 ? 1 : .45);
   par.sx += (par.x - par.sx) * .05;
   par.sy += (par.y - par.sy) * .05;
   /* handheld drift — the scene is never perfectly still, so depth never stops reading */
   const dx = reduced ? 0 : Math.sin(t * .00031) * 7 + Math.sin(t * .00013) * 4;
   const dy = reduced ? 0 : Math.sin(t * .00042 + 2) * 4;
-  camera.position.set(camBase.x + par.sx * 85 * pk + dx, camBase.y - par.sy * 48 * pk + dy, camBase.z);
-  camera.lookAt(tgtBase);
+  applyCamera(dx, dy);
   if (!reduced) {
     for (const pa of pillarAnims) if (pa.running) pa.mat.emissiveIntensity = .9 + Math.sin(t * .004 + pa.phase) * .38;
     if (terms.tick) terms.tick(t);
@@ -765,6 +844,7 @@ function resize() {
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
+  fitPortal();
   kick();
 }
 addEventListener('resize', resize); resize();
@@ -952,6 +1032,7 @@ const smooth = u => u * u * (3 - 2 * u);
 function startReel() {
   if (reel) return;
   reel = true; document.body.classList.add('reel'); close(); setLevelSilent(0);
+  PORTAL.mix = 0;   /* deterministic projection for the recorded artifact */
   tour = { keys: tourKeys(), start: performance.now() };
   $('live').textContent = 'cinematic tour running — tap or press escape to exit';
 }
