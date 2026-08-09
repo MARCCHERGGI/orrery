@@ -749,3 +749,9 @@ scores: U10 L10 D10 De10 A10 P10
 shipped: nothing. Prod healthy: level-0 room, cardiogram 6 cols, run columns, errs 0, calls 319, age "1 h old" un-ambered (correct — threshold φ²h). 00:00Z-window refresh (exporter fires ~:47) not yet committed at check time; 7th column expected next cycle.
 evidence: probe + screenshot read.
 next-observe: 7th cardiogram column; if the :47 refresh did NOT land by next cycle, investigate the exporter lane before anything else.
+
+## 85 · 2026-08-09 · systemic · (observation — false alarm corrected)
+scores: U10 L10 D10 De10 A10 P10
+shipped: nothing. Iter-84's worry ("refresh didn't land, investigate exporter") was MY timestamp confusion, corrected here: ClaudeOrreryRefresh fires ON THE HOUR (schtask Ready, last 19:00:01 local result 0x0), and ced4774 committed at 19:00:13 — that IS the 6-column refresh. The fleet.json `exported` stamp (22:47Z) is the warden data's provenance stamp, not the refresh commit time; the two differ by up to an hour by design. Pipeline fully healthy; 7th column lands at 20:00 local.
+evidence: schtasks query (Ready/0x0/next 20:00); git log --grep "fleet refresh" shows unbroken hourly commits 15:00→19:00 local.
+next-observe: 7th column in ced4774's successor (~20:00:13 local). Provenance-vs-commit-time distinction now on record — do not re-derive.
