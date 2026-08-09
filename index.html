@@ -2320,7 +2320,13 @@ addEventListener('keydown', e => {
       if (g) { const di = deptList.findIndex(d => d.id === g.dept); if (di >= 0 && deptList[di].hubs[g.id]) { close(); setLevel(2, di, g.id); search.blur(); return; } }
       const dd = deptList.findIndex(d => d.label.toLowerCase() === query);
       if (dd >= 0) { close(); setLevel(1, dd); search.blur(); return; }
-      const hit = nodes.find(n => n._hit); if (hit) { open(hit); search.blur(); }
+      const hit = nodes.find(n => n._hit);
+      if (hit) {
+        /* Enter means GO TO — fly to the lane's checkpoint, then open it */
+        const di = deptList.findIndex(d => d.id === hit.dept);
+        if (di >= 0 && hit.group && deptList[di].hubs[hit.group]) setLevel(2, di, hit.group);
+        open(hit); search.blur();
+      }
     }
     return;
   }
