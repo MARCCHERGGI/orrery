@@ -770,7 +770,7 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, pillarAnims = [], terms = [], junRings = [], tilePanels = [];
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, pillarAnims = [], terms = [], junRings = [], tilePanels = [], ledgerPlates = [];
 const brain = new THREE.Group(); scene.add(brain);
 
 const BEAM_OP = .38;
@@ -1045,7 +1045,7 @@ const STATUS_COLOR = {
 };
 
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; pillarAnims = []; terms = []; junRings = []; tilePanels = [];
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; pillarAnims = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = [];
 
   /* every agent is an app tile on its zone's wall — in the reference the walls
      ARE the OS: icon grids covering luminous surfaces. 5 columns, cells on the
@@ -1387,7 +1387,8 @@ function buildWorld() {
       pl.rotation.x = -Math.PI / 2;
       pl.position.set(x, 1.8 + k * .02, z);
       pl.material.opacity = Math.max(.35, 1 - k / 13);
-      world.add(pl);
+      pl.userData.node = r.n;
+      world.add(pl); ledgerPlates.push(pl);
     });
   }
 
@@ -1757,6 +1758,11 @@ canvas.addEventListener('pointerup', e => {
       const ti = T ? tilePanels.tileAt(T, th[0].uv) : -1;
       if (ti >= 0) { open(T.d.nodes[ti]); return; }
     }
+  }
+  /* a floor-ledger plate is a lane — the freshest ones sit at the centre */
+  if (ledgerPlates.length) {
+    const lh = ray.intersectObjects(ledgerPlates);
+    if (lh.length) { open(lh[0].object.userData.node); return; }
   }
   const zoneHit = ray.intersectObjects(zoneDiscs);
   if (zoneHit.length) {
