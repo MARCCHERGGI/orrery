@@ -314,9 +314,11 @@ const camBase = new THREE.Vector3(0, 260, 810);
 const tgtBase = new THREE.Vector3(0, 170, -350);
 const camGoal = { pos: camBase.clone(), tgt: tgtBase.clone(), active: false };
 const par = { x: 0, y: 0, sx: 0, sy: 0 };
+const idle = { k: 0, lastMove: 0 };
 addEventListener('pointermove', e => {
   par.x = (e.clientX / innerWidth - .5) * 2;
   par.y = (e.clientY / innerHeight - .5) * 2;
+  idle.lastMove = performance.now();
 });
 addEventListener('wheel', e => {
   if (level === 0 && PORTAL.mix > .5) {
@@ -419,6 +421,38 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   }
   g2.setAttribute('position', new THREE.BufferAttribute(arr2, 3));
   scene.add(new THREE.Points(g2, new THREE.PointsMaterial({ color: 0xc7cbf0, size: 3.4, transparent: true, opacity: .16, blending: THREE.AdditiveBlending, depthWrite: false })));
+  /* near-mouth band: big soft motes just inside the opening — the fastest-moving
+     layer under parallax, right where the eye needs the near/far contrast */
+  const N3 = 90, g3 = new THREE.BufferGeometry(), arr3 = new Float32Array(N3 * 3);
+  for (let i = 0; i < N3; i++) {
+    arr3[i * 3] = (Math.random() * 2 - 1) * ROOM.hw * .9;
+    arr3[i * 3 + 1] = Math.random() * ROOM.h;
+    arr3[i * 3 + 2] = ROOM.depth * (.5 + Math.random() * .45);
+  }
+  g3.setAttribute('position', new THREE.BufferAttribute(arr3, 3));
+  scene.add(new THREE.Points(g3, new THREE.PointsMaterial({ color: 0xd6daf6, size: 5.2, transparent: true, opacity: .2, blending: THREE.AdditiveBlending, depthWrite: false })));
+
+  /* aperture contact shadow — a real cut sits in shadow; the light lives deeper
+     in the room. Gradient strips darken floor/walls/ceiling toward the mouth. */
+  const mkGrad = (horizontal, darkAtStart) => {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d');
+    const gr = horizontal ? g.createLinearGradient(0, 0, 128, 0) : g.createLinearGradient(0, 0, 0, 128);
+    gr.addColorStop(darkAtStart ? 0 : 1, 'rgba(0,0,0,.62)');
+    gr.addColorStop(darkAtStart ? 1 : 0, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  };
+  const shMat = t => new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false });
+  const SH = 290;
+  const shFloor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, SH), shMat(mkGrad(false, false)));
+  shFloor.rotation.x = -Math.PI / 2; shFloor.position.set(0, .45, ROOM.depth - SH / 2); scene.add(shFloor);
+  const shCeil = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, SH), shMat(mkGrad(false, true)));
+  shCeil.rotation.x = Math.PI / 2; shCeil.position.set(0, ROOM.h - .45, ROOM.depth - SH / 2); scene.add(shCeil);
+  const shL = new THREE.Mesh(new THREE.PlaneGeometry(SH, ROOM.h), shMat(mkGrad(true, true)));
+  shL.rotation.y = Math.PI / 2; shL.position.set(-ROOM.hw + .8, ROOM.h / 2, ROOM.depth - SH / 2); scene.add(shL);
+  const shR = new THREE.Mesh(new THREE.PlaneGeometry(SH, ROOM.h), shMat(mkGrad(true, false)));
+  shR.rotation.y = -Math.PI / 2; shR.position.set(ROOM.hw - .8, ROOM.h / 2, ROOM.depth - SH / 2); scene.add(shR);
 }
 
 /* THE PORTAL — the screen is literally the opening of the room.
@@ -427,7 +461,7 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
    edges while the eye moves. That is what makes the display read as a hole with real
    depth behind it instead of a picture of one. The aperture gives the cut a physical
    thickness you can see when you look in at an angle. */
-const PORTAL = { z: ROOM.depth, w: 900, h: ROOM.h, cy: ROOM.h / 2, dist: 640, mix: 0 };
+const PORTAL = { z: ROOM.depth, w: 900, h: ROOM.h, cy: ROOM.h / 2, dist: 560, mix: 0 };
 const aperture = new THREE.Group(); scene.add(aperture);
 function fitPortal() {
   const a = innerWidth / Math.max(1, innerHeight);
@@ -446,7 +480,7 @@ function fitPortal() {
     new THREE.MeshBasicMaterial({ color: 0x07091a, side: THREE.DoubleSide }));
   fascia.position.z = PORTAL.z; aperture.add(fascia);
   /* reveal: the thickness of the cut, facing inward — parallax makes it visible */
-  const REV = 70, rm = new THREE.MeshStandardMaterial({ color: 0x1a1e3e, roughness: .9, metalness: .1 });
+  const REV = 150, rm = new THREE.MeshStandardMaterial({ color: 0x1a1e3e, roughness: .9, metalness: .1 });
   const rp = (w, h, x, y, z, rx, ry) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), rm);
     m.position.set(x, y, z); m.rotation.x = rx || 0; m.rotation.y = ry || 0;
@@ -461,6 +495,24 @@ function fitPortal() {
     new THREE.EdgesGeometry(new THREE.PlaneGeometry(PORTAL.w, PORTAL.h)),
     new THREE.LineBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .28 }));
   edge.position.set(0, PORTAL.cy, PORTAL.z); aperture.add(edge);
+
+  /* inner frame lip — a physical NEAR layer hugging the opening; it shears fast
+     against the far room when the eye moves, which is the depth cue the far
+     walls alone can't give */
+  const lipM = new THREE.MeshStandardMaterial({ color: 0x0c0f24, roughness: .55, metalness: .45 });
+  const lip = (w, h, x, y) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 14), lipM);
+    m.position.set(x, y, PORTAL.z - 8); aperture.add(m);
+  };
+  lip(PORTAL.w, 6, 0, T - 3); lip(PORTAL.w, 6, 0, B + 3);
+  lip(6, PORTAL.h, L + 3, PORTAL.cy); lip(6, PORTAL.h, R - 3, PORTAL.cy);
+  const hlM = new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .55 });
+  const hl = (w, h, x, y) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), hlM);
+    m.position.set(x, y, PORTAL.z - 15.2); aperture.add(m);
+  };
+  hl(PORTAL.w, 1.4, 0, T - 6.4); hl(PORTAL.w, 1.4, 0, B + 6.4);
+  hl(1.4, PORTAL.h, L + 6.4, PORTAL.cy); hl(1.4, PORTAL.h, R - 6.4, PORTAL.cy);
 }
 
 /* label sprites */
@@ -1098,7 +1150,7 @@ function animateAgents(t) {
    (eye outside the opening, asymmetric frustum pinned to the portal rectangle) */
 const _m4 = new THREE.Matrix4(), _qc = new THREE.Quaternion(), _qp = new THREE.Quaternion();
 const _pc = new THREE.Vector3(), _pp = new THREE.Vector3();
-function applyCamera(dx, dy) {
+function applyCamera(t, dx, dy) {
   const pk = reel ? 0 : (level === 0 ? 1 : .45);
   _pc.set(camBase.x + par.sx * 85 * pk + dx, camBase.y - par.sy * 48 * pk + dy, camBase.z);
   _m4.lookAt(_pc, tgtBase, camera.up); _qc.setFromRotationMatrix(_m4);
@@ -1109,9 +1161,14 @@ function applyCamera(dx, dy) {
   if (PORTAL.mix < .001) PORTAL.mix = 0;
   if (PORTAL.mix > 0) {
     /* the eye — big lateral travel is what opens the depth; the frustum below
-       keeps the portal rectangle exactly on the screen edges no matter where it is */
-    const ex = par.sx * 250 + dx * .6;
-    const ey = PORTAL.cy + 20 - par.sy * 150 + dy * .6;
+       keeps the portal rectangle exactly on the screen edges no matter where it is.
+       When the pointer rests, an orbital sway takes over: depth must never freeze. */
+    const idleTgt = (performance.now() - idle.lastMove > 1300) ? 1 : 0;
+    idle.k += (idleTgt - idle.k) * .02;
+    const swx = Math.sin(t * .0006) * 105 * idle.k;
+    const swy = Math.cos(t * .00047) * 48 * idle.k;
+    const ex = par.sx * 400 + dx * .8 + swx;
+    const ey = PORTAL.cy + 20 - par.sy * 240 + dy * .8 + swy;
     _pp.set(ex, ey, PORTAL.z + PORTAL.dist); _qp.identity();
     const d = PORTAL.dist;
     const pl = (-PORTAL.w / 2 - ex) * near / d, pr = (PORTAL.w / 2 - ex) * near / d;
@@ -1130,12 +1187,13 @@ function frame(now) {
   if (tour) tourStep(t);
   camBase.lerp(camGoal.pos, .06);
   tgtBase.lerp(camGoal.tgt, .08);
-  par.sx += (par.x - par.sx) * .05;
-  par.sy += (par.y - par.sy) * .05;
+  /* fast pursuit — the room must feel bolted to the hand; lag makes walls swim */
+  par.sx += (par.x - par.sx) * .16;
+  par.sy += (par.y - par.sy) * .16;
   /* handheld drift — the scene is never perfectly still, so depth never stops reading */
   const dx = reduced ? 0 : Math.sin(t * .00031) * 7 + Math.sin(t * .00013) * 4;
   const dy = reduced ? 0 : Math.sin(t * .00042 + 2) * 4;
-  applyCamera(dx, dy);
+  applyCamera(t, dx, dy);
   if (!reduced) {
     for (const pa of pillarAnims) if (pa.running && pa.mat !== hover.mat) pa.mat.emissiveIntensity = .9 + Math.sin(t * .004 + pa.phase) * .38;
     if (terms.tick) terms.tick(t);
