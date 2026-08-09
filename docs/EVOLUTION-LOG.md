@@ -657,3 +657,9 @@ shipped: Enter = GO TO everywhere — a search Enter on an agent now flies to it
 evidence: local ?v=99 in-eval provenance {host:127.0.0.1:8613}; "board scan" ⏎ → level 2 hunt/job-engine + Board Scan card + #a/ClaudeBoardScan; errs 0. node --check OK. hist confirmed {4:145} at 20:48Z export.
 ship status: PENDING-DEPLOY — pushed 9AAF28A0, live still C1106082 (quota trickle).
 next-observe: FIRST live==9AAF28A0. Fundamental due ~71 — research candidates: what a first-time visitor DOESN'T get (fresh-eyes pass), portrait tablet widths (768>700 breakpoint gap), repo-link surface still a MARCO DECISION.
+
+## 70 · 2026-08-09 · systemic · LEGIBLE
+scores: U10 L10 D10 De10 A10 P10
+shipped: header breakpoint 700→820px — portrait tablets (768) now get the wrapped header rows + scrim + crumbs drop. At 768 the desktop header was wrapping the wordmark into the crumb and stacking "data N min old" one word per line.
+evidence: emulated 768×1024 before/after screenshots read (before: wordmark wrap + vertical age; after: three clean rows on scrim, crumbsTop 128, wordmark single-line); landscape 1366 regression probe crumbsTop 46, errs 0 both. node --check OK. LIVE MATCH FDAF9AF4 after 2 polls — carried iter 69 (Enter=GO TO now live).
+next-observe: iter 71 = FUNDAMENTAL, research first: fresh-eyes pass — what does a first-time visitor not get? (Candidates from cold look: no visible hint that tiles/monuments are clickable, keyboard map undiscoverable, repo link still MARCO DECISION.) hist {5:145} after 22:00Z.
