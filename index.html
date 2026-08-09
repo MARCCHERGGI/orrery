@@ -1031,21 +1031,34 @@ function buildWorld() {
   /* every agent is an app tile on its zone's wall — in the reference the walls
      ARE the OS: icon grids covering luminous surfaces. 5 columns, cells on the
      module, status is the border, running tiles blink. All 145 are real lanes. */
-  function drawTilePanel(T, blink) {
+  function tileGrid(T) {
+    const c = T.c, cols = 5, rows = Math.ceil(T.d.nodes.length / cols);
+    const cell = Math.min(96, Math.floor((c.height - 21) / Math.max(1, rows)));
+    return { cols, rows, cell, ox: (c.width - cols * cell) / 2, oy: (c.height - rows * cell) / 2 };
+  }
+  function tileAt(T, uv) {
+    const { cols, cell, ox, oy } = tileGrid(T);
+    const px = uv.x * T.c.width, py = (1 - uv.y) * T.c.height;
+    const col = Math.floor((px - ox) / cell), row = Math.floor((py - oy) / cell);
+    if (col < 0 || col >= cols || row < 0) return -1;
+    const i = row * cols + col;
+    return i < T.d.nodes.length ? i : -1;
+  }
+  function drawTilePanel(T, blink, hoverIdx = -1) {
     const { g, c, d } = T;
+    T.blink = blink;
     g.clearRect(0, 0, c.width, c.height);
     const COL = { running: '#8be2b9', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
-    const cols = 5, rows = Math.ceil(d.nodes.length / cols);
-    const cell = Math.min(96, Math.floor((c.height - 21) / Math.max(1, rows)));
-    const ox = (c.width - cols * cell) / 2, oy = (c.height - rows * cell) / 2;
+    const { cols, cell, ox, oy } = tileGrid(T);
     d.nodes.forEach((nd, i) => {
       const x = ox + (i % cols) * cell, y = oy + Math.floor(i / cols) * cell;
       const tw = cell - 18, th = cell - 34;
       const col = COL[nd.status] || COL.ok;
-      g.globalAlpha = nd.status === 'dormant' ? .35 : .92;
-      g.fillStyle = `hsla(${d.hue},52%,62%,.15)`;
+      const hov = i === hoverIdx;
+      g.globalAlpha = nd.status === 'dormant' ? (hov ? .7 : .35) : .92;
+      g.fillStyle = `hsla(${d.hue},52%,62%,${hov ? .38 : .15})`;
       g.beginPath(); g.roundRect(x + 9, y + 5, tw, th, 8); g.fill();
-      g.strokeStyle = col; g.lineWidth = nd.status === 'running' && blink ? 3 : 1.4;
+      g.strokeStyle = hov ? '#eceaf6' : col; g.lineWidth = hov || (nd.status === 'running' && blink) ? 3 : 1.4;
       g.stroke();
       g.fillStyle = col;
       g.beginPath(); g.arc(x + 9 + tw - 9, y + 14, 3.6, 0, 7); g.fill();
@@ -1058,6 +1071,7 @@ function buildWorld() {
     });
     T.tex.needsUpdate = true;
   }
+  tilePanels.tileAt = tileAt; tilePanels.draw = drawTilePanel;
 
   /* THE CORE — bigger, structured: particle cloud + wireframe heart + orbital rings +
      a light column wiring it to the floor bus. Counters under it are real. */
@@ -1191,7 +1205,8 @@ function buildWorld() {
     else if (s.nx === -1) { tmesh.position.set(ROOM.hw - d.cx - 5, 140, 0); tmesh.rotation.y = -Math.PI / 2; }
     else { tmesh.position.set((d.cx > 0 ? FIB(5) : -FIB(5)) - d.cx, 140, -ROOM.depth - d.cz + 5); }
     zone.add(tmesh);
-    const TP = { c: tc, g: tc.getContext('2d'), tex: ttex, d };
+    tmesh.userData = { kind: 'tiles', dept: d.id };
+    const TP = { c: tc, g: tc.getContext('2d'), tex: ttex, d, mesh: tmesh, hover: -1 };
     tilePanels.push(TP); drawTilePanel(TP, true);
 
     /* circuit junction at the district center — everything in this zone wires here */
@@ -1404,7 +1419,7 @@ function buildWorld() {
       terms.last = t;
       for (const T of terms) { if (T.list.length) { T.row = (T.row + 1) % T.list.length; drawTerm(T); } }
       const blink = Math.floor(t / 1400) % 2 === 0;
-      for (const TP of tilePanels) drawTilePanel(TP, blink);
+      for (const TP of tilePanels) drawTilePanel(TP, blink, TP.hover);
     }
   };
 }
@@ -1593,11 +1608,28 @@ const ptr = new THREE.Vector2();
 /* hover — the net answers the cursor: checkpoint lights up, its beam brightens */
 const hover = { hub: null, mat: null };
 function updateHover() {
-  if (reel || !entered) { setHover(null); return; }
+  if (reel || !entered) { setHover(null); setTileHover(null, -1); return; }
   ptr.set(par.x, -par.y);
   ray.setFromCamera(ptr, camera);
   const h = ray.intersectObjects(hubMeshes);
   setHover(h.length ? h[0].object : null);
+  /* wall tiles answer the cursor too — every tile is a real, openable lane */
+  if (!h.length && tilePanels.length) {
+    const th = ray.intersectObjects(tilePanels.map(T => T.mesh));
+    if (th.length && th[0].uv) {
+      const T = tilePanels.find(T => T.mesh === th[0].object);
+      setTileHover(T, T ? tilePanels.tileAt(T, th[0].uv) : -1);
+    } else setTileHover(null, -1);
+  } else setTileHover(null, -1);
+}
+let tileHov = { T: null, i: -1 };
+function setTileHover(T, i) {
+  if (i < 0) T = null;
+  if (tileHov.T === T && tileHov.i === i) return;
+  if (tileHov.T && tileHov.T !== T) { tileHov.T.hover = -1; tilePanels.draw && tilePanels.draw(tileHov.T, tileHov.T.blink, -1); }
+  tileHov = { T, i: T ? i : -1 };
+  if (T) { T.hover = i; tilePanels.draw(T, T.blink, i); canvas.style.cursor = 'pointer'; }
+  else if (!hover.hub) canvas.style.cursor = '';
 }
 function setHover(mesh) {
   if (hover.hub === mesh) return;
@@ -1628,6 +1660,15 @@ canvas.addEventListener('pointerup', e => {
     const u = hubHit[0].object.userData;
     close(); setLevel(2, deptList.findIndex(d => d.id === u.dept), u.group);
     return;
+  }
+  /* a wall tile is a lane — clicking it opens that agent's card */
+  if (tilePanels.length) {
+    const th = ray.intersectObjects(tilePanels.map(T => T.mesh));
+    if (th.length && th[0].uv) {
+      const T = tilePanels.find(T => T.mesh === th[0].object);
+      const ti = T ? tilePanels.tileAt(T, th[0].uv) : -1;
+      if (ti >= 0) { open(T.d.nodes[ti]); return; }
+    }
   }
   const zoneHit = ray.intersectObjects(zoneDiscs);
   if (zoneHit.length) {
