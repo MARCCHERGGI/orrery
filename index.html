@@ -827,7 +827,7 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, terms = [], junRings = [], tilePanels = [], ledgerPlates = [], monRings = [], monInst = null;
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, terms = [], junRings = [], tilePanels = [], ledgerPlates = [], monRings = [], monInst = null, corePulse = null;
 const brain = new THREE.Group(); scene.add(brain);
 
 const BEAM_OP = .38;
@@ -1109,7 +1109,7 @@ const STATUS_COLOR = {
 };
 
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = []; monRings = []; monInst = null; hover.i = -1;
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = []; monRings = []; monInst = null; corePulse = null; hover.i = -1;
 
   /* every agent is an app tile on its zone's wall — in the reference the walls
      ARE the OS: icon grids covering luminous surfaces. 5 columns, cells on the
@@ -1237,6 +1237,23 @@ function buildWorld() {
     const colM = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.2, 300, 12),
       new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .22 }));
     colM.position.set(0, 150, -640); scene.add(colM);
+    /* the column carries traffic — M packets rise from the floor bus into the
+       brain, φ-staggered start heights, wrapping. One Points draw. */
+    const upA = new Float32Array(M * 3);
+    for (let i = 0; i < M; i++) {
+      const a = i * GA;
+      upA[i * 3] = Math.cos(a) * 1.8;
+      upA[i * 3 + 1] = (i / M) * 292 + 6;
+      upA[i * 3 + 2] = Math.sin(a) * 1.8;
+    }
+    const upG = new THREE.BufferGeometry();
+    upG.setAttribute('position', new THREE.BufferAttribute(upA, 3));
+    const upPts = new THREE.Points(upG, new THREE.PointsMaterial({
+      color: 0xbfa7ff, size: 3.2, transparent: true, opacity: .85,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+    upPts.position.set(0, 0, -640); scene.add(upPts);
+    corePulse = { a: upA, g: upG };
+    window.__col = () => corePulse ? [...corePulse.a].filter((_, i) => i % 3 === 1).map(v => +v.toFixed(1)) : null;
     /* contact shadow — a high mass needs a wide, faint pool to sit in the room */
     const sc = document.createElement('canvas'); sc.width = sc.height = 128;
     const sg = sc.getContext('2d');
@@ -1788,6 +1805,14 @@ function frame(now) {
     if (breatheN) gi2.instanceColor.needsUpdate = true;
   }
   animateAgents(t);
+  if (!reduced && corePulse) {
+    const A = corePulse.a;
+    for (let i = 0; i < A.length; i += 3) {
+      A[i + 1] += .55 + (i % 9) * .07;
+      if (A[i + 1] > 298) A[i + 1] = 6;
+    }
+    corePulse.g.attributes.position.needsUpdate = true;
+  }
   if (!reduced && pulseMeshes && pulseMeshes.inst) {
     pulseMeshes.data.forEach((pd, i) => {
       pd.p += pd.sp;
