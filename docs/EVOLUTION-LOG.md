@@ -107,3 +107,20 @@ the tour between MCP calls; exact-keyframe stills are now unreliable in this har
 live hash==local.
 next-observe: watch the tour once on the live site end-to-end. Then backlog #3
 (checkpoint last-result readouts) or monument-trio instancing (352 -> ~290 est).
+
+## 8 · 2026-08-09 · systemic · USEFUL/DENSITY
+scores: U8->9 L7 D8 De7->8 A8 P8
+shipped: backlog #3 - checkpoint last-result readouts. Monuments whose group has
+flagged lanes now carry a third label line in flag-red: "<n> flagged - <CODE> x<n>"
+using the group's actual dominant failure code from fleet.json (REQUEST_REFUSED,
+GENERIC_FAILURE, PROCESS_ABORTED...). Label stack lifts +7 on flagged groups so the
+code clears the cap sphere. 11 of 29 checkpoints currently carry a code; ok groups
+unchanged (density without noise). All strings are data values - no invented copy.
+evidence: node --check syntax pass (the old Function() harness false-alarmed - use
+--check from now on); COMMUNICATIONS zone screenshot read: HERMES "2 flagged -
+REQUEST_REFUSED x2", FIELD/POLYMARKET "1 flagged - GENERIC_FAILURE", WORLD-CUP
+visible, no cap collisions; 11s synthetic sweep + full rec-button tour stepped with
+zero __errs, rec returned to idle; live hash==local redirects-off.
+next-observe: fundamental cycle is due (iters 5-8 all systemic). Candidates: LEGIBLE
+paradigm pass (wall stat strips at distance), or the room's story for a first-time
+phone visitor. Perf backlog (monument-trio instancing) stays queued.
