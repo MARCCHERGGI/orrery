@@ -743,3 +743,9 @@ scores: U10 L10 D10 De10 A10 P10
 shipped: verdict only. Research question: does the first-time MOBILE tap-through flow (the actual IG-viewer path) work end-to-end on prod? Walked at 390×844: intro tap → enter → tap first visible monument (the-pocket, screen 52,563; 5 monuments tappable on first screen) → level 2 + checkpoint card open + deep link #senses/the-pocket written → errs 0. RULES-OUT mobile-interaction rework. The funnel chain is now verified end-to-end across cycles: OG unfurl (72/78/80) → fast boot (71/76) → dead-tap ack (73) → tap-through + deep link (83, this). Gotcha: __mon(j) throws past monRings.length — probe loops need try/catch; left as-is (verify-only hook).
 evidence: prod probe {visN:5, tapped:{g:"the-pocket"}, lvl:{level:2,groupId:"the-pocket"}, card:true, hash:"#senses/the-pocket", errs:0}; viewport restored 1366×768; sweep clean.
 next-observe: 7th cardiogram column (00:00Z refresh due now — check next cycle). Strips at 13 columns ~05:00Z. Iters 84+ systemic observation duties; fundamental ~87.
+
+## 84 · 2026-08-09 · systemic · (observation — clean)
+scores: U10 L10 D10 De10 A10 P10
+shipped: nothing. Prod healthy: level-0 room, cardiogram 6 cols, run columns, errs 0, calls 319, age "1 h old" un-ambered (correct — threshold φ²h). 00:00Z-window refresh (exporter fires ~:47) not yet committed at check time; 7th column expected next cycle.
+evidence: probe + screenshot read.
+next-observe: 7th cardiogram column; if the :47 refresh did NOT land by next cycle, investigate the exporter lane before anything else.
