@@ -1918,15 +1918,16 @@ function close() {
 let statusFilter = null;
 function openStatus(st) {
   statusFilter = st;
-  const members = nodes.filter(n => n.status === st);
+  const stale = st === 'stale';
+  const members = stale ? nodes.filter(isStale) : nodes.filter(n => n.status === st);
   query = 'status:' + st;
-  nodes.forEach(n => n._hit = n.status === st);
+  nodes.forEach(n => n._hit = stale ? isStale(n) : n.status === st);
   $('agent-only').style.display = 'none'; $('group-only').style.display = '';
-  $('card-led').style.background = DOT[st];
+  $('card-led').style.background = stale ? '#e2b878' : DOT[st];
   $('card-badge').textContent = 'system view';
   $('card-badge').style.color = 'var(--ink-dim)';
   $('card-dept').textContent = 'all zones';
-  $('card-name').textContent = `${members.length} ${STATUS_SHORT[st]}`;
+  $('card-name').textContent = stale ? `◔ ${members.length}` : `${members.length} ${STATUS_SHORT[st]}`;
   $('card-lede').textContent = `${members.length} of ${nodes.length} lanes`;
   $('card-members-k').textContent = 'lane · last result';
   const ul = $('card-members'); ul.innerHTML = '';
@@ -1941,7 +1942,7 @@ function openStatus(st) {
     li.appendChild(b); ul.appendChild(li);
   }
   $('card').classList.add('open');
-  $('live').textContent = `${members.length} ${STATUS_SHORT[st]} lanes`;
+  $('live').textContent = `${members.length} ${stale ? 'quiet' : STATUS_SHORT[st]} lanes`;
   if (tilePanels.draw) for (const T of tilePanels) tilePanels.draw(T, T.blink, T.hover);
   kick();
 }
@@ -2102,7 +2103,8 @@ function fmtAge(iso) {
 }
 function hud() {
   const c = s => nodes.filter(n => n.status === s).length;
-  $('counts').innerHTML = `<b>${nodes.length}</b> units · <b>${(fleet.groups || []).length}</b> checkpoints · <button class="cbtn" data-st="ok"><b>${c('ok')}</b> ok</button> · <button class="cbtn" data-st="running"><b>${c('running')}</b> running</button> · <button class="cbtn" data-st="flag">${c('flag')} flagged</button>`;
+  const sc = nodes.filter(isStale).length;
+  $('counts').innerHTML = `<b>${nodes.length}</b> units · <b>${(fleet.groups || []).length}</b> checkpoints · <button class="cbtn" data-st="ok"><b>${c('ok')}</b> ok</button> · <button class="cbtn" data-st="running"><b>${c('running')}</b> running</button> · <button class="cbtn" data-st="flag">${c('flag')} flagged</button>${sc ? ` · <button class="cbtn" data-st="stale" title="ran less recently than its own cadence" style="color:#e2b878">◔ <b style="color:#e2b878">${sc}</b></button>` : ''}`;
   $('counts').querySelectorAll('.cbtn').forEach(b => b.addEventListener('click', () => openStatus(b.dataset.st)));
   $('age').textContent = fmtAge(fleet.meta.exported);
   if (fleet.meta.subtitle) $('intro-sub').textContent = fleet.meta.subtitle;
