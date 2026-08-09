@@ -1887,11 +1887,22 @@ search.addEventListener('input', () => {
 });
 
 /* ============================== reel mode ============================== */
+let tourRun = 0;
 function tourKeys() {
   /* exactly 10 seconds: dive through the portal → glancing sweep along the
-     icon-grid wall → the INSTAGRAM monument → JARVIS close → pull back out */
-  const d = deptList.find(x => Object.keys(x.hubs || {}).some(g => /instagram/.test(g))) || deptList[0];
-  const gid = Object.keys(d.hubs).find(g => /instagram/.test(g)) || Object.keys(d.hubs)[0];
+     icon-grid wall → a hero monument → JARVIS close → pull back out.
+     Each run rotates the hero (instagram first, then every zone's biggest
+     checkpoint) so repeated recordings give different takes. */
+  const cands = [];
+  const igd = deptList.find(x => Object.keys(x.hubs || {}).some(g => /instagram/.test(g)));
+  if (igd) cands.push([igd, Object.keys(igd.hubs).find(g => /instagram/.test(g))]);
+  for (const x of deptList) {
+    if (!x.hubs || !x.nodes) continue;
+    const big = Object.keys(x.hubs).sort((a, b) =>
+      x.nodes.filter(n => n.group === b).length - x.nodes.filter(n => n.group === a).length)[0];
+    if (big && !(x === igd && big === cands[0]?.[1])) cands.push([x, big]);
+  }
+  const [d, gid] = cands.length ? cands[tourRun++ % cands.length] : [deptList[0], Object.keys(deptList[0].hubs)[0]];
   const hub = d.hubs[gid];
   /* wall point + sweep frame for this zone, side- or back-wall */
   const side = d.nx !== 0;
