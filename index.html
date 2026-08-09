@@ -193,6 +193,8 @@
   #card ul.members button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   #card ul.members .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
   #card ul.members .st { margin-left: auto; font-size: 11px; color: var(--ink-faint); letter-spacing: .06em; }
+  .hist-mini { display: inline-flex; gap: 1px; padding-left: 8px; flex: none; }
+  .hist-mini i { width: 4px; height: 4px; border-radius: 1px; }
   #card button.close {
     position: absolute; top: 8px; right: 8px; width: 44px; height: 44px;
     background: none; border: 0; color: var(--ink-faint); font-size: 17px; cursor: pointer;
@@ -2241,7 +2243,10 @@ function openGroup(d, hub) {
     const li = document.createElement('li');
     const b = document.createElement('button');
     const st = isStale(m) ? `<span style="color:#e2b878">${relAgo(m.last)}</span> · ${STATUS_SHORT[m.status]}` : STATUS_SHORT[m.status];
-    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span><span class="st">${st}</span>`;
+    /* each member carries the tail of its record — last 8 samples, newest right */
+    const hm = (m.hist || '').slice(-8);
+    const strip = hm ? `<span class="hist-mini">${[...hm].map(ch => `<i style="background:${HISTC[ch] || HISTC.o}"></i>`).join('')}</span>` : '';
+    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span>${strip}<span class="st">${st}</span>`;
     b.addEventListener('click', () => open(m));
     li.appendChild(b); ul.appendChild(li);
   }
