@@ -347,3 +347,9 @@ export-at-arm 10:48Z, live export 11:31Z, no human touch between. Page
 self-rebuild PROVEN. With refresh.log's autonomous "7:00:15 deployed", the
 whole loop is verified: schtask -> gen-data -> deploy -> open tabs refresh
 themselves. The site is now fully self-updating end to end.
+
+## 21 · 2026-08-09 · systemic · PERF
+scores: U9 L8 D8 De8 A9 P9
+shipped: instancing cycle A per docs/INSTANCING-PLAN.md — 29 monument ring+cap trios (58 meshes) collapsed to 2 InstancedMesh with setColorAt per-zone hues; Y-bob kept via per-frame matrix compose; ring z-spin dropped (torus is rotationally symmetric — the spin was invisible, discovered while planning).
+evidence: node --check clean · __perf at same __hold frame: 375 → 319 calls (−56 = 58 meshes − 2 instanced draws) · v31-inst.png read — rings/caps present on every monument, correct hues, room visually identical · combined check {hubClickOpensCheckpoint: true, errs: 0} — pillar raycast untouched, 11s sweep + full rec tour zero __errs · live SHA256 == local (65F9ADCB…).
+next-observe: instancing cycle B (pillars behind instanceId remap, verify bar = 29/29 scripted clicks + visible breathe) — or portrait tap-target measurement if cycle B risk budget feels tight for one 5-min cycle. Calls now 319; cycle B est. ~292.
