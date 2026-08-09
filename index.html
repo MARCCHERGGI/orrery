@@ -1956,6 +1956,7 @@ function setLevel(lv, di, gid) {
     setDeptnav(d.label.split('').join(' '), hub.label);
     openGroup(d, hub);
   }
+  hover.i = -2; setHover(-1);   /* re-aim the selection shell at the new focus */
   crumbs(); kick();
 }
 function setDeptnav(name, tag) { $('dept-name').textContent = name; $('dept-tag').textContent = tag; }
@@ -2013,11 +2014,16 @@ function setTileHover(T, i) {
   if (T) { T.hover = i; tilePanels.draw(T, T.blink, i); canvas.style.cursor = 'pointer'; }
   else if (hover.i < 0) canvas.style.cursor = '';
 }
+/* the focused checkpoint at level 2 — the ghost shell and bright beam hold on
+   it while the pointer is elsewhere, so the selection never goes ambient */
+const selMonIdx = () => level === 2 && groupId && deptList[deptIdx]
+  ? monRings.findIndex(r => r.group === groupId && r.dept === deptList[deptIdx].id) : -1;
 function setHover(i) {
   if (hover.i === i) return;
   hover.i = i;
   canvas.style.cursor = i >= 0 ? 'pointer' : '';
-  const u = i >= 0 ? monRings[i] : null;
+  const si = i >= 0 ? i : selMonIdx();
+  const u = si >= 0 ? monRings[si] : null;
   for (const b of beams) if (b.line)
     b.line.material.opacity = (u && b.group === u.group && b.dept === u.dept) ? .85 : BEAM_OP;
   const g = monInst && monInst.ghost;
