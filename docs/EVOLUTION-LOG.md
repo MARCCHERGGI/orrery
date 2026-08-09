@@ -242,3 +242,25 @@ zero __errs; live hash==local redirects-off.
 next-observe: LEGIBLE at ALL distance (wall stat strips), or tap-target sizing for
 tiles on portrait (tiles are small - maybe fine since cards also open via search
 and counters). Perf healthy at 379/158.
+
+## 16 · 2026-08-09 · systemic · USEFUL (mobile search)
+scores: U9 L8 D8 De9 A9 P8
+shipped: search is reachable on phones. It only opened via the `/` key - phones
+have no keyboard, and the <=700px media query hides the counter-filters too, so
+mobile had NO path to any card except tapping 3D geometry. Header now has a
+find button (styled like face/tour) that toggles the palette; Enter inside the
+search opens the first hit (was a dead end even on desktop - the keydown handler
+early-returned for search-focused events).
+evidence: portrait 390x844: button opens palette, "warden" dims the room; tab was
+then taken mid-verify by SocialWatch's 6-hourly run - waited it out (idle-based
+detection after killing my own polling watcher, which was resetting the idle
+clock I was measuring), restored 1366 viewport, then verified the full chain:
+find -> "warden" -> Enter -> "Fleet Warden - ran 14 min ago - next in 1 min"
+card open, zero __errs; sweep + full tour clean; live hash==local redirects-off.
+HARNESS LESSON: the relay tab is shared with scheduled lanes (SocialWatch every
+6h at ~04/10/16/22Z) - check /status idle_seconds before long verifications, and
+remember my own pollers reset that clock. Also: I left 390x844 emulation on
+during part of SocialWatch's run - its 10:4xZ snapshot may have scraped mobile
+layouts; restore the viewport BEFORE yielding the tab next time.
+next-observe: LEGIBLE at ALL distance (wall stat strips) or portrait tile tap
+targets. Reel is fully serviceable for Marco's recording session.
