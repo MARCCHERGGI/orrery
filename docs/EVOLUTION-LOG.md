@@ -596,3 +596,10 @@ shipped: wall-panel text quality — mid-word hard slice replaced with ellipsis 
 evidence: node --check OK; local 8613 deep-linked #hunt/job-engine (deep links now serve the verify harness) — LIVE NOW panel reads clean STILL_RUNNING, no fragment; record 2 dots + selection shell both confirmed on the same screenshot; errs 0.
 ship status: PENDING-DEPLOY — pushed 97AFA8F7, live still 53FCEACE after 18 polls; log push follows.
 next-observe: FIRST confirm live == the new blob (panel fix + this log). Then OBSERVE fresh — L axis clean now; consider CORE column area or portrait pass. Fundamental due ~63.
+
+## 61 · 2026-08-09 · systemic · USEFUL
+scores: U10 L10 D10 De10 A10 P10
+shipped: agent deep links — #a/<nodeId> boots straight to the lane's card at its checkpoint; writeHash() now unifies all URL state (agent > group > dept > clear), open()/close() participate, try/catch guards replaceState rate limits. Completes iter 59's fundamental down to the atomic shareable unit.
+evidence: local 8613 — boot #a/ClaudeBoardScan → level 2 job-engine + Board Scan card + hash intact; close → #hunt at level 1; hashchange #a/ClaudeAffiliateTick → card swaps; errs 0. Prod after deploy: same boot probe clean. node --check OK.
+deploy note: iter-60's PENDING-DEPLOY root-caused via Vercel API — no deployment records were minted for those pushes (deployment-creation quota window), not a build failure; the 61 push landed A3D351EE carrying 60+61, LIVE MATCH after 2 polls. Rule confirmed: batched pushes resolve stalled windows; check list_deployments before suspecting the build.
+next-observe: hist should be {3:145} after the 20:00Z refresh (or {2}+{3} mix mid-cache). Visual steer: next visible ship candidates — CORE column polish, portrait spot-check of card hash flows. Fundamental due ~63.
