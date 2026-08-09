@@ -2132,6 +2132,11 @@ canvas.addEventListener('pointerup', e => {
 /* ============================== cards ============================== */
 /* record dot colors — the room's status palette */
 const HISTC = { o: 'var(--ink)', r: 'var(--accent)', f: 'var(--danger)', d: 'var(--ink-faint)' };
+/* last-8 record tail as an inline strip — shared by group and status rows */
+const histMini = m => {
+  const hm = (m.hist || '').slice(-8);
+  return hm ? `<span class="hist-mini">${[...hm].map(ch => `<i style="background:${HISTC[ch] || HISTC.o}"></i>`).join('')}</span>` : '';
+};
 const BADGE = {
   ok:      { text: 'fully autonomous', color: 'var(--accent)' },
   running: { text: 'running now',      color: 'var(--accent)' },
@@ -2243,10 +2248,7 @@ function openGroup(d, hub) {
     const li = document.createElement('li');
     const b = document.createElement('button');
     const st = isStale(m) ? `<span style="color:#e2b878">${relAgo(m.last)}</span> · ${STATUS_SHORT[m.status]}` : STATUS_SHORT[m.status];
-    /* each member carries the tail of its record — last 8 samples, newest right */
-    const hm = (m.hist || '').slice(-8);
-    const strip = hm ? `<span class="hist-mini">${[...hm].map(ch => `<i style="background:${HISTC[ch] || HISTC.o}"></i>`).join('')}</span>` : '';
-    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span>${strip}<span class="st">${st}</span>`;
+    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span>${histMini(m)}<span class="st">${st}</span>`;
     b.addEventListener('click', () => open(m));
     li.appendChild(b); ul.appendChild(li);
   }
@@ -2288,7 +2290,7 @@ function openStatus(st) {
     const st = isStale(m)
       ? `<span style="color:#e2b878">${relAgo(m.last)}</span> · ${String(m.detail || depts[m.dept].label).slice(0, 18)}`
       : String(m.detail || depts[m.dept].label).slice(0, 30);
-    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span><span class="st">${st}</span>`;
+    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span>${histMini(m)}<span class="st">${st}</span>`;
     b.addEventListener('click', () => open(m));
     li.appendChild(b); ul.appendChild(li);
   }
