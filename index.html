@@ -69,8 +69,15 @@
     pointer-events: none;
   }
   header .wordmark { font-family: var(--serif); font-weight: 600; font-size: 17px; letter-spacing: .34em; }
-  header .counts { font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+  header .counts { font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; letter-spacing: .04em; pointer-events: auto; }
   header .counts b { color: var(--ink); font-weight: 600; }
+  header .counts button.cbtn {
+    font: inherit; letter-spacing: inherit; color: inherit; background: none; border: 0;
+    padding: 0 1px; cursor: pointer; border-bottom: 1px dotted rgba(236,234,246,.28);
+    transition: color var(--t-quick), border-color var(--t-quick);
+  }
+  header .counts button.cbtn:hover { color: var(--ink); border-bottom-color: var(--accent); }
+  header .counts button.cbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   header .right { margin-left: auto; display: flex; align-items: center; gap: 14px; pointer-events: auto; }
   header .age { font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
   header #rec, header #face {
@@ -244,7 +251,7 @@
     <div class="sect"><div class="k">last result</div><div class="v mono" id="card-detail"></div></div>
   </div>
   <div id="group-only" style="display:none">
-    <div class="sect"><div class="k">agents at this checkpoint</div><ul class="members" id="card-members"></ul></div>
+    <div class="sect"><div class="k" id="card-members-k">agents at this checkpoint</div><ul class="members" id="card-members"></ul></div>
   </div>
 </aside>
 
@@ -1055,7 +1062,9 @@ function buildWorld() {
       const tw = cell - 18, th = cell - 34;
       const col = COL[nd.status] || COL.ok;
       const hov = i === hoverIdx;
-      g.globalAlpha = nd.status === 'dormant' ? (hov ? .7 : .35) : .92;
+      let alpha = nd.status === 'dormant' ? (hov ? .7 : .35) : .92;
+      if (query && !nd._hit) alpha *= .22;   /* a filter dims the wall too */
+      g.globalAlpha = alpha;
       g.fillStyle = `hsla(${d.hue},52%,62%,${hov ? .38 : .15})`;
       g.beginPath(); g.roundRect(x + 9, y + 5, tw, th, 8); g.fill();
       g.strokeStyle = hov ? '#eceaf6' : col; g.lineWidth = hov || (nd.status === 'running' && blink) ? 3 : 1.4;
@@ -1723,6 +1732,7 @@ function openGroup(d, hub) {
   $('card-dept').textContent = d.label.toLowerCase();
   $('card-name').textContent = hub.label.replace(/-/g, ' ');
   $('card-lede').textContent = (hub.blurb || '') + ` — ${c('ok')} ok · ${c('running')} running · ${c('flag')} flagged · ${c('dormant')} dormant.`;
+  $('card-members-k').textContent = 'agents at this checkpoint';
   const ul = $('card-members'); ul.innerHTML = '';
   for (const m of members) {
     const li = document.createElement('li');
@@ -1734,7 +1744,45 @@ function openGroup(d, hub) {
   $('card').classList.add('open');
   $('live').textContent = `${hub.label} checkpoint, ${members.length} agents`;
 }
-function close() { selected = null; $('card').classList.remove('open'); kick(); }
+function close() {
+  selected = null; $('card').classList.remove('open');
+  if (statusFilter) {
+    statusFilter = null; query = ''; search.value = '';
+    nodes.forEach(n => n._hit = false);
+    if (tilePanels.draw) for (const T of tilePanels) tilePanels.draw(T, T.blink, T.hover);
+  }
+  kick();
+}
+
+/* status views — the header counters are live filters: click "18 flagged" and
+   the system shows you which 18 and each one's real last result */
+let statusFilter = null;
+function openStatus(st) {
+  statusFilter = st;
+  const members = nodes.filter(n => n.status === st);
+  query = 'status:' + st;
+  nodes.forEach(n => n._hit = n.status === st);
+  $('agent-only').style.display = 'none'; $('group-only').style.display = '';
+  $('card-led').style.background = DOT[st];
+  $('card-badge').textContent = 'system view';
+  $('card-badge').style.color = 'var(--ink-dim)';
+  $('card-dept').textContent = 'all zones';
+  $('card-name').textContent = `${members.length} ${STATUS_SHORT[st]}`;
+  $('card-lede').textContent = `${members.length} of ${nodes.length} lanes`;
+  $('card-members-k').textContent = 'lane · last result';
+  const ul = $('card-members'); ul.innerHTML = '';
+  for (const m of members) {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span><span class="st">${String(m.detail || depts[m.dept].label).slice(0, 30)}</span>`;
+    b.addEventListener('click', () => open(m));
+    li.appendChild(b); ul.appendChild(li);
+  }
+  $('card').classList.add('open');
+  $('live').textContent = `${members.length} ${STATUS_SHORT[st]} lanes`;
+  if (tilePanels.draw) for (const T of tilePanels) tilePanels.draw(T, T.blink, T.hover);
+  kick();
+}
 document.querySelector('#card .close').addEventListener('click', () => { close(); if (level === 2) setLevel(1, deptIdx); });
 
 /* ============================== keyboard + search ============================== */
@@ -1841,7 +1889,8 @@ function fmtAge(iso) {
 }
 function hud() {
   const c = s => nodes.filter(n => n.status === s).length;
-  $('counts').innerHTML = `<b>${nodes.length}</b> units · <b>${(fleet.groups || []).length}</b> checkpoints · <b>${c('ok')}</b> ok · <b>${c('running')}</b> running · ${c('flag')} flagged`;
+  $('counts').innerHTML = `<b>${nodes.length}</b> units · <b>${(fleet.groups || []).length}</b> checkpoints · <button class="cbtn" data-st="ok"><b>${c('ok')}</b> ok</button> · <button class="cbtn" data-st="running"><b>${c('running')}</b> running</button> · <button class="cbtn" data-st="flag">${c('flag')} flagged</button>`;
+  $('counts').querySelectorAll('.cbtn').forEach(b => b.addEventListener('click', () => openStatus(b.dataset.st)));
   $('age').textContent = fmtAge(fleet.meta.exported);
   if (fleet.meta.subtitle) $('intro-sub').textContent = fleet.meta.subtitle;
   if (fleet.meta.title) { $('intro-title').textContent = fleet.meta.title; document.querySelector('header .wordmark').textContent = fleet.meta.title; }
