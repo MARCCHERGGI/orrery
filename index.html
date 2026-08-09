@@ -831,7 +831,7 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, terms = [], junRings = [], tilePanels = [], ledgerPlates = [], monRings = [], monInst = null, corePulse = null;
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, terms = [], junRings = [], tilePanels = [], ledgerPlates = [], monRings = [], monInst = null, corePulse = null, dust = null;
 const brain = new THREE.Group(); scene.add(brain);
 
 const BEAM_OP = .38;
@@ -1113,7 +1113,7 @@ const STATUS_COLOR = {
 };
 
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = []; monRings = []; monInst = null; corePulse = null; hover.i = -1;
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = []; monRings = []; monInst = null; corePulse = null; dust = null; hover.i = -1;
 
   /* every agent is an app tile on its zone's wall — in the reference the walls
      ARE the OS: icon grids covering luminous surfaces. 5 columns, cells on the
@@ -1526,6 +1526,27 @@ function buildWorld() {
     monInst = { ri, M4, P, S, QX, gi2, ghost, CT: new THREE.Color() };
   }
 
+  /* the air — F(4) dust motes drifting through the room volume, one Points
+     draw. They parallax against camera sway, which is what makes the space
+     read as volume instead of backdrop. */
+  {
+    const dn = FIB(4);
+    const da = new Float32Array(dn * 3);
+    for (let i = 0; i < dn; i++) {
+      const a = i * GA;
+      da[i * 3] = Math.sin(a * 7.3) * ROOM.hw * .88;
+      da[i * 3 + 1] = 12 + ((i * PHI) % 1) * ROOM.h * .78;
+      da[i * 3 + 2] = -ROOM.depth + ((a % 1)) * (ROOM.depth + 320);
+    }
+    const dg = new THREE.BufferGeometry();
+    dg.setAttribute('position', new THREE.BufferAttribute(da, 3));
+    const dp = new THREE.Points(dg, new THREE.PointsMaterial({
+      color: 0xaebcf2, size: 2.1, transparent: true, opacity: .38,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+    world.add(dp);
+    dust = { a: da, g: dg, n: dn };
+  }
+
   /* one riser: CORE foot → CORE (was duplicated once per zone before) */
   beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(0, 1.6, -640), new THREE.Vector3(0, 300, -640)), dept: 'core' });
 
@@ -1830,6 +1851,15 @@ function frame(now) {
       if (A[i + 1] > 298) A[i + 1] = 6;
     }
     corePulse.g.attributes.position.needsUpdate = true;
+  }
+  if (!reduced && dust) {
+    const A = dust.a;
+    for (let i = 0; i < A.length; i += 3) {
+      A[i + 1] += .028 + (i % 5) * .009;          /* slow rise, per-mote spread */
+      A[i] += Math.sin(t * .00021 + i) * .05;      /* lateral waft */
+      if (A[i + 1] > ROOM.h * .9) A[i + 1] = 10;
+    }
+    dust.g.attributes.position.needsUpdate = true;
   }
   if (!reduced && pulseMeshes && pulseMeshes.inst) {
     pulseMeshes.data.forEach((pd, i) => {
