@@ -631,3 +631,9 @@ shipped: record strips in status views — the "18 flagged" system view (and all
 evidence: local ?v=96 same-eval provenance probe {host:127.0.0.1:8613, rows:18, strips:18, firstStrip:3×var(--danger), errs:0}; screenshot read — every flagged row carries a salmon tail. node --check OK.
 ship status: PENDING-DEPLOY — pushed DB6D60F8, live still ACA52B1F (quota trickle; batched-push protocol).
 next-observe: FIRST live==DB6D60F8. hist {4:145} after 21:00Z refresh. Fundamental ~67: tour refresh research (reel must showcase strips/shell/uplights). CORE banner parked for Marco copy.
+
+## 66 · 2026-08-09 · systemic · ALIVE/USEFUL
+scores: U10 L10 D10 De10 A10 P10
+shipped: flagged checkpoints tint their beam to CORE salmon (0xe08a7c, opacity ×φ) — at level 0 the 18 flags are now geographically visible without opening anything. setHover made base-aware (per-beam op field) so hover restore keeps the tint. Perf unchanged (color/opacity only, 317 calls).
+evidence: node --check OK; local ?v=97 same-eval provenance {host:127.0.0.1:8613, lvl:0, errs:0}; screenshot read — salmon arc cluster left (marketing/newsroom flags) + right (strategy WC flags) clearly distinct from dept-hued beams. LIVE MATCH 56208A20 after 2 polls — carried iter 65 too (status-view strips now live).
+next-observe: 65+66 both live — spot-check flagged view strips + salmon beams on prod. hist {4:145} after 21:00Z. Iter 67 = FUNDAMENTAL: tour refresh research first (reel must showcase strips/shell/uplights/salmon beams; keep exactly 10s; rotate heroes).
