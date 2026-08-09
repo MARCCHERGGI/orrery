@@ -1369,6 +1369,28 @@ function buildWorld() {
     }
   }
 
+  /* THE FLOOR LEDGER — the room's dead centre carries the freshest truth: the
+     M most recently active lanes on a golden-angle spiral, newest at the core.
+     Pure scheduler data (last-run timestamps); ages fade with rank. */
+  {
+    const nowMs = Date.now();
+    const recent = nodes.filter(n => n.last)
+      .map(n => ({ n, age: (nowMs - new Date(n.last)) / 60000 }))
+      .filter(r => r.age >= 0 && r.age < 1440)
+      .sort((a, b) => a.age - b.age).slice(0, 13);
+    recent.forEach((r, k) => {
+      const rad = M * PHI * PHI * Math.sqrt(k + .5);
+      const th = k * GA;
+      const x = Math.sin(th) * rad, z = -120 + Math.cos(th) * rad;
+      const age = r.age < 90 ? Math.round(r.age) + 'm' : Math.round(r.age / 60) + 'h';
+      const pl = makePlate(`${r.n.label} · ${age}`, { size: 20, scale: .5 });
+      pl.rotation.x = -Math.PI / 2;
+      pl.position.set(x, 1.8 + k * .02, z);
+      pl.material.opacity = Math.max(.35, 1 - k / 13);
+      world.add(pl);
+    });
+  }
+
   /* build the two merged line objects */
   const mkMerged = (pos, col, add) => {
     if (!pos.length) return;
