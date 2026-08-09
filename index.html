@@ -41,11 +41,6 @@
     content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 4;
     background: radial-gradient(ellipse 130% 105% at 50% 42%, transparent 52%, rgba(8,10,24,.5) 100%);
   }
-  body::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 5;
-    opacity: .05; mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
 
   #intro {
     position: fixed; inset: 0; display: grid; place-items: center; text-align: center;
@@ -319,7 +314,7 @@ camera.position.set(0, 260, 1500);
    Threshold .82 keeps text crisp; only true emitters glow (sun, orb, neon, pulses). */
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .5, .45, .82);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .38, .45, .82);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
@@ -408,6 +403,18 @@ Object.assign(key.shadow.camera, { left: -760, right: 760, top: 980, bottom: -98
 key.shadow.bias = -.0004;
 const rim = new THREE.DirectionalLight(0x8be2b9, .3); rim.position.set(-400, 300, -500); scene.add(rim);
 
+/* ═══════════════ THE SYSTEM — one equation governs every dimension ═══════════════
+   φ = (1+√5)/2. Base module M = 21. Every radius, height, spacing, orbit and
+   period in the world is M·φⁿ (≈ the Fibonacci numbers 21 34 55 89 144 233 377
+   610 987), every angular placement is the golden angle Θ = 2π(2−φ) ≈ 137.5°,
+   and orbital periods obey Kepler's third law T ∝ r^1.5. The room shell is
+   architecture; everything standing inside it derives from these four lines. */
+const PHI = (1 + Math.sqrt(5)) / 2;
+const GA = Math.PI * 2 * (2 - PHI);            // golden angle
+const M = 21;
+const FIB = n => Math.round(M * Math.pow(PHI, n));   // F(0..8) = 21 34 55 89 144 233 377 610 987
+const TILT = 1 / (PHI * PHI * PHI);            // one shared orbital inclination, nodes rotated by Θ
+
 /* THE ROOM — the screen is the open face of a box; everything lives inside it */
 const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-depth, open front at z=+depth
 {
@@ -474,34 +481,15 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   };
   vstrip(-ROOM.hw); vstrip(ROOM.hw);
 
-  /* dust motes drifting in the volume — depth cue, all the way up to the opening */
-  const N = 320, g = new THREE.BufferGeometry(), arr = new Float32Array(N * 3);
+  /* one fine dust layer — depth cue under parallax, nothing more */
+  const N = FIB(4), g = new THREE.BufferGeometry(), arr = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) {
     arr[i * 3] = (Math.random() * 2 - 1) * ROOM.hw * .95;
     arr[i * 3 + 1] = Math.random() * ROOM.h;
     arr[i * 3 + 2] = (Math.random() * 2 - 1) * ROOM.depth * .97;
   }
   g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
-  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xdfe2f8, size: 1.6, transparent: true, opacity: .35 })));
-  /* a second, coarser layer — two dust depths parallax at different rates */
-  const N2 = 150, g2 = new THREE.BufferGeometry(), arr2 = new Float32Array(N2 * 3);
-  for (let i = 0; i < N2; i++) {
-    arr2[i * 3] = (Math.random() * 2 - 1) * ROOM.hw * .95;
-    arr2[i * 3 + 1] = Math.random() * ROOM.h;
-    arr2[i * 3 + 2] = (Math.random() * 2 - 1) * ROOM.depth * .97;
-  }
-  g2.setAttribute('position', new THREE.BufferAttribute(arr2, 3));
-  scene.add(new THREE.Points(g2, new THREE.PointsMaterial({ color: 0xc7cbf0, size: 3.4, transparent: true, opacity: .16, blending: THREE.AdditiveBlending, depthWrite: false })));
-  /* near-mouth band: big soft motes just inside the opening — the fastest-moving
-     layer under parallax, right where the eye needs the near/far contrast */
-  const N3 = 90, g3 = new THREE.BufferGeometry(), arr3 = new Float32Array(N3 * 3);
-  for (let i = 0; i < N3; i++) {
-    arr3[i * 3] = (Math.random() * 2 - 1) * ROOM.hw * .9;
-    arr3[i * 3 + 1] = Math.random() * ROOM.h;
-    arr3[i * 3 + 2] = ROOM.depth * (.5 + Math.random() * .45);
-  }
-  g3.setAttribute('position', new THREE.BufferAttribute(arr3, 3));
-  scene.add(new THREE.Points(g3, new THREE.PointsMaterial({ color: 0xd6daf6, size: 5.2, transparent: true, opacity: .2, blending: THREE.AdditiveBlending, depthWrite: false })));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xdfe2f8, size: 1.6, transparent: true, opacity: .22 })));
 
   /* aperture contact shadow — a real cut sits in shadow; the light lives deeper
      in the room. Gradient strips darken floor/walls/ceiling toward the mouth. */
@@ -555,7 +543,12 @@ const planets = [];
   gg.fillStyle = gr; gg.fillRect(0, 0, 128, 128);
   const glowM = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gc), blending: THREE.AdditiveBlending, depthWrite: false });
   glowM.fog = false;
-  const glow = new THREE.Sprite(glowM); glow.scale.set(420, 420, 1); glow.position.copy(SUN); sky.add(glow);
+  const glow = new THREE.Sprite(glowM); glow.scale.set(FIB(6), FIB(6), 1); glow.position.copy(SUN); sky.add(glow);
+  /* inner graduation ring — the instrument begins at the sun */
+  const sunRingPts = [];
+  for (let a = 0; a <= 96; a++) { const th = a / 96 * Math.PI * 2; sunRingPts.push(new THREE.Vector3(SUN.x + Math.cos(th) * FIB(3), SUN.y, SUN.z + Math.sin(th) * FIB(3))); }
+  const srM = new THREE.LineBasicMaterial({ color: 0xcabf9a, transparent: true, opacity: .3 }); srM.fog = false;
+  sky.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(sunRingPts), srM));
   /* procedural planet skins — each world gets weather, not a flat color */
   const ptex = (draw) => {
     const c = document.createElement('canvas'); c.width = 256; c.height = 128;
@@ -599,42 +592,44 @@ const planets = [];
     () => texBands('#d8c79e', ['#e8dcc0', '#c2ad7e', '#efe6cd']),
     () => texBands('#3f6fd1', ['#5b8ae0', '#2f55a8', '#7fa8ef']),
   ];
-  /* planets: [orbit r, size, period s, tilt] */
-  const P = [
-    [170, 10, 14, .03], [235, 15, 22, .05], [310, 16, 30, .02],
-    [395, 12, 42, .06], [520, 30, 62, .04], [620, 24, 84, .07],
-    [750, 18, 118, .05],
-  ];
-  P.forEach(([r, s, period, tilt], i) => {
+  /* seven orbits on the module: rₙ = 144·φ^(n/2), periods by Kepler T ∝ r^1.5
+     (T₀ = 13 s at r = 144), inclination shared, ascending node rotated by Θ per
+     planet, size drawn from the Fibonacci set, axial spin from powers of φ. */
+  const SIZES = [8, 13, 8, 13, 21, 13, 8];
+  for (let i = 0; i < 7; i++) {
+    const r = FIB(4) * Math.pow(PHI, i / 2);
+    const period = 13 * Math.pow(r / FIB(4), 1.5);
+    const node = i * GA;
     const m = new THREE.MeshBasicMaterial({ map: SKINS[i]() }); m.fog = false;
-    const p = new THREE.Mesh(new THREE.SphereGeometry(s, 24, 24), m);
-    p.rotation.z = rnd(-.2, .25);
+    const p = new THREE.Mesh(new THREE.SphereGeometry(SIZES[i], 24, 24), m);
+    p.rotation.z = TILT * ((i % 2) * 2 - 1);
     sky.add(p);
     if (i === 5) { /* the ringed one */
-      const rg = new THREE.Mesh(new THREE.TorusGeometry(s * 1.7, s * .22, 2, 48),
+      const rg = new THREE.Mesh(new THREE.TorusGeometry(SIZES[i] * PHI, SIZES[i] / PHI / 3.5, 2, 48),
         new THREE.MeshBasicMaterial({ color: 0xcabf9a, transparent: true, opacity: .7 }));
       rg.material.fog = false; rg.rotation.x = Math.PI / 2.6; p.add(rg);
     }
-    /* orbit line */
+    /* orbit line traces the exact path the planet flies */
     const pts = [];
     for (let a = 0; a <= 96; a++) {
       const th = a / 96 * Math.PI * 2;
-      pts.push(new THREE.Vector3(SUN.x + Math.cos(th) * r, SUN.y + Math.sin(th) * r * tilt * 8, SUN.z + Math.sin(th) * r));
+      pts.push(new THREE.Vector3(SUN.x + Math.cos(th) * r, SUN.y + Math.sin(th - node) * r * TILT, SUN.z + Math.sin(th) * r));
     }
     const om = new THREE.LineBasicMaterial({ color: 0x8a90c0, transparent: true, opacity: .16 }); om.fog = false;
     sky.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), om));
-    planets.push({ mesh: p, r, tilt, speed: (Math.PI * 2) / (period * 1000), phase: i * 2.1, sun: SUN, spin: .0003 + (i % 3) * .00035 });
-  });
-  /* asteroid belt between the 4th and 5th orbits */
-  const NB = 170, bg2 = new THREE.BufferGeometry(), ba = new Float32Array(NB * 3);
+    planets.push({ mesh: p, r, node, speed: (Math.PI * 2) / (period * 1000), phase: i * GA, sun: SUN, spin: .0003 * Math.pow(PHI, i % 3) });
+  }
+  /* asteroid belt fills the annulus between the 4th and 5th orbits */
+  const beltIn = FIB(4) * Math.pow(PHI, 3 / 2), beltOut = FIB(4) * Math.pow(PHI, 4 / 2);
+  const NB = FIB(4), bg2 = new THREE.BufferGeometry(), ba = new Float32Array(NB * 3);
   for (let i = 0; i < NB; i++) {
-    const th = Math.random() * Math.PI * 2, rr = 448 + Math.random() * 42;
+    const th = i * GA, rr = beltIn + ((i * PHI) % 1) * (beltOut - beltIn);
     ba[i * 3] = SUN.x + Math.cos(th) * rr;
-    ba[i * 3 + 1] = SUN.y + (Math.random() * 2 - 1) * 14;
+    ba[i * 3 + 1] = SUN.y + (((i * PHI * PHI) % 1) * 2 - 1) * 13;
     ba[i * 3 + 2] = SUN.z + Math.sin(th) * rr;
   }
   bg2.setAttribute('position', new THREE.BufferAttribute(ba, 3));
-  const beltM = new THREE.PointsMaterial({ color: 0xb8b4a8, size: 2.4, transparent: true, opacity: .55, depthWrite: false });
+  const beltM = new THREE.PointsMaterial({ color: 0xb8b4a8, size: 2.4, transparent: true, opacity: .4, depthWrite: false });
   beltM.fog = false; sky.add(new THREE.Points(bg2, beltM));
 }
 
@@ -740,7 +735,7 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = [], pillarAnims = [], terms = [], junRings = [], couriers = [], hubPts = [];
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = [], pillarAnims = [], terms = [], junRings = [];
 const brain = new THREE.Group(); scene.add(brain);
 
 const BEAM_OP = .38;
@@ -1015,7 +1010,7 @@ const STATUS_COLOR = {
 };
 
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = []; pillarAnims = []; terms = []; junRings = []; couriers = []; hubPts = [];
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = []; agentData = []; pillarAnims = []; terms = []; junRings = [];
 
   /* THE CORE — bigger, structured: particle cloud + wireframe heart + orbital rings +
      a light column wiring it to the floor bus. Counters under it are real. */
@@ -1055,9 +1050,12 @@ function buildWorld() {
       world: orb.getWorldPosition(new THREE.Vector3()).toArray().map(v => Math.round(v)),
     });
     jarvis = { mat: orbMat, noiseTime: 0, lastT: 0, load: Math.min(.35, nodes.filter(n => n.status === 'running').length * .05) };
-    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(150, 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .5 }));
+    /* orbital rings at F(3)·φ⁰·¹·² = 89 · 144 · 233 — the Fibonacci triple */
+    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(FIB(3), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .3 }));
+    ring0.rotation.x = Math.PI / 2.1; ring0.rotation.y = -.4; brain.add(ring0);
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(FIB(4), 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .5 }));
     ring1.rotation.x = Math.PI / 2.4; brain.add(ring1);
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(170, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .38 }));
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(FIB(5), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .21 }));
     ring2.rotation.x = Math.PI / 1.8; ring2.rotation.y = .7; brain.add(ring2);
     const glow = new THREE.PointLight(0x6ea8ff, 1.7, 700); brain.add(glow);
     brain.position.set(0, 300, -640);
@@ -1087,13 +1085,29 @@ function buildWorld() {
     d.cx = s.x; d.cz = s.z; d.nx = s.nx; d.nz = s.nz;
     const zone = new THREE.Group(); zone.position.set(d.cx, 0, d.cz); world.add(zone); d.groupObj = zone;
 
-    /* district glow on the floor */
+    /* district = a graduated instrument dial etched on the floor: hairline
+       circles at F(3) and F(4), 21 radial tick marks, no glow wash */
     const disc = new THREE.Mesh(
-      new THREE.CircleGeometry(155, 48),
-      new THREE.MeshBasicMaterial({ color: hsl(d.hue, .55, .5), transparent: true, opacity: .11, depthWrite: false })
+      new THREE.CircleGeometry(FIB(4), 48),
+      new THREE.MeshBasicMaterial({ color: hsl(d.hue, .55, .5), transparent: true, opacity: .04, depthWrite: false })
     );
-    disc.rotation.x = -Math.PI / 2; disc.position.y = .6; disc.userData = { kind: 'zone', dept: d.id, breathe: true, phase: i * .9 };
+    disc.rotation.x = -Math.PI / 2; disc.position.y = .6; disc.userData = { kind: 'zone', dept: d.id };
     zone.add(disc); zoneDiscs.push(disc);
+    const dialM = new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .62), transparent: true, opacity: .5, depthWrite: false });
+    const dialFaint = new THREE.LineBasicMaterial({ color: hsl(d.hue, .4, .55), transparent: true, opacity: .22, depthWrite: false });
+    const circ = (r, mat) => {
+      const pts = [];
+      for (let a = 0; a <= 96; a++) { const th = a / 96 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(th) * r, .8, Math.sin(th) * r)); }
+      zone.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+    };
+    circ(FIB(4), dialM); circ(FIB(3), dialFaint);
+    const tickPts = [];
+    for (let k = 0; k < M; k++) {
+      const th = k * GA;
+      tickPts.push(new THREE.Vector3(Math.cos(th) * (FIB(4) - 8), .8, Math.sin(th) * (FIB(4) - 8)),
+                   new THREE.Vector3(Math.cos(th) * FIB(4), .8, Math.sin(th) * FIB(4)));
+    }
+    zone.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tickPts), dialM));
 
     /* zone nameplate painted on the wall behind the district */
     const zl = makePlate(d.label, { size: 78, serif: true, sub: d.tagline || '', hue: d.hue, scale: .5 });
@@ -1121,40 +1135,39 @@ function buildWorld() {
     junRing.rotation.x = Math.PI / 2; junRing.position.y = 1.2; zone.add(junRing);
     junRing.userData.pulsePhase = i * 1.3; junRings.push(junRing);
 
-    /* soft light shaft over the district — a depth layer the eye reads instantly */
-    const shaft = new THREE.Mesh(
-      new THREE.ConeGeometry(125, ROOM.h - 44, 24, 1, true),
-      new THREE.MeshBasicMaterial({ color: hsl(d.hue, .5, .62), transparent: true, opacity: .032, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    shaft.position.y = (ROOM.h - 44) / 2 + 22; zone.add(shaft);
-    const fixture = new THREE.Mesh(new THREE.CircleGeometry(16, 24),
-      new THREE.MeshBasicMaterial({ color: hsl(d.hue, .5, .75), transparent: true, opacity: .35, blending: THREE.AdditiveBlending, depthWrite: false }));
-    fixture.rotation.x = Math.PI / 2; fixture.position.y = ROOM.h - 2; zone.add(fixture);
-
-    /* zone junction → back bus → CORE column: the visible wiring of the system */
-    const trace = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(d.cx, 1.2, d.cz),
-      new THREE.Vector3(d.cx, 1.2, -640),
-      new THREE.Vector3(0, 1.2, -640),
-    ]);
-    scene.add(new THREE.Line(trace, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .6), transparent: true, opacity: .72, blending: THREE.AdditiveBlending, depthWrite: false })));
-    /* packets ride the bus into the CORE column */
-    beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx, 1.6, d.cz), new THREE.Vector3(d.cx, 1.6, -640)), dept: d.id });
-    beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx, 1.6, -640), new THREE.Vector3(0, 1.6, -640)), dept: d.id });
-    beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(0, 1.6, -640), new THREE.Vector3(0, 300, -640)), dept: d.id });
+    /* radial spoke: junction → CORE foot, straight, with graduation dashes
+       every F(1) units — the wiring reads as an etched instrument, not cabling */
+    const CF = new THREE.Vector3(0, .9, -640);
+    const J = new THREE.Vector3(d.cx, .9, d.cz);
+    world.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([J, CF]),
+      new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .6), transparent: true, opacity: .5, depthWrite: false })));
+    const dir = CF.clone().sub(J), len = dir.length(); dir.normalize();
+    const perp = new THREE.Vector3(-dir.z, 0, dir.x);
+    const dashPts = [];
+    for (let s2 = FIB(1); s2 < len; s2 += FIB(1)) {
+      const p0 = J.clone().addScaledVector(dir, s2);
+      dashPts.push(p0.clone().addScaledVector(perp, -3), p0.clone().addScaledVector(perp, 3));
+    }
+    world.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(dashPts),
+      new THREE.LineBasicMaterial({ color: hsl(d.hue, .4, .55), transparent: true, opacity: .35, depthWrite: false })));
+    /* packets ride the spoke into the CORE column */
+    beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx, 1.6, d.cz), new THREE.Vector3(0, 1.6, -640)), dept: d.id });
 
     /* checkpoints — monuments standing on the floor along the wall */
     const gs = groupsByDept[d.id] || [];
     d.hubs = {};
     gs.forEach((g, gi) => {
       const tx = s.nx === 0 ? 1 : 0, tz = s.nx === 0 ? 0 : 1;   // wall tangent
-      const span = Math.min(300, gs.length * 95);
-      const along = gs.length > 1 ? (gi / (gs.length - 1) - .5) * span : 0;
-      const stagger = (gi % 2) * 58 - 22;
-      const hx = tx * along + s.nx * stagger;
-      const hz = tz * along + s.nz * stagger;
-      const H = 64 + (g.id.length % 3) * 10;
+      /* monuments sit on an exact line, F(3) apart (capped by the wall) */
+      const spacing = gs.length > 1 ? Math.min(FIB(3), 300 / (gs.length - 1)) : 0;
+      const along = (gi - (gs.length - 1) / 2) * spacing;
+      const hx = tx * along;
+      const hz = tz * along;
+      const members = d.nodes.filter(n => n.group === g.id);
+      /* height is data, quantized to the scale: big groups F(3), small F(2) */
+      const H = members.length >= 8 ? FIB(3) : FIB(2);
       const pillar = new THREE.Mesh(
-        new THREE.CylinderGeometry(7, 10, H, 24),
+        new THREE.CylinderGeometry(5, 8, H, 24),
         new THREE.MeshStandardMaterial({
           color: 0x232848, roughness: .35, metalness: .6,
           emissive: hsl(d.hue, .6, .28), emissiveIntensity: .9,
@@ -1164,8 +1177,7 @@ function buildWorld() {
       pillar.userData = { kind: 'hub', dept: d.id, group: g.id };
       pillar.castShadow = true;
       zone.add(pillar); hubMeshes.push(pillar);
-      const members = d.nodes.filter(n => n.group === g.id);
-      pillarAnims.push({ mat: pillar.material, running: members.some(n => n.status === 'running'), phase: gi * 1.7 });
+      pillarAnims.push({ mat: pillar.material, running: members.some(n => n.status === 'running'), phase: gi * GA });
       /* monument → zone junction trace on the floor */
       const tr = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(hx, 1.2, hz), new THREE.Vector3(0, 1.2, 0),
@@ -1173,16 +1185,16 @@ function buildWorld() {
       zone.add(new THREE.Line(tr, new THREE.LineBasicMaterial({ color: hsl(d.hue, .5, .62), transparent: true, opacity: .68, blending: THREE.AdditiveBlending, depthWrite: false })));
 
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(15, 1.4, 10, 48),
+        new THREE.TorusGeometry(13, 1.1, 10, 48),
         new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .9 })
       );
       ring.rotation.x = Math.PI / 2;
       ring.position.set(hx, H + 8, hz);
-      ring.userData = { spin: .4 + (gi % 3) * .2, baseY: H + 8 };
+      ring.userData = { spin: Math.pow(PHI, gi % 3 - 1) * .4, baseY: H + 8 };
       zone.add(ring);
 
       const cap = new THREE.Mesh(
-        new THREE.SphereGeometry(4.6, 16, 16),
+        new THREE.SphereGeometry(5, 16, 16),
         new THREE.MeshBasicMaterial({ color: hsl(d.hue, .65, .75) })
       );
       cap.position.set(hx, H + 8, hz); zone.add(cap);
@@ -1194,7 +1206,9 @@ function buildWorld() {
       const ro = makeLabel(`${members.length} agents · ${okN} ok${runN ? ' · ' + runN + ' live' : ''}`, { size: 22, scale: .2 });
       ro.position.set(hx, H + 17, hz); zone.add(ro);
 
-      d.hubs[g.id] = { ...g, x: d.cx + hx, z: d.cz + hz, y: H + 8, localX: hx, localZ: hz, H, ring };
+      /* the phyllotaxis formation around this monument rotates rigidly, rate from φ */
+      d.hubs[g.id] = { ...g, x: d.cx + hx, z: d.cz + hz, y: H + 8, localX: hx, localZ: hz, H, ring,
+        omega: .00013 * Math.pow(PHI, gi % 3 - 1) };
 
       /* beam: checkpoint cap → brain */
       const from = new THREE.Vector3(d.cx + hx, H + 8, d.cz + hz);
@@ -1210,6 +1224,34 @@ function buildWorld() {
     });
   });
 
+  /* one riser: CORE foot → CORE (was duplicated once per zone before) */
+  beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(0, 1.6, -640), new THREE.Vector3(0, 300, -640)), dept: 'core' });
+
+  /* THE FLOOR INSTRUMENT — concentric arcs at F(4)..F(8) centred on the CORE
+     foot, each labelled with its radius. The whole room stands on one dial. */
+  {
+    const arcM = new THREE.LineBasicMaterial({ color: 0x8a90c0, transparent: true, opacity: .2, depthWrite: false });
+    const inside = (x, z) => Math.abs(x) < ROOM.hw - 6 && z > -ROOM.depth + 6 && z < ROOM.depth - 6;
+    for (let n = 4; n <= 8; n++) {
+      const r = FIB(n), segs = [];
+      const S = 256;
+      for (let a = 0; a < S; a++) {
+        const t0 = a / S * Math.PI * 2, t1 = (a + 1) / S * Math.PI * 2;
+        const x0 = Math.cos(t0) * r, z0 = -640 + Math.sin(t0) * r;
+        const x1 = Math.cos(t1) * r, z1 = -640 + Math.sin(t1) * r;
+        if (inside(x0, z0) && inside(x1, z1)) segs.push(new THREE.Vector3(x0, .7, z0), new THREE.Vector3(x1, .7, z1));
+      }
+      if (segs.length) world.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(segs), arcM));
+      const zNum = -640 + r;
+      if (zNum < ROOM.depth - 30) {
+        const num = makePlate(String(r), { size: 24, scale: .2 });
+        num.material.opacity = .45;
+        num.rotation.x = -Math.PI / 2; num.position.set(21, .9, zNum + 8);
+        world.add(num);
+      }
+    }
+  }
+
   /* agents — an instanced swarm, orbiting their checkpoint (working) */
   const count = nodes.length;
   agentMesh = new THREE.InstancedMesh(
@@ -1220,45 +1262,31 @@ function buildWorld() {
   agentMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   agentMesh.castShadow = true;
   world.add(agentMesh);
+  /* every agent is a seed in its checkpoint's phyllotaxis: the k-th member sits
+     at r = (M/φ²)·√(k+½), θ = k·Θ — the sunflower packing. Status sets the
+     altitude tier (running F(0), ok 13, flagged 8, dormant grounded). The whole
+     formation rotates rigidly at its hub's φ-derived rate. */
   const mtx = new THREE.Matrix4();
+  const kCount = {};
   nodes.forEach((n, i) => {
     const d = depts[n.dept];
     const hub = d.hubs[n.group] || Object.values(d.hubs)[0];
-    const seed = (i * 2654435761 % 1000) / 1000;
-    const ad = {
-      n, i, hub, d,
-      orbitR: 22 + seed * 22 + (n.mass === 3 ? 6 : 0),
-      speed: (n.status === 'running' ? 1.6 : .55) * (.6 + seed),
-      phase: seed * Math.PI * 2,
-      h: 10 + seed * (hub ? hub.H - 18 : 30),
-      bob: 2 + seed * 3,
-      dart: 0,
-    };
+    const key = n.dept + '/' + n.group;
+    const k = kCount[key] = (kCount[key] ?? -1) + 1;
+    const ad = { n, i, hub, d, k };
     agentData.push(ad);
     agentMesh.setColorAt(i, STATUS_COLOR[n.status] || STATUS_COLOR.ok);
-    mtx.setPosition(d.cx + (hub ? hub.localX : 0), ad.h, d.cz + (hub ? hub.localZ : 0));
+    mtx.setPosition(d.cx + (hub ? hub.localX : 0), 13, d.cz + (hub ? hub.localZ : 0));
     agentMesh.setMatrixAt(i, mtx);
   });
   agentMesh.instanceColor && (agentMesh.instanceColor.needsUpdate = true);
 
-  /* couriers — glowing agents that physically fly between checkpoints, filling
-     the room's airspace with cross-depth traffic */
-  for (const d of deptList) if (d.hubs) for (const h of Object.values(d.hubs)) hubPts.push(new THREE.Vector3(h.x, h.y, h.z));
-  for (let i = 0; i < 10 && hubPts.length; i++) {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(2.7, 10, 10),
-      new THREE.MeshBasicMaterial({ color: 0xcfe9ff, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false }));
-    scene.add(m);
-    const from = hubPts[Math.floor(Math.random() * hubPts.length)];
-    const to = hubPts[Math.floor(Math.random() * hubPts.length)];
-    const mid = from.clone().lerp(to, .5); mid.y = 140 + Math.random() * 150;
-    couriers.push({ mesh: m, from, to, mid, u: Math.random(), sp: .002 + Math.random() * .003 });
-  }
-
-  /* pulses — the packets that make the net read as ALIVE, on beams and floor circuits */
-  for (let i = 0; i < 72; i++) {
+  /* pulses — F(2) packets on the network; speed quantized to powers of φ,
+     phases seeded by the golden ratio (low-discrepancy), routes fixed */
+  for (let i = 0; i < FIB(2); i++) {
     const m = new THREE.Mesh(new THREE.SphereGeometry(2.1, 8, 8),
       new THREE.MeshBasicMaterial({ color: 0xeceaf6, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false }));
-    m.userData = { beam: Math.floor(Math.random() * beams.length), p: Math.random(), sp: .0016 + Math.random() * .003 };
+    m.userData = { beam: i % Math.max(1, beams.length), p: (i * PHI) % 1, sp: .0013 * Math.pow(PHI, (i % 5) - 2) };
     scene.add(m); pulseMeshes.push(m);
   }
 
@@ -1315,27 +1343,22 @@ function buildWorld() {
 const dummy = new THREE.Object3D();
 function animateAgents(t) {
   if (!agentMesh) return;
+  const TIER = { running: FIB(0), ok: 13, flag: 8, dormant: 2.2 };
   for (const ad of agentData) {
-    const { n, i, hub, d } = ad;
+    const { n, i, hub, d, k } = ad;
     const focusD = level >= 1 ? deptList[deptIdx] : null;
     const dimmed = (focusD && d !== focusD) || (level === 2 && d === focusD && n.group !== groupId) || (query && !n._hit);
-    if (n.status === 'dormant') {
-      /* dormant agents lie on the ground near their pillar, not working */
-      dummy.position.set(d.cx + (hub ? hub.localX : 0) + Math.cos(ad.phase) * 30, 2.2, d.cz + (hub ? hub.localZ : 0) + Math.sin(ad.phase) * 30);
-      dummy.scale.setScalar(dimmed ? .4 : .75);
-    } else {
-      const t2 = reduced ? ad.phase * 500 : t;
-      const ang = ad.phase + t2 * .0002 * ad.speed * 3;
-      /* occasional dart to the pillar — delivering work */
-      if (!reduced && n.status === 'running' && Math.sin(t2 * .0005 + ad.phase * 7) > .992) ad.dart = 1;
-      ad.dart *= .94;
-      const r = ad.orbitR * (1 - ad.dart * .8);
-      const x = d.cx + (hub ? hub.localX : 0) + Math.cos(ang) * r;
-      const z = d.cz + (hub ? hub.localZ : 0) + Math.sin(ang) * r;
-      const y = ad.h + (reduced ? 0 : Math.sin(t * .001 * ad.speed + ad.phase) * ad.bob);
-      dummy.position.set(x, y, z);
-      dummy.scale.setScalar((n.mass === 3 ? 1.35 : 1) * (dimmed ? .45 : 1) * (nodes[i] === selected ? 1.6 : 1));
-    }
+    /* the sunflower: r = (M/φ²)·√(k+½), θ = k·Θ + rigid formation rotation */
+    const ang = k * GA + (reduced ? 0 : t * (hub ? hub.omega : .00013));
+    const r = (M / (PHI * PHI)) * Math.sqrt(k + .5);
+    const x = d.cx + (hub ? hub.localX : 0) + Math.cos(ang) * r;
+    const z = d.cz + (hub ? hub.localZ : 0) + Math.sin(ang) * r;
+    const y = (TIER[n.status] ?? 13) + (!reduced && n.status === 'running' ? Math.sin(t * .001 + k) * 3 : 0);
+    dummy.position.set(x, y, z);
+    const breathe = !reduced && n.status === 'running' ? 1 + Math.sin(t * .003 + k * GA) * .13 : 1;
+    dummy.scale.setScalar(
+      n.status === 'dormant' ? (dimmed ? .4 : .75)
+      : (n.mass === 3 ? 1.35 : 1) * (dimmed ? .45 : 1) * (nodes[i] === selected ? 1.6 : 1) * breathe);
     dummy.updateMatrix();
     agentMesh.setMatrixAt(i, dummy.matrix);
   }
@@ -1387,14 +1410,13 @@ function frame(now) {
   par.sx += (par.x - par.sx) * .16;
   par.sy += (par.y - par.sy) * .16;
   /* handheld drift — the scene is never perfectly still, so depth never stops reading */
-  const dx = reduced ? 0 : Math.sin(t * .00031) * 7 + Math.sin(t * .00013) * 4;
-  const dy = reduced ? 0 : Math.sin(t * .00042 + 2) * 4;
+  const dx = reduced ? 0 : Math.sin(t * .00031) * 8 + Math.sin(t * .00013) * 5;
+  const dy = reduced ? 0 : Math.sin(t * .00042 + 2) * 5;
   applyCamera(t, dx, dy);
   if (!reduced) {
     for (const pa of pillarAnims) if (pa.running && pa.mat !== hover.mat) pa.mat.emissiveIntensity = .9 + Math.sin(t * .004 + pa.phase) * .38;
     if (terms.tick) terms.tick(t);
-    for (const jr of junRings) jr.material.opacity = .4 + Math.sin(t * .0022 + jr.userData.pulsePhase) * .25;
-    for (const zd of zoneDiscs) if (zd.userData.breathe) zd.material.opacity = .105 + Math.sin(t * .0007 + zd.userData.phase) * .04;
+    for (const jr of junRings) jr.material.opacity = .45 + Math.sin(t * .0022 + jr.userData.pulsePhase) * .13;
   }
   updateHover();
   if (!reduced) brain.rotation.y = t * .00012;
@@ -1402,25 +1424,10 @@ function frame(now) {
     const ang = pl.phase + t * pl.speed;
     pl.mesh.position.set(
       pl.sun.x + Math.cos(ang) * pl.r,
-      pl.sun.y + Math.sin(ang) * pl.r * pl.tilt * 8,
+      pl.sun.y + Math.sin(ang - pl.node) * pl.r * TILT,
       pl.sun.z + Math.sin(ang) * pl.r
     );
     if (!reduced) pl.mesh.rotation.y = t * pl.spin;
-  }
-  /* couriers — agents crossing the room's airspace between checkpoints */
-  for (const cu of couriers) {
-    cu.u += cu.sp;
-    if (cu.u >= 1) {
-      cu.from = cu.to; cu.to = hubPts[Math.floor(Math.random() * hubPts.length)] || cu.from;
-      cu.u = 0; cu.sp = .002 + Math.random() * .003;
-      cu.mid = cu.from.clone().lerp(cu.to, .5); cu.mid.y = 140 + Math.random() * 150;
-    }
-    const u = cu.u, a = cu.from, b = cu.mid, c = cu.to;
-    cu.mesh.position.set(
-      (1 - u) * (1 - u) * a.x + 2 * (1 - u) * u * b.x + u * u * c.x,
-      (1 - u) * (1 - u) * a.y + 2 * (1 - u) * u * b.y + u * u * c.y,
-      (1 - u) * (1 - u) * a.z + 2 * (1 - u) * u * b.z + u * u * c.z
-    );
   }
   if (jarvis) {
     /* idle breathing + real system load — the orb breathes with running lanes */
@@ -1444,7 +1451,7 @@ function frame(now) {
   animateAgents(t);
   if (!reduced) for (const p of pulseMeshes) {
     p.userData.p += p.userData.sp;
-    if (p.userData.p >= 1) { p.userData.p = 0; p.userData.beam = Math.floor(Math.random() * beams.length); }
+    if (p.userData.p >= 1) p.userData.p = 0;   /* fixed route — constant flows, not shuffles */
     const b = beams[p.userData.beam];
     if (b) b.curve.getPoint(p.userData.p, p.position);
   }
