@@ -1895,7 +1895,8 @@ function openGroup(d, hub) {
   for (const m of members) {
     const li = document.createElement('li');
     const b = document.createElement('button');
-    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span><span class="st">${STATUS_SHORT[m.status]}</span>`;
+    const st = isStale(m) ? `<span style="color:#e2b878">${relAgo(m.last)}</span> · ${STATUS_SHORT[m.status]}` : STATUS_SHORT[m.status];
+    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span><span class="st">${st}</span>`;
     b.addEventListener('click', () => open(m));
     li.appendChild(b); ul.appendChild(li);
   }
@@ -1932,7 +1933,10 @@ function openStatus(st) {
   for (const m of members) {
     const li = document.createElement('li');
     const b = document.createElement('button');
-    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span><span class="st">${String(m.detail || depts[m.dept].label).slice(0, 30)}</span>`;
+    const st = isStale(m)
+      ? `<span style="color:#e2b878">${relAgo(m.last)}</span> · ${String(m.detail || depts[m.dept].label).slice(0, 18)}`
+      : String(m.detail || depts[m.dept].label).slice(0, 30);
+    b.innerHTML = `<span class="dot" style="background:${DOT[m.status]}"></span><span>${m.label}</span><span class="st">${st}</span>`;
     b.addEventListener('click', () => open(m));
     li.appendChild(b); ul.appendChild(li);
   }
