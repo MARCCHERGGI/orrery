@@ -731,3 +731,9 @@ scores: U10 L10 D10 De10 A10 P10
 shipped: header scrim promoted from the ≤820px block to base scope (89px desktop, 144px override kept for wrapped phone header). Found by walking THE RECORD surfaces at level 2: with the camera close to a lit wall, tile labels and the panel age column bled straight through the wordmark/counters/crumbs — the iter-62 scrim only existed on phones. One CSS rule moved.
 evidence: level-2 card walk on PROD first (search Enter → job-engine): card open, group rollup 6 dots, 7/7 member rows with 6-dot tails, honest amber ages (5d-22d), errs 0 — THE RECORD maturing correctly at 6 samples. Before/after screenshots READ: wordmark+crumbs now seat on the scrim, wall bleed dimmed. node --check SYNTAX-OK; push 2e17593 live in 2 polls (9620D38C).
 next-observe: cardiogram 7th column after next refresh; strips at 13 columns ~05:00Z. Fundamental ~83.
+
+## 82 · 2026-08-09 · systemic · (observation cycle — no ship needed)
+scores: U10 L10 D10 De10 A10 P10
+shipped: nothing — clean walk. Flagged status view exercised on PROD: 18/18 rows, all with 6-dot salmon strips, honest ages (9d-74d), real failure codes (REQUEST_REFUSED / GENERIC_FAILURE / FLOOR_BREACHED / CTRL_C_EXIT); rows with no last-run show code only (never-ran sentinel correctly stripped). Iter-81 header scrim visible in the same shot doing its job. errs 0; standing sweep clean.
+evidence: screenshot READ (system view over the room); probe {card:true, rows:18, minis:18, errs:0}.
+next-observe: 7th cardiogram column (00:00Z refresh imminent). Iter 83 = FUNDAMENTAL — candidate question: none urgent; if research yields nothing genuinely more useful, the honest fundamental is a no-op verdict. Strips at 13 columns ~05:00Z.
