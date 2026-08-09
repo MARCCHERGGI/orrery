@@ -223,3 +223,22 @@ crowding); 11s sweep + 2 full tours zero __errs; live hash==local redirects-off.
 next-observe: PERF full-room measure at ALL (was 352 + 13 plate sprites now).
 Candidates: monument-trio instancing with a careful plan, or LEGIBLE at ALL
 distance, or a mobile re-check of the new clickable surfaces (tap targets).
+
+## 15 · 2026-08-09 · systemic · LEGIBLE (mobile)
+scores: U9 L8 D8 De9 A9 P8
+shipped: mobile header fix. Portrait emulation (relay `emulate` 390x844 - new
+harness capability, no more desktop-only verification) showed the wordmark
+wrapping to two lines and colliding with the ALL crumb. At <=700px the wordmark
+now stays one line (12px/.2em/nowrap) and crumbs sit below it. Measured after:
+wordmark bottom 43 < crumbs top 46, no overlap; portrait screenshot clean.
+Also measured: ALL-level draw calls 379 (352 + ledger plates + planets in frame),
+zone level 158 - frustum culling keeps walk-around light; perf is fine, monument
+instancing stays deferred. Honest find while probing: a portrait tap opened
+"Screen Activity - OK - ran 8 d ago" - warden says ok, scheduler says stale;
+the room now surfaces that tension truthfully.
+evidence: overlap:false measured via getBoundingClientRect on portrait; before/
+after portrait screenshots read; desktop restored 1366px; 11s sweep + full tour
+zero __errs; live hash==local redirects-off.
+next-observe: LEGIBLE at ALL distance (wall stat strips), or tap-target sizing for
+tiles on portrait (tiles are small - maybe fine since cards also open via search
+and counters). Perf healthy at 379/158.
