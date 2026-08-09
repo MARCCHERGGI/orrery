@@ -419,6 +419,13 @@ scene.environmentIntensity = .16;
 scene.add(new THREE.AmbientLight(0x8a8fc0, .3));
 const key = new THREE.DirectionalLight(0xf0eeff, 1.05); key.position.set(120, 900, 240); scene.add(key);
 key.castShadow = true;
+/* a directional light's default shadow camera is a ±5-unit box — in a ±620 room
+   that renders no visible shadow at all. Size it to the room, once. */
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -1000; key.shadow.camera.right = 1000;
+key.shadow.camera.top = 1200; key.shadow.camera.bottom = -1000;
+key.shadow.camera.near = 100; key.shadow.camera.far = 2400;
+key.shadow.bias = -0.0005;
 key.shadow.mapSize.set(2048, 2048);
 Object.assign(key.shadow.camera, { left: -760, right: 760, top: 980, bottom: -980, near: 1, far: 2200 });
 key.shadow.bias = -.0004;
