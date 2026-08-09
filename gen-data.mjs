@@ -131,12 +131,27 @@ const sched = {};
 try {
   const csv = execSync('schtasks /query /fo CSV /v', { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   const toIso = s => { if (!s || s === 'N/A') return null; const d = new Date(s); return isNaN(d) ? null : d.toISOString(); };
+  // "6 Hour(s), 0 Minute(s)" + schedule type + start time -> human cadence
+  const toCadence = (type, start, repeat) => {
+    const rm = /(\d+) Hour\(s\), (\d+) Minute\(s\)/.exec(repeat || '');
+    if (rm) {
+      const mins = (+rm[1]) * 60 + (+rm[2]);
+      if (mins > 0) return mins < 60 ? `every ${mins} min` : mins % 60 === 0 ? `every ${mins / 60} h` : `every ${Math.round(mins / 60 * 10) / 10} h`;
+    }
+    const hhmm = s => { const d = new Date(`1/1/2000 ${s}`); return isNaN(d) ? '' : ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+    if (/Daily/i.test(type || '')) return 'daily' + hhmm(start);
+    if (/Weekly/i.test(type || '')) return 'weekly' + hhmm(start);
+    if (/start up/i.test(type || '')) return 'at boot';
+    if (/logon/i.test(type || '')) return 'at logon';
+    if (/idle/i.test(type || '')) return 'on idle';
+    return null;
+  };
   for (const line of csv.split('\n')) {
     if (!line.startsWith('"')) continue;
     const f = parseCsvLine(line.trim());
     if (f.length < 7 || f[1] === 'TaskName') continue;
     const name = f[1].replace(/^\\/, '');
-    const entry = { last: toIso(f[5]), next: toIso(f[2]) };
+    const entry = { last: toIso(f[5]), next: toIso(f[2]), cadence: toCadence(f[18], f[19], f[24]) };
     if (!sched[name] || (entry.last && !sched[name].last)) sched[name] = entry;
   }
 } catch { /* no scheduler access — fleet still exports without timestamps */ }
@@ -163,7 +178,7 @@ for (const raw of lines) {
     label: id.replace(/^Claude/, '').replace(/([a-z])([A-Z])/g, '$1 $2'),
     dept, group, status,
     detail: result.trim(),
-    ...(CADENCE[id] ? { cadence: CADENCE[id] } : {}),
+    ...(CADENCE[id] || sched[id]?.cadence ? { cadence: CADENCE[id] || sched[id].cadence } : {}),
     ...(REPLACES[id] ? { replaces: REPLACES[id] } : {}),
     ...(sched[id]?.last ? { last: sched[id].last } : {}),
     ...(sched[id]?.next ? { next: sched[id].next } : {}),
