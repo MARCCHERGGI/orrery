@@ -725,3 +725,9 @@ scores: U10 L10 D10 De10 A10 P10
 shipped: nothing — and that is the correct output under the Round-3 rules. Full entered-view observation found zero defects: cardiogram at 6 columns reading correctly in the atrium, run columns live on monuments, salmon flag beams visible from the doorway, fresh 22:47Z data flowing (header shifted to 5 running · 18 flagged — the fleet moved and the page moved with it), errs 0. Unfurl chain verified END-TO-END live: all 8 og: tags serving + og.png 200 at exact bytes. Iter-79 docs push confirmed live earlier in cycle.
 evidence: entered screenshot READ (full room, all surfaces); prod probe {entered:true, sky:{HL:6}, errs:0}; curl live og tags ×8 + og.png 200/395458.
 next-observe: cardiogram at 7+ columns (next hourly refresh). Strips check at 13 columns lands ~05:00Z. Fundamental ~83. Ship bar stays: observation-driven fixes or genuinely-more-useful only.
+
+## 81 · 2026-08-09 · systemic · LEGIBLE
+scores: U10 L10 D10 De10 A10 P10
+shipped: header scrim promoted from the ≤820px block to base scope (89px desktop, 144px override kept for wrapped phone header). Found by walking THE RECORD surfaces at level 2: with the camera close to a lit wall, tile labels and the panel age column bled straight through the wordmark/counters/crumbs — the iter-62 scrim only existed on phones. One CSS rule moved.
+evidence: level-2 card walk on PROD first (search Enter → job-engine): card open, group rollup 6 dots, 7/7 member rows with 6-dot tails, honest amber ages (5d-22d), errs 0 — THE RECORD maturing correctly at 6 samples. Before/after screenshots READ: wordmark+crumbs now seat on the scrim, wall bleed dimmed. node --check SYNTAX-OK; push 2e17593 live in 2 polls (9620D38C).
+next-observe: cardiogram 7th column after next refresh; strips at 13 columns ~05:00Z. Fundamental ~83.
