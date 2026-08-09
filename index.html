@@ -68,6 +68,10 @@
   }
   #intro p.sub { margin-top: 14px; color: var(--ink-dim); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
   #intro p.hint { margin-top: 44px; color: var(--ink-faint); font-size: 12px; letter-spacing: .12em; }
+  /* a tap that lands before the module loads gets acknowledged — the hint
+     breathes until boot finishes and enters for them */
+  #intro.waking .hint { animation: wake .618s ease-in-out infinite alternate; color: var(--ink-dim); }
+  @keyframes wake { from { opacity: .45; } to { opacity: 1; } }
   @media (prefers-reduced-motion: no-preference) {
     #intro h1 { animation: rise 1.4s cubic-bezier(.2,.7,.2,1) both; }
     #intro p.sub { animation: rise 1.4s .25s cubic-bezier(.2,.7,.2,1) both; }
@@ -253,6 +257,11 @@
     <p class="hint">tap anywhere · every light is a real agent</p>
   </div>
 </div>
+<script>
+/* runs before the module chain — on a slow connection the module (three.js)
+   takes seconds; a tap in that window must not feel dead */
+document.getElementById('intro').addEventListener('click', function () { this.classList.add('waking'); });
+</script>
 
 <header>
   <span class="wordmark">AI COMMAND CENTER</span>
@@ -2521,6 +2530,7 @@ function boot(data) {
   const h0 = location.hash;          /* setLevel(0) rewrites the hash — keep the deep link */
   buildWorld(); hud(); setLevel(0);
   if (h0) { history.replaceState(null, '', h0); applyHash(); }
+  if (intro.classList.contains('waking')) enter();   /* a tap during load was a request to enter */
   if (reduced) { enter(); kick(); }
 }
 /* data comes from the repo itself (raw.githubusercontent CDN, ~5 min cache) so
