@@ -174,3 +174,20 @@ hero each run; live hash==local redirects-off.
 next-observe: LEGIBLE at ALL distance post-label-change; whether non-IG heroes
 frame well (healing/relays monuments sit at different wall offsets). PERF backlog
 still queued behind a lower-risk plan (label sprite merge first, then trios).
+
+## 12 · 2026-08-09 · systemic · USEFUL (reel) + harness
+scores: U9 L8 D8 De8 A9 P8
+shipped: (a) window.__hold(1/0) - freezes/releases the renderer's animation loop so
+__step-driven state can be screenshot at EXACT keyframes; kills the real-rAF race
+that made keyframe stills unreliable since iter 7. (b) The hold immediately caught
+a real framing bug: setLevelSilent(2) during the tour opens the checkpoint card,
+which overlaid the right third of every monument close-up - .reel CSS hid the HUD
+but not #card. One CSS line hides it; recorded footage is now clean scene only.
+Non-IG hero framing VERIFIED with a frozen war-room keyframe: monument + failure
+readout + both tile walls readable, no overlay.
+evidence: cardHidden:true computed at the frozen 6300ms key for two variants
+(instagram, war room); frozen war-room screenshot read (clean footage frame);
+3 further full tours under hold + release, zero __errs across all; live
+hash==local redirects-off.
+next-observe: use __hold to spot-check the orb close key (t7400-8600) that iter 7
+could never capture. Then perf pass (label sprite merge) or LEGIBLE at ALL distance.
