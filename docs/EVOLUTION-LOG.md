@@ -589,3 +589,10 @@ evidence: local 8613 — boot with #hunt/job-engine → level 2 + card open + ha
 THE RECORD APPEND PROVEN: refresh commit dd7a2fd (post-seed) → origin/main hist {2:145}, exported 18:48:34Z. Core loop closed.
 ship status: PENDING-DEPLOY — pushed 53FCEACE, live still 58AFB6A3 after ~5 min of polling (quota trickle); this log push rides the next build.
 next-observe: FIRST confirm live hash == 53FCEACE-successor blob (deep links live); spot-check a deep link on prod. The record now has 2 samples — group rollup dots should show 2. Systemic next; visual steer says ship something visible (candidates: wall-panel text truncation "STILL_RUNNING (runn" cleanup, CORE column polish).
+
+## 60 · 2026-08-09 · systemic · LEGIBLE
+scores: U10 L10 D10 De10 A10 P10
+shipped: wall-panel text quality — mid-word hard slice replaced with ellipsis fit (label 26, detail 19) and the redundant "(running)" suffix stripped from detail (the ► glyph + row colour already carry it). "STILL_RUNNING (runn" → "STILL_RUNNING". All four panels.
+evidence: node --check OK; local 8613 deep-linked #hunt/job-engine (deep links now serve the verify harness) — LIVE NOW panel reads clean STILL_RUNNING, no fragment; record 2 dots + selection shell both confirmed on the same screenshot; errs 0.
+ship status: PENDING-DEPLOY — pushed 97AFA8F7, live still 53FCEACE after 18 polls; log push follows.
+next-observe: FIRST confirm live == the new blob (panel fix + this log). Then OBSERVE fresh — L axis clean now; consider CORE column area or portrait pass. Fundamental due ~63.
