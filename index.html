@@ -2069,6 +2069,20 @@ function boot(data) {
   if (reduced) { enter(); kick(); }
 }
 fetch('data/fleet.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw 0; return r.json(); }).then(boot).catch(() => boot(SAMPLE));
+
+/* live refresh — re-pull the fleet every 233 s; rebuild only on a newer export
+   and only while idle at the front of the room (no card, no reel, no filter,
+   level 0) so state is never yanked out from under the viewer. Between
+   rebuilds the header age keeps counting instead of freezing at load. */
+setInterval(() => {
+  if (document.hidden) return;
+  $('age').textContent = fmtAge(fleet.meta && fleet.meta.exported);
+  if (reel || tour || level !== 0 || query || $('card').classList.contains('open')) return;
+  fetch('data/fleet.json', { cache: 'no-cache' })
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { if (d && d.meta && d.meta.exported && d.meta.exported !== fleet.meta.exported) boot(d); })
+    .catch(() => {});
+}, 233000);
 </script>
 </body>
 </html>

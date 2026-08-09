@@ -59,19 +59,31 @@ more useful to a real viewer or to Marco, not merely different.
 
 ## Backlog (usefulness-ranked; re-rank every cycle)
 
-1. **Fresh data forever** (fundamental, ALIVE axis): the deployed site shows
-   "data N h old". Automate: scheduled task runs `gen-data.mjs` + prod deploy
-   every few hours, so the public map stays live without anyone touching it.
-2. **Tiles are dead** (USEFUL): wall tiles aren't clickable — hovering/clicking
-   a tile should open that agent's card (same card as the swarm orbs).
-3. **Checkpoint last-result readouts** (USEFUL/DENSITY): zone level shows each
-   monument's real last run result on approach.
-4. **Mobile/touch pass** (PERF/USEFUL): pinch-dolly, tap targets, portal on
-   portrait aspect.
-5. **Search palette** (USEFUL): `/` opens fuzzy search over 145 lanes, Enter
-   flies to the agent.
-6. **Reel-mode variants** (Marco's IG lane): 2–3 alternate 10 s camera paths.
-7. **Draw-call audit** (PERF): merge static line geometry, cap canvases.
+Round 1 (iters 1-16, all shipped): fresh-data automation · clickable tiles ·
+checkpoint readouts · mobile gyro/portrait · search + find button · reel
+variants + clean footage · draw calls 478→352 · per-lane timestamps · floor
+ledger · cell-scaled labels · __hold harness.
+
+Round 2 (seeded iter 17 from accumulated next-observes):
+
+1. **Live refresh** (ALIVE): page re-pulls fleet.json on a 233 s tick, rebuilds
+   on newer export when idle at level 0; header age counts instead of freezing.
+   (Shipped iter 17.)
+2. **MARCO DECISION — repo link**: the site is OSS and the repo is the IG
+   comment magnet, but nothing on the page points to it. Needs Marco-authored
+   placement/copy; do not auto-ship. Hand him the option.
+3. **Portrait tile tap targets** (USEFUL, mobile): tiles are small at 390px.
+   Search now covers card access, so this is polish — measure real tap accuracy
+   before building anything.
+4. **Monument trio instancing** (PERF): 29× pillar/ring/cap → 3 InstancedMesh,
+   ~379→~300 est. Deferred twice for interaction risk — needs a careful plan
+   (per-instance emissive via instanceColor, raycast instanceId remap).
+5. **DEPTH pass**: contact shadows / grounding under monuments and orb; the
+   portal illusion's weakest remaining link.
+6. **Stale-ok surfacing** (TRUTH): lanes warden calls ok but scheduler shows
+   weeks-stale (e.g. Screen Activity, 8 d). Age can't recolor status (at-startup
+   daemons), but the card could carry a quiet "stale?" marker when cadence
+   implies a shorter gap. Needs cadence-aware logic, not a blanket threshold.
 
 ## Log
 
