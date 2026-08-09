@@ -191,3 +191,20 @@ evidence: cardHidden:true computed at the frozen 6300ms key for two variants
 hash==local redirects-off.
 next-observe: use __hold to spot-check the orb close key (t7400-8600) that iter 7
 could never capture. Then perf pass (label sprite merge) or LEGIBLE at ALL distance.
+
+## 13 · 2026-08-09 · fundamental · DENSITY/ALIVE (floor ledger)
+scores: U9 L8 D8 De8->9 A9 P8
+shipped: the floor ledger. First closed iter-7's last caveat: orb close key frozen
+at t8000 via __hold and read - orb centred between ALERTS/ACTIVITY panels, clean.
+Then the fundamental: the room's dead centre was an empty blue expanse in every
+wide shot. Now it carries the 13 most recently active lanes (real scheduler
+last-run timestamps from iter 9) as floor plates on a golden-angle spiral,
+r = M*phi^2*sqrt(k+1/2), newest at the core, opacity fading with rank. First
+attempt at scale .2 was invisible - .5 reads mid-dive. All strings are data
+("Fleet Warden - 30m"); ages bake at data load (header shows data age; acceptable).
+The tour's dive now flies over a live activity record instead of empty floor.
+evidence: frozen mid-dive screenshot read: "Telegram Bridge - 17m", "Fleet Warden -
+30m", "Ig Local Tick - 18m" legible centre-frame; orb-key screenshot read; 11s
+sweep + 2 full tours zero __errs; live hash==local redirects-off.
+next-observe: does the ledger crowd the centre at zone level? PERF pass (draw calls
++13 sprites now) with label sprite merge, or LEGIBLE at ALL distance.
