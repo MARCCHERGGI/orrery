@@ -1433,6 +1433,17 @@ function buildWorld() {
       ci.setMatrixAt(i, M4); ci.setColorAt(i, r.capCol);
     });
     world.add(ri); world.add(ci);
+    /* each monument stands in its own pool of zone light (F(2) radius, 1 draw) */
+    const pc = document.createElement('canvas'); pc.width = pc.height = 64;
+    const pg = pc.getContext('2d');
+    const pgr = pg.createRadialGradient(32, 32, 2, 32, 32, 32);
+    pgr.addColorStop(0, 'rgba(255,255,255,.5)'); pgr.addColorStop(.5, 'rgba(255,255,255,.15)'); pgr.addColorStop(1, 'rgba(255,255,255,0)');
+    pg.fillStyle = pgr; pg.fillRect(0, 0, 64, 64);
+    const gi2 = new THREE.InstancedMesh(new THREE.PlaneGeometry(FIB(2) * 2, FIB(2) * 2),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(pc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }), monRings.length);
+    const QF = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+    monRings.forEach((r, i) => { M4.compose(P.set(r.x, .8, r.z), QF, S); gi2.setMatrixAt(i, M4); gi2.setColorAt(i, r.col); });
+    world.add(gi2);
     monInst = { ri, M4, P, S, QX };
   }
 
