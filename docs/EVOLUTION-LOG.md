@@ -644,3 +644,9 @@ shipped: nothing — and that is the finding. RULES-OUT the "tour needs a refres
 evidence: v102 one-eval 660-frame run, host captured in-eval; trace at 2400/4480/6720/8000/9600ms all correct; done={reel:false,lvl:0,hash:"",errs:0}. Lesson: a flagship artifact untested across N ships is a liability — the verify bar's "tour clean" line is now re-anchored with a cheap repeatable one-eval harness (v102-tour.json).
 also: screenshot-after-eval on a background tab CANNOT pin a tour phase (real rAF re-renders with real elapsed time between eval and screenshot; tour.start is module-scoped so the phase can't be frozen) — phase-state traces are the right evidence for animated sequences, screenshots only for static states.
 next-observe: hist {4:145} after 21:00Z refresh. Systemic next (68). Candidates: search Enter→checkpoint when query names a group; ledger floor observe; CORE banner still parked for Marco copy.
+
+## 68 · 2026-08-09 · systemic · USEFUL
+scores: U10 L10 D10 De10 A10 P10
+shipped: search Enter navigates — a query exactly naming a checkpoint (id or label) flies to level 2, a zone label flies to level 1, anything else opens the first matching lane as before. "job engine" ⏎ → the checkpoint; "finance" ⏎ → the zone; "board scan" ⏎ → the agent card.
+evidence: local ?v=98 in-eval provenance; three-route probe r1/r2/r3 all correct with hashes #hunt/job-engine, #markets, #a/ClaudeBoardScan; errs 0. node --check OK. LIVE MATCH C1106082 after 2 polls.
+next-observe: hist still {3:145} (19:48Z export) — 21:00Z refresh lands mid-next-cycle, expect {4:145}. Fundamental due ~71. Candidates: ledger floor observe (long-unseen), CORE banner parked for Marco copy, portrait re-pass at higher device widths.
