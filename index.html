@@ -2080,10 +2080,22 @@ function tourStep(now) {
 }
 $('rec').addEventListener('click', startReel);
 
+/* kiosk attract — an untouched room shows itself once (attract-loop pattern:
+   starts on idle, first touch hands control straight back). 13 s = F(-1). */
+let lastInput = performance.now(), attractDone = false;
+['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev =>
+  addEventListener(ev, () => { lastInput = performance.now(); }, { passive: true, capture: true }));
+setInterval(() => {
+  if (attractDone || reduced || !entered || reel || document.hidden || level !== 0 || !nodes.length) return;
+  if ($('card').classList.contains('open') || query) return;
+  if (performance.now() - Math.max(lastInput, idle.lastMove) > FIB(-1) * 1000) { attractDone = true; startReel(); }
+}, 1000);
+
 /* ============================== intro ============================== */
 const intro = $('intro');
 function enter() {
   if (entered) return; entered = true;
+  lastInput = performance.now();   /* attract counts idle from the entering tap */
   intro.classList.add('gone');
   intro.setAttribute('aria-hidden', 'true');
   if (!reduced) { camBase.set(0, 280, 1650); flyTo(0, 260, 810, 0, 170, -350); }
