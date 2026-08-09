@@ -650,3 +650,10 @@ scores: U10 L10 D10 De10 A10 P10
 shipped: search Enter navigates — a query exactly naming a checkpoint (id or label) flies to level 2, a zone label flies to level 1, anything else opens the first matching lane as before. "job engine" ⏎ → the checkpoint; "finance" ⏎ → the zone; "board scan" ⏎ → the agent card.
 evidence: local ?v=98 in-eval provenance; three-route probe r1/r2/r3 all correct with hashes #hunt/job-engine, #markets, #a/ClaudeBoardScan; errs 0. node --check OK. LIVE MATCH C1106082 after 2 polls.
 next-observe: hist still {3:145} (19:48Z export) — 21:00Z refresh lands mid-next-cycle, expect {4:145}. Fundamental due ~71. Candidates: ledger floor observe (long-unseen), CORE banner parked for Marco copy, portrait re-pass at higher device widths.
+
+## 69 · 2026-08-09 · systemic · USEFUL
+scores: U10 L10 D10 De10 A10 P10
+shipped: Enter = GO TO everywhere — a search Enter on an agent now flies to its checkpoint before opening the card (was: card opened while the camera stayed put). Completes 68's navigation semantic; arrow-key browsing still browses in place by design. Ledger floor observed and judged: honest within its data (13 freshest real timestamps, self-limited to <24h) — no change needed.
+evidence: local ?v=99 in-eval provenance {host:127.0.0.1:8613}; "board scan" ⏎ → level 2 hunt/job-engine + Board Scan card + #a/ClaudeBoardScan; errs 0. node --check OK. hist confirmed {4:145} at 20:48Z export.
+ship status: PENDING-DEPLOY — pushed 9AAF28A0, live still C1106082 (quota trickle).
+next-observe: FIRST live==9AAF28A0. Fundamental due ~71 — research candidates: what a first-time visitor DOESN'T get (fresh-eyes pass), portrait tablet widths (768>700 breakpoint gap), repo-link surface still a MARCO DECISION.
