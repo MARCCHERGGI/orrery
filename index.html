@@ -1446,6 +1446,17 @@ function buildWorld() {
       /* the same packet also travels the floor: monument → zone junction */
       beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx + hx, 1.6, d.cz + hz), new THREE.Vector3(d.cx, 1.6, d.cz)), dept: d.id, group: g.id });
     });
+
+    /* focus-dimming inventory — every zone surface that should recede when
+       another dept holds the stage. junRings excluded: their opacity is
+       rewritten per-frame by the pulse tick and would fight the dim. */
+    d.dimMats = [];
+    zone.traverse(o => {
+      if (o.material && o.material.transparent && !junRings.includes(o))
+        d.dimMats.push({ m: o.material, base: o.material.opacity });
+    });
+    d.dimMats.push({ m: bleed.material, base: bleed.material.opacity });
+    d.dimK = 1;
   });
 
   /* monument rings + caps: 29 trios → 2 instanced draws */
@@ -1503,11 +1514,12 @@ function buildWorld() {
     const pGeo = new THREE.CylinderGeometry(5, 8, 1, 24);
     const QI = new THREE.Quaternion();
     for (const [dep, idxs] of Object.entries(byDept)) {
-      const hue = D.find(d => d.id === dep).hue;
+      const dobj = D.find(d => d.id === dep);
       const dm = new THREE.MeshStandardMaterial({
         color: 0x232848, roughness: .35, metalness: .6,
-        emissive: hsl(hue, .6, .28), emissiveIntensity: .9,
+        emissive: hsl(dobj.hue, .6, .28), emissiveIntensity: .9,
       });
+      dobj.dimPill = dm;
       const dpi = new THREE.InstancedMesh(pGeo, dm, idxs.length);
       idxs.forEach((mi, k) => {
         const r = monRings[mi];
@@ -1860,6 +1872,18 @@ function frame(now) {
       if (A[i + 1] > ROOM.h * .9) A[i + 1] = 10;
     }
     dust.g.attributes.position.needsUpdate = true;
+  }
+  /* focus dimming — at level ≥1 the unfocused zones recede so the stage
+     belongs to one dept; tween settles and then costs nothing */
+  for (const dd of deptList) {
+    if (!dd.dimMats) continue;
+    const tgt = level >= 1 && deptList[deptIdx] !== dd ? 0 : 1;
+    if (Math.abs(dd.dimK - tgt) > .004) {
+      dd.dimK += (tgt - dd.dimK) * .07;
+      const f = .42 + .58 * dd.dimK;
+      for (const e of dd.dimMats) e.m.opacity = e.base * f;
+      if (dd.dimPill) dd.dimPill.emissiveIntensity = .9 * f;
+    }
   }
   if (!reduced && pulseMeshes && pulseMeshes.inst) {
     pulseMeshes.data.forEach((pd, i) => {
