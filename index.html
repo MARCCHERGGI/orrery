@@ -1377,6 +1377,7 @@ function buildWorld() {
         spin: Math.pow(PHI, gi % 3 - 1) * .4,
         col: new THREE.Color(hsl(d.hue, .6, .66)),
         capCol: new THREE.Color(hsl(d.hue, .65, .75)),
+        run: members.some(n => n.status === 'running'),
       });
 
       /* checkpoint readout — real member counts + the group's actual last failure
@@ -1444,7 +1445,7 @@ function buildWorld() {
     const QF = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
     monRings.forEach((r, i) => { M4.compose(P.set(r.x, .8, r.z), QF, S); gi2.setMatrixAt(i, M4); gi2.setColorAt(i, r.col); });
     world.add(gi2);
-    monInst = { ri, M4, P, S, QX };
+    monInst = { ri, M4, P, S, QX, gi2, CT: new THREE.Color() };
   }
 
   /* one riser: CORE foot → CORE (was duplicated once per zone before) */
@@ -1727,12 +1728,19 @@ function frame(now) {
     u.uMorph.value    = Math.min(1, Math.max(0, u.uMorph.value + jdt * .5));
   }
   if (!reduced && monInst) {
-    const { ri, M4, P, S, QX } = monInst;
+    const { ri, M4, P, S, QX, gi2, CT } = monInst;
+    let breatheN = 0;
     monRings.forEach((r, i) => {
       M4.compose(P.set(r.x, r.baseY + Math.sin(t * .0009 + r.spin * 9) * 2.5, r.z), QX, S);
       ri.setMatrixAt(i, M4);
+      /* a pool breathes only while its checkpoint has a live run — the floor shows work */
+      if (r.run) {
+        gi2.setColorAt(i, CT.copy(r.col).multiplyScalar(1 + Math.sin(t * .0013 + r.spin * 9) * (PHI - 1) * .6));
+        breatheN++;
+      }
     });
     ri.instanceMatrix.needsUpdate = true;
+    if (breatheN) gi2.instanceColor.needsUpdate = true;
   }
   animateAgents(t);
   if (!reduced && pulseMeshes && pulseMeshes.inst) {
@@ -1757,6 +1765,7 @@ window.__hold = (v) => { renderer.setAnimationLoop(v ? null : (reduced ? null : 
 const kick = () => { if (reduced) { try { frame(performance.now()); } catch (e) {} } };
 window.__step = (ms) => { try { frame(ms ?? performance.now()); } catch (e) { return String(e); } return 'ok'; };
 window.__age = (iso) => { setAge(iso); return $('age').style.color || 'clean'; };
+window.__pool = (i) => { const c = new THREE.Color(); monInst.gi2.getColorAt(i, c); return { run: monRings[i].run, hex: c.getHexString() }; };
 
 function resize() {
   const w = innerWidth, h = innerHeight;
