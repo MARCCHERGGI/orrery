@@ -89,10 +89,15 @@ Round 2 (seeded iter 17 from accumulated next-observes):
    (per-instance emissive via instanceColor, raycast instanceId remap).
 5. **DEPTH pass**: contact shadows / grounding under monuments and orb; the
    portal illusion's weakest remaining link.
-6. **Stale-ok surfacing** (TRUTH): lanes warden calls ok but scheduler shows
-   weeks-stale (e.g. Screen Activity, 8 d). Age can't recolor status (at-startup
-   daemons), but the card could carry a quiet "stale?" marker when cadence
-   implies a shorter gap. Needs cadence-aware logic, not a blanket threshold.
+6. ~~Stale-ok surfacing~~ CLOSED iter 49: already implemented — `isStale()`
+   (age > cadence·φ² with a φ³-hour floor) ambers the card's "ran X ago" line;
+   "next in…" renders beside it. RULES-OUT anything louder: 90/118 lanes read
+   "stale" by schtasks `last`, but the ~206 h cluster (incl. CrowResident,
+   which provably runs every 10 min) is the Aug-1 bus-migration artifact —
+   schtasks froze when lanes moved to the :7799 event bus. The page cannot
+   distinguish stopped-on-purpose from bus-migrated; the card's quiet amber on
+   a factual timestamp is the honest ceiling. A truer fix is warden/gen-data
+   side (bus-aware last-run), not page side.
 
 ## Log
 
