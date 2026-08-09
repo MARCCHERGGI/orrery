@@ -624,3 +624,10 @@ shipped: member record strips — each agent row in the group card carries the l
 evidence: local ?v=95 same-eval probe {host:127.0.0.1:8613, strips:7, cells:21, errs:0} + screenshot read (··· after each name). Prod after deploy: #content/newsroom — flagged lane ClaudeConvoDaily renders 3×var(--danger) cells, ok lanes var(--ink); same-eval host verified. LIVE MATCH ACA52B1F after 2 polls (carried 63+64; quota window flowing again).
 incident: mid-verify the shared relay tab was navigated to prod by an outside actor (sibling/task) — a stale-DOM probe read strips:0 and a screenshot caught the attract reel. Root-caused via location.search in a follow-up probe. RULE REINFORCED: capture location/host in the SAME eval as every probe AND every screenshot-adjacent step; a probe without provenance is not evidence.
 next-observe: all record surfaces live. Fundamental due ~67. Candidates: tour refresh to showcase current visual state (research reel timing first), search→group nav, CORE banner still parked for Marco copy.
+
+## 65 · 2026-08-09 · systemic · USEFUL
+scores: U10 L10 D10 De10 A10 P10
+shipped: record strips in status views — the "18 flagged" system view (and all counter views) now shows each lane's last-8 tail; strip markup extracted to a shared histMini helper used by both group and status row builders. Chronic failures ('fff') vs fresh ones read instantly on the operator's most actionable list.
+evidence: local ?v=96 same-eval provenance probe {host:127.0.0.1:8613, rows:18, strips:18, firstStrip:3×var(--danger), errs:0}; screenshot read — every flagged row carries a salmon tail. node --check OK.
+ship status: PENDING-DEPLOY — pushed DB6D60F8, live still ACA52B1F (quota trickle; batched-push protocol).
+next-observe: FIRST live==DB6D60F8. hist {4:145} after 21:00Z refresh. Fundamental ~67: tour refresh research (reel must showcase strips/shell/uplights). CORE banner parked for Marco copy.
