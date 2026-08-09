@@ -436,3 +436,9 @@ shipped: COMMITTED, NOT YET LIVE — vercel free-tier daily deploy cap (100/day,
 evidence: node --check clean · v44-ring-zoom.png read (6x crop: dimensional shading, hues intact vs v31-inst.png flat donuts) · sweep + tour {reel:false, errs:0} · local hash 063A2988; live intentionally NOT claimed.
 DEPLOY RULE (until quota resets ~24 h): keep building + committing each cycle; attempt ONE deploy per cycle and treat quota-refusal as normal — log PENDING-DEPLOY, never claim live. First successful deploy carries all batched work; verify hash then.
 next-observe: confirm when a deploy lands and clear the pending queue in the log. Note the hourly ClaudeOrreryRefresh data deploys are also blocked — header data-age will amber past 2.6 h BY DESIGN, which is the system telling the truth about itself.
+
+## 35 · 2026-08-09 · systemic · VISUAL+DEPTH (grounding) — PENDING-DEPLOY
+scores: U10 L9 D9 De9 A9 P9
+shipped: COMMITTED, NOT LIVE (quota, per rule) — monument light pools: every one of the 29 monuments now stands in its own soft floor glow, hue-tinted per zone, one InstancedMesh of F(2)-radius radial-gradient planes (additive, depthWrite off). Kills the last "floating pillar" read; backlog #5 (DEPTH grounding) is substantially addressed at +1 draw call (336, budget ≤~350).
+evidence: node --check clean · v45-pools-home.png read (all 29 pools visible, hue-matched, not blown out) · v45-pools-zoom.png read (2x crop: teal FORTUNE / purple JOB-ENGINE pools ground their pillars) · sweep + tour {reel:false, errs:0} · __perf 336 calls · deploy attempt refused api-deployments-free-per-day; live still 9711C5ED (iter 33). Pending queue: 34 (lit ring materials) + 35 (light pools).
+next-observe: attempt deploy first — if it lands, hash-verify and confirm BOTH pending iters visible live. Visual ranked next: orb chroma pulse refinement; then consider pool subtle breathe tied to running state (data-backed, cheap).
