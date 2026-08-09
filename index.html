@@ -589,6 +589,28 @@ const planets = [];
   sg.setAttribute('position', new THREE.BufferAttribute(sa, 3));
   const starM = new THREE.PointsMaterial({ color: 0xe6e9ff, size: 2.2, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false });
   starM.fog = false; sky.add(new THREE.Points(sg, starM));
+  /* near star layer — bigger, sparser, lower: the void gets parallax depth */
+  const NS2 = FIB(4), sg2 = new THREE.BufferGeometry(), sa2 = new Float32Array(NS2 * 3);
+  for (let i = 0; i < NS2; i++) {
+    sa2[i * 3] = (Math.random() * 2 - 1) * 1100;
+    sa2[i * 3 + 1] = 560 + Math.random() * 500;
+    sa2[i * 3 + 2] = -1200 + Math.random() * 1800;
+  }
+  sg2.setAttribute('position', new THREE.BufferAttribute(sa2, 3));
+  const starM2 = new THREE.PointsMaterial({ color: 0xaebaff, size: 3.4, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false });
+  starM2.fog = false; sky.add(new THREE.Points(sg2, starM2));
+  /* nebula wash — faint colour so the atrium reads deep, not empty */
+  const nc = document.createElement('canvas'); nc.width = nc.height = 256;
+  const ng = nc.getContext('2d');
+  const nr = ng.createRadialGradient(128, 128, 10, 128, 128, 128);
+  nr.addColorStop(0, 'rgba(150,160,255,.32)'); nr.addColorStop(.5, 'rgba(100,90,210,.12)'); nr.addColorStop(1, 'rgba(60,50,140,0)');
+  ng.fillStyle = nr; ng.fillRect(0, 0, 256, 256);
+  const nebT = new THREE.CanvasTexture(nc);
+  [[-700, 1150, -900, FIB(7), 0x7f8cff], [650, 1350, -400, FIB(7), 0x8be2b9], [80, 980, -1250, FIB(8), 0xbfa7ff]].forEach(([x, y, z, s, tint]) => {
+    const m = new THREE.SpriteMaterial({ map: nebT, color: tint, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .42 });
+    m.fog = false;
+    const sp = new THREE.Sprite(m); sp.scale.set(s, s, 1); sp.position.set(x, y, z); sky.add(sp);
+  });
   /* sun */
   const sunM = new THREE.MeshBasicMaterial({ color: 0xffe9c4 }); sunM.fog = false;
   const sun = new THREE.Mesh(new THREE.SphereGeometry(55, 24, 24), sunM);
