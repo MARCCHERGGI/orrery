@@ -142,3 +142,18 @@ index hash==local; live fleet.json confirmed carrying "last" timestamps.
 next-observe: whether stale-but-ok lanes ("ok" + ran weeks ago) should read as
 dormant in status logic - the timestamps now make that computable. Then LEGIBLE
 wall-strip pass or monument-trio instancing.
+
+## 10 · 2026-08-09 · systemic · LEGIBLE
+scores: U9 L7->8 D8 De8 A9 P8
+shipped: tile labels scale with their cell. Was fixed 13px/12-chars regardless of
+cell size - on dense walls (COMMUNICATIONS ~38 lanes, cell 61px) adjacent labels
+collided; on sparse walls they wasted space. Now font = max(11, cell/phi^4) and the
+char budget comes from the same cell width, baseline follows the font. DECIDED
+AGAINST entry-9's stale-ok->dormant candidate: at-startup daemons legitimately show
+week-old last-run times while alive since boot - age alone cannot recolor status
+without lying in the other direction.
+evidence: COMMUNICATIONS wall before/after read - labels now cell-contained
+("Agent Cont", "Browser Rel", "Isabela Brie"), no neighbour collisions; 11s sweep +
+full rec tour zero __errs; live hash==local redirects-off.
+next-observe: monument-trio instancing (PERF, 352 -> ~290 est) or reel variants.
+LEGIBLE re-check at ALL distance after this label change.
