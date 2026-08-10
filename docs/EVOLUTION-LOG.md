@@ -821,3 +821,9 @@ scores: U7 L7 D9 De7 A7 P9
 shipped: Marco named the effect himself ("8 screens within the screen, screen extend — optical illusion") — the 8 dept walls became 8 floating bezeled phi-ratio MONITORS (377x233, MONA layout: two receding rows flanking the back wall), back wallpaper rimmed as the master screen. Wall-anchored bleed/wash/uplight gated off in OS_MODE; plates float above bezels, stats strips below; tile canvas 640x396.
 evidence: v131-os97.png read (monitors + floor-mirror doubles visible), sweep 120 steps zero errs, perf 223 calls / 8.3k tris / 2.12ms per frame, blob D2676CA4 pushed 35b7e06, poll b1xoqex85.
 next-observe: does the receding-monitors illusion finally match xref.mp4 for Marco; check reel orbit framing over the new monitor rows; back-pair occlusion by the orb.
+
+## 98 · 2026-08-10 · systemic · PERF+LEGIBLE
+scores: U7 L8 D9 De7 A7 P9
+shipped: Marco's triple ask — (1) FULLSCREEN button in header (⛶ FULL, key F, fullscreenchange label swap); (2) de-rainbow: wallpaper aurora folded from hues 138-305 to one cyan-indigo family (193-249, sat 68), all dept hues remapped in boot() to the same band, mint accent (#8be2b9) globally replaced with cyan (#57d9ff) so UI and 3D share ONE accent; (3) perf governor in liveLoop — 120-frame warmup amnesty, then every 45 frames if avg>20ms shed tier 1 bloom, tier 2 floor mirror, tier 3 pixelRatio→1. __gov() probe added.
+evidence: v132-os98.png read (one-palette room, FULL visible), sweep zero errs, 195 calls / 8.1k tris / 2.0ms, blob 8AC5BFA4 pushed + vercel CLI prod deploy, live hash MATCH after 20s (poll bm8kuccwe).
+next-observe: does Marco's machine still lag (governor tier via __gov), fullscreen on his browser, whether the folded palette reads "artist-built" to him.
