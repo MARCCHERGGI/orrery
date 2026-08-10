@@ -755,3 +755,9 @@ scores: U10 L10 D10 De10 A10 P10
 shipped: nothing. Iter-84's worry ("refresh didn't land, investigate exporter") was MY timestamp confusion, corrected here: ClaudeOrreryRefresh fires ON THE HOUR (schtask Ready, last 19:00:01 local result 0x0), and ced4774 committed at 19:00:13 — that IS the 6-column refresh. The fleet.json `exported` stamp (22:47Z) is the warden data's provenance stamp, not the refresh commit time; the two differ by up to an hour by design. Pipeline fully healthy; 7th column lands at 20:00 local.
 evidence: schtasks query (Ready/0x0/next 20:00); git log --grep "fleet refresh" shows unbroken hourly commits 15:00→19:00 local.
 next-observe: 7th column in ced4774's successor (~20:00:13 local). Provenance-vs-commit-time distinction now on record — do not re-derive.
+
+## 86 · 2026-08-09 · systemic · (observation — record pipeline verified at 7)
+scores: U10 L10 D10 De10 A10 P10
+shipped: nothing. 20:00 refresh landed on schedule (fe6f6ba 20:00:05), hist {7:145}, and the LIVE page shows it: fresh-load probe sky {HL:7}, errs 0, calls 320. THE RECORD now carries real variation (flag stratum 17,18,18,17,17,18,17 across columns) — the cardiogram is no longer uniform strata but a moving trace. Full pipeline warden→gen-data→git→raw CDN→page verified end-to-end within 90 s of the commit.
+evidence: git log + node hist analysis + live probe after reload.
+next-observe: strips at 13 columns ~05:00Z (13th sample). Fundamental ~87 — candidate: none pending; honest no-op acceptable. Sweep next cycle.
