@@ -1880,12 +1880,12 @@ function animateAgents(t) {
 const _m4 = new THREE.Matrix4(), _qc = new THREE.Quaternion(), _qp = new THREE.Quaternion();
 const _pc = new THREE.Vector3(), _pp = new THREE.Vector3();
 function applyCamera(t, dx, dy) {
-  const pk = reel ? 0 : (level === 0 ? 1 : .45);
+  const pk = reel ? (OS_MODE ? 1 : 0) : (level === 0 ? 1 : .45);
   _pc.set(camBase.x + par.sx * 85 * pk + dx, camBase.y - par.sy * 48 * pk + dy, camBase.z);
   _m4.lookAt(_pc, tgtBase, camera.up); _qc.setFromRotationMatrix(_m4);
   const near = 1, fovT = near * Math.tan(THREE.MathUtils.degToRad(30));
   let l = -fovT * camera.aspect, r = fovT * camera.aspect, tp = fovT, bt = -fovT;
-  const goal = (level === 0 && !reel && !tour) ? 1 : 0;
+  const goal = level === 0 && (OS_MODE || (!reel && !tour)) ? 1 : 0;
   PORTAL.mix += (goal - PORTAL.mix) * .07;
   if (PORTAL.mix < .001) PORTAL.mix = 0;
   if (PORTAL.mix > 0) {
@@ -2445,6 +2445,19 @@ search.addEventListener('input', () => {
 /* ============================== reel mode ============================== */
 let tourRun = 0;
 function tourKeys() {
+  /* OS mode: the reference's grammar — the room NEVER moves, the EYE does.
+     A 10-second orbit of the viewer around the fixed glass window (the phone
+     circling the laptop): big lateral swings, a low lean-in, a high pull-back.
+     px/py are eye parallax targets, dist is how far the eye sits off the glass. */
+  if (OS_MODE) return [
+    { t: 0,     px: 0,     py: .05,  dist: 1050 },
+    { t: 1800,  px: -1.35, py: .12,  dist: 760 },
+    { t: 3600,  px: -.85,  py: -.42, dist: 520 },
+    { t: 5400,  px: .95,   py: -.25, dist: 430 },
+    { t: 7200,  px: 1.35,  py: .42,  dist: 700 },
+    { t: 8800,  px: .25,   py: .1,   dist: 900 },
+    { t: 10000, px: 0,     py: .05,  dist: 1050 },
+  ];
   /* exactly 10 seconds: dive through the portal → glancing sweep along the
      icon-grid wall → a hero monument → JARVIS close → pull back out.
      Each run rotates the hero (instagram first, then every zone's biggest
@@ -2481,13 +2494,16 @@ const smooth = u => u * u * (3 - 2 * u);
 function startReel() {
   if (reel) return;
   reel = true; document.body.classList.add('reel'); close(); setLevelSilent(0);
-  PORTAL.mix = 0;   /* deterministic projection for the recorded artifact */
+  /* OS mode records THROUGH the window projection — the illusion IS the shot.
+     Legacy mode zeroed it for a deterministic drone flight. */
+  PORTAL.mix = OS_MODE ? 1 : 0;
   tour = { keys: tourKeys(), start: performance.now() };
   $('live').textContent = 'cinematic tour running — tap or press escape to exit';
 }
 function exitReel() {
   reel = false; tour = null; document.body.classList.remove('reel');
   close(); setLevel(0);
+  fitPortal();   /* the orbit leaves the eye far out — reset lean to the fitted default */
 }
 function tourStep(now) {
   const el = now - tour.start;
@@ -2498,6 +2514,14 @@ function tourStep(now) {
   const a = K[i], b = K[Math.min(i + 1, K.length - 1)];
   if (a.act && !a.done) { a.done = true; a.act(); }
   const u = smooth(Math.min(1, (el - a.t) / Math.max(1, b.t - a.t)));
+  if (OS_MODE) {
+    /* eye-orbit: drive the viewer's parallax + lean, never the camera flight */
+    par.x = a.px + (b.px - a.px) * u;
+    par.y = a.py + (b.py - a.py) * u;
+    PORTAL.dist = a.dist + (b.dist - a.dist) * u;
+    idle.lastMove = now;   /* the scripted eye owns the sway */
+    return;
+  }
   camBase.set(
     a.pos[0] + (b.pos[0] - a.pos[0]) * u,
     a.pos[1] + (b.pos[1] - a.pos[1]) * u,
