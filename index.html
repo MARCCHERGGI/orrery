@@ -339,6 +339,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { Reflector } from 'three/addons/objects/Reflector.js';
 
 /* ============================== data ============================== */
 const SAMPLE = {
@@ -547,9 +548,19 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
      surface's front face — a culled backface reads as a hole torn in the room */
   const mat = (t) => new THREE.MeshStandardMaterial({ map: t, color: 0x8286ad, roughness: .82, metalness: .2, side: THREE.DoubleSide });
 
-  /* glossy floor — env reflections + received shadows anchor everything to it */
+  /* mirror floor — the reference's signature: the room visibly continues
+     UNDERNEATH itself. A true planar reflection renders the walls, orb and
+     monuments below the ground line; the grid floor sits on top at partial
+     opacity so the reflection reads through it. */
+  const mirror = new Reflector(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2), {
+    clipBias: .003,
+    textureWidth: Math.min(1024, Math.round(innerWidth * devicePixelRatio / 2)),
+    textureHeight: Math.min(1024, Math.round(innerHeight * devicePixelRatio / 2)),
+    color: 0xb8bde0,
+  });
+  mirror.rotation.x = -Math.PI / 2; mirror.position.y = -.2; scene.add(mirror);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2),
-    new THREE.MeshStandardMaterial({ map: floorT, color: 0x8e93c2, roughness: .36, metalness: .5, side: THREE.DoubleSide }));
+    new THREE.MeshStandardMaterial({ map: floorT, color: 0x8e93c2, roughness: .36, metalness: .5, side: THREE.DoubleSide, transparent: true, opacity: .38, depthWrite: true }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
   /* the roof is a RIM, not a lid — the center opens to sky. The atrium opening
      spans |x|<400, -600<z<400; everything above it is visible from inside. */
