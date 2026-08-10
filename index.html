@@ -808,6 +808,11 @@ let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = []
 const brain = new THREE.Group(); scene.add(brain);
 
 const BEAM_OP = .38;
+/* THE 3D-OS CONVERSION (Marco picked it, 2026-08-09): the reference is a
+   desktop unfolded into a cube — surfaces carry everything, the middle is
+   EMPTY. OS_MODE gates the old mid-room population (monuments, swarms, dials,
+   beams, ledger) instead of deleting it: flip to false to restore v7. */
+const OS_MODE = true;
 function hsl(h, s, l) { const c = new THREE.Color(); c.setHSL(h / 360, s, l); return c; }
 
 /* ========================= JARVIS spirit orb ==========================
@@ -1249,39 +1254,41 @@ function buildWorld() {
     const tbar = new THREE.Mesh(new THREE.PlaneGeometry(FIB(7), FIB(7) * 56 / 1024),
       new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(tb), transparent: true }));
     tbar.position.set(0, 24, -ROOM.depth + 2.2); scene.add(tbar);
-    /* light column: CORE → floor bus */
-    const colM = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.2, 300, 12),
-      new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .22 }));
-    colM.position.set(0, 150, -640); scene.add(colM);
-    /* the column carries traffic — M packets rise from the floor bus into the
-       brain, φ-staggered start heights, wrapping. One Points draw. */
-    const upA = new Float32Array(M * 3);
-    for (let i = 0; i < M; i++) {
-      const a = i * GA;
-      upA[i * 3] = Math.cos(a) * 1.8;
-      upA[i * 3 + 1] = (i / M) * 292 + 6;
-      upA[i * 3 + 2] = Math.sin(a) * 1.8;
+    if (!OS_MODE) {
+      /* light column: CORE → floor bus */
+      const colM = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.2, 300, 12),
+        new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .22 }));
+      colM.position.set(0, 150, -640); scene.add(colM);
+      /* the column carries traffic — M packets rise from the floor bus into the
+         brain, φ-staggered start heights, wrapping. One Points draw. */
+      const upA = new Float32Array(M * 3);
+      for (let i = 0; i < M; i++) {
+        const a = i * GA;
+        upA[i * 3] = Math.cos(a) * 1.8;
+        upA[i * 3 + 1] = (i / M) * 292 + 6;
+        upA[i * 3 + 2] = Math.sin(a) * 1.8;
+      }
+      const upG = new THREE.BufferGeometry();
+      upG.setAttribute('position', new THREE.BufferAttribute(upA, 3));
+      const upPts = new THREE.Points(upG, new THREE.PointsMaterial({
+        color: 0xbfa7ff, size: 3.2, transparent: true, opacity: .85,
+        blending: THREE.AdditiveBlending, depthWrite: false }));
+      upPts.position.set(0, 0, -640); scene.add(upPts);
+      corePulse = { a: upA, g: upG };
+      /* contact shadow — a high mass needs a wide, faint pool to sit in the room */
+      const sc = document.createElement('canvas'); sc.width = sc.height = 128;
+      const sg = sc.getContext('2d');
+      const grad = sg.createRadialGradient(64, 64, 6, 64, 64, 64);
+      grad.addColorStop(0, 'rgba(4,6,16,.5)'); grad.addColorStop(.6, 'rgba(4,6,16,.22)'); grad.addColorStop(1, 'rgba(4,6,16,0)');
+      sg.fillStyle = grad; sg.fillRect(0, 0, 128, 128);
+      const pool = new THREE.Mesh(new THREE.PlaneGeometry(FIB(4) * 2, FIB(4) * 2),
+        new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false }));
+      pool.rotation.x = -Math.PI / 2; pool.position.set(0, .9, -640); pool.renderOrder = 1;
+      scene.add(pool);
+      const pad = new THREE.Mesh(new THREE.CircleGeometry(26, 32), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .3, depthWrite: false }));
+      pad.rotation.x = -Math.PI / 2; pad.position.set(0, 1.1, -640); scene.add(pad);
     }
-    const upG = new THREE.BufferGeometry();
-    upG.setAttribute('position', new THREE.BufferAttribute(upA, 3));
-    const upPts = new THREE.Points(upG, new THREE.PointsMaterial({
-      color: 0xbfa7ff, size: 3.2, transparent: true, opacity: .85,
-      blending: THREE.AdditiveBlending, depthWrite: false }));
-    upPts.position.set(0, 0, -640); scene.add(upPts);
-    corePulse = { a: upA, g: upG };
     window.__col = () => corePulse ? [...corePulse.a].filter((_, i) => i % 3 === 1).map(v => +v.toFixed(1)) : null;
-    /* contact shadow — a high mass needs a wide, faint pool to sit in the room */
-    const sc = document.createElement('canvas'); sc.width = sc.height = 128;
-    const sg = sc.getContext('2d');
-    const grad = sg.createRadialGradient(64, 64, 6, 64, 64, 64);
-    grad.addColorStop(0, 'rgba(4,6,16,.5)'); grad.addColorStop(.6, 'rgba(4,6,16,.22)'); grad.addColorStop(1, 'rgba(4,6,16,0)');
-    sg.fillStyle = grad; sg.fillRect(0, 0, 128, 128);
-    const pool = new THREE.Mesh(new THREE.PlaneGeometry(FIB(4) * 2, FIB(4) * 2),
-      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false }));
-    pool.rotation.x = -Math.PI / 2; pool.position.set(0, .9, -640); pool.renderOrder = 1;
-    scene.add(pool);
-    const pad = new THREE.Mesh(new THREE.CircleGeometry(26, 32), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .3, depthWrite: false }));
-    pad.rotation.x = -Math.PI / 2; pad.position.set(0, 1.1, -640); scene.add(pad);
   }
 
   /* zones live along the walls — 3 left, 2 back, 3 right, like rooms in the reference */
@@ -1326,13 +1333,15 @@ function buildWorld() {
     }
     world.add(bleed);
     zone.add(disc); zoneDiscs.push(disc);
-    const dialCol = hsl(d.hue, .5, .62), dialFaintCol = hsl(d.hue, .4, .55);
-    circSeg(d.cx, d.cz, FIB(4), .8, dialCol, .5);
-    circSeg(d.cx, d.cz, FIB(3), .8, dialFaintCol, .22);
-    for (let k = 0; k < M; k++) {
-      const th = k * GA;
-      seg(false, d.cx + Math.cos(th) * (FIB(4) - 8), .8, d.cz + Math.sin(th) * (FIB(4) - 8),
-                 d.cx + Math.cos(th) * FIB(4), .8, d.cz + Math.sin(th) * FIB(4), dialCol, .5);
+    if (!OS_MODE) {
+      const dialCol = hsl(d.hue, .5, .62), dialFaintCol = hsl(d.hue, .4, .55);
+      circSeg(d.cx, d.cz, FIB(4), .8, dialCol, .5);
+      circSeg(d.cx, d.cz, FIB(3), .8, dialFaintCol, .22);
+      for (let k = 0; k < M; k++) {
+        const th = k * GA;
+        seg(false, d.cx + Math.cos(th) * (FIB(4) - 8), .8, d.cz + Math.sin(th) * (FIB(4) - 8),
+                   d.cx + Math.cos(th) * FIB(4), .8, d.cz + Math.sin(th) * FIB(4), dialCol, .5);
+      }
     }
 
     /* zone nameplate painted on the wall behind the district */
@@ -1383,26 +1392,28 @@ function buildWorld() {
     const TP = { c: tc, g: tc.getContext('2d'), tex: ttex, d, mesh: tmesh, hover: -1 };
     tilePanels.push(TP); drawTilePanel(TP, true);
 
-    /* circuit junction at the district center — everything in this zone wires here */
-    const jun = new THREE.Mesh(new THREE.CircleGeometry(9, 24), new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .85, depthWrite: false }));
-    jun.rotation.x = -Math.PI / 2; jun.position.y = 1.2; zone.add(jun);
-    const junRing = new THREE.Mesh(new THREE.TorusGeometry(14, .9, 6, 32), new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .5 }));
-    junRing.rotation.x = Math.PI / 2; junRing.position.y = 1.2; zone.add(junRing);
-    junRing.userData.pulsePhase = i * 1.3; junRings.push(junRing);
+    if (!OS_MODE) {
+      /* circuit junction at the district center — everything in this zone wires here */
+      const jun = new THREE.Mesh(new THREE.CircleGeometry(9, 24), new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .85, depthWrite: false }));
+      jun.rotation.x = -Math.PI / 2; jun.position.y = 1.2; zone.add(jun);
+      const junRing = new THREE.Mesh(new THREE.TorusGeometry(14, .9, 6, 32), new THREE.MeshBasicMaterial({ color: hsl(d.hue, .6, .66), transparent: true, opacity: .5 }));
+      junRing.rotation.x = Math.PI / 2; junRing.position.y = 1.2; zone.add(junRing);
+      junRing.userData.pulsePhase = i * 1.3; junRings.push(junRing);
 
-    /* radial spoke: junction → CORE foot, straight, with graduation dashes
-       every F(1) units — the wiring reads as an etched instrument, not cabling */
-    const CF = new THREE.Vector3(0, .9, -640);
-    const J = new THREE.Vector3(d.cx, .9, d.cz);
-    seg(false, J.x, J.y, J.z, CF.x, CF.y, CF.z, hsl(d.hue, .5, .6), .5);
-    const dir = CF.clone().sub(J), len = dir.length(); dir.normalize();
-    const perp = new THREE.Vector3(-dir.z, 0, dir.x);
-    for (let s2 = FIB(1); s2 < len; s2 += FIB(1)) {
-      const p0 = J.clone().addScaledVector(dir, s2);
-      seg(false, p0.x - perp.x * 3, .9, p0.z - perp.z * 3, p0.x + perp.x * 3, .9, p0.z + perp.z * 3, hsl(d.hue, .4, .55), .35);
+      /* radial spoke: junction → CORE foot, straight, with graduation dashes
+         every F(1) units — the wiring reads as an etched instrument, not cabling */
+      const CF = new THREE.Vector3(0, .9, -640);
+      const J = new THREE.Vector3(d.cx, .9, d.cz);
+      seg(false, J.x, J.y, J.z, CF.x, CF.y, CF.z, hsl(d.hue, .5, .6), .5);
+      const dir = CF.clone().sub(J), len = dir.length(); dir.normalize();
+      const perp = new THREE.Vector3(-dir.z, 0, dir.x);
+      for (let s2 = FIB(1); s2 < len; s2 += FIB(1)) {
+        const p0 = J.clone().addScaledVector(dir, s2);
+        seg(false, p0.x - perp.x * 3, .9, p0.z - perp.z * 3, p0.x + perp.x * 3, .9, p0.z + perp.z * 3, hsl(d.hue, .4, .55), .35);
+      }
+      /* packets ride the spoke into the CORE column */
+      beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx, 1.6, d.cz), new THREE.Vector3(0, 1.6, -640)), dept: d.id });
     }
-    /* packets ride the spoke into the CORE column */
-    beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx, 1.6, d.cz), new THREE.Vector3(0, 1.6, -640)), dept: d.id });
 
     /* checkpoints — monuments standing on the floor along the wall */
     const gs = groupsByDept[d.id] || [];
@@ -1420,7 +1431,7 @@ function buildWorld() {
       /* pillars are instanced after the zone loop (29 → 1 draw); everything a
          pillar needs — geometry, hue, raycast identity — rides monRings */
       /* monument → zone junction trace on the floor */
-      seg(true, d.cx + hx, 1.2, d.cz + hz, d.cx, 1.2, d.cz, hsl(d.hue, .5, .62), .68);
+      if (!OS_MODE) seg(true, d.cx + hx, 1.2, d.cz + hz, d.cx, 1.2, d.cz, hsl(d.hue, .5, .62), .68);
 
       /* ring + cap are instanced after the zone loop (29 monuments → 2 draw
          calls). The old per-ring z-spin was invisible — a torus is symmetric
@@ -1439,35 +1450,39 @@ function buildWorld() {
          so the code clears the cap sphere. */
       const okN = members.filter(n => n.status === 'ok').length, runN = members.filter(n => n.status === 'running').length;
       const flg = members.filter(n => n.status === 'flag');
-      const lift = flg.length ? 7 : 0;
-      const hl = makeLabel(g.label.toUpperCase(), { size: 34, hue: d.hue, scale: .22 });
-      hl.position.set(hx, H + 26 + lift, hz); zone.add(hl);
-      const ro = makeLabel(`${members.length} agents · ${okN} ok${runN ? ' · ' + runN + ' live' : ''}`, { size: 22, scale: .2 });
-      ro.position.set(hx, H + 17 + lift, hz); zone.add(ro);
-      if (flg.length) {
-        const tally = {};
-        flg.forEach(n => { const k = (n.detail || '?').replace(/\s*\(running\)$/, '').slice(0, 18); tally[k] = (tally[k] || 0) + 1; });
-        const [code, cn] = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
-        const fl = makeLabel(`${flg.length} flagged · ${code}${cn > 1 ? ' ×' + cn : ''}`, { size: 22, scale: .2, hue: 8 });
-        fl.position.set(hx, H + 15, hz); zone.add(fl);
+      if (!OS_MODE) {
+        const lift = flg.length ? 7 : 0;
+        const hl = makeLabel(g.label.toUpperCase(), { size: 34, hue: d.hue, scale: .22 });
+        hl.position.set(hx, H + 26 + lift, hz); zone.add(hl);
+        const ro = makeLabel(`${members.length} agents · ${okN} ok${runN ? ' · ' + runN + ' live' : ''}`, { size: 22, scale: .2 });
+        ro.position.set(hx, H + 17 + lift, hz); zone.add(ro);
+        if (flg.length) {
+          const tally = {};
+          flg.forEach(n => { const k = (n.detail || '?').replace(/\s*\(running\)$/, '').slice(0, 18); tally[k] = (tally[k] || 0) + 1; });
+          const [code, cn] = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
+          const fl = makeLabel(`${flg.length} flagged · ${code}${cn > 1 ? ' ×' + cn : ''}`, { size: 22, scale: .2, hue: 8 });
+          fl.position.set(hx, H + 15, hz); zone.add(fl);
+        }
       }
 
       /* the phyllotaxis formation around this monument rotates rigidly, rate from φ */
       d.hubs[g.id] = { ...g, x: d.cx + hx, z: d.cz + hz, y: H + 8, localX: hx, localZ: hz, H,
         omega: .00013 * Math.pow(PHI, gi % 3 - 1) };
 
-      /* beam: checkpoint cap → brain */
-      const from = new THREE.Vector3(d.cx + hx, H + 8, d.cz + hz);
-      const to = new THREE.Vector3(0, 300, -640);
-      const mid = from.clone().lerp(to, .5); mid.y += 110;
-      const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
-      const pts = curve.getPoints(40);
-      const bg = new THREE.BufferGeometry().setFromPoints(pts);
-      /* a flagged checkpoint tints its beam — trouble is visible from the doorway */
-      const line = new THREE.Line(bg, new THREE.LineBasicMaterial({ color: flg.length ? 0xe08a7c : hsl(d.hue, .5, .6), transparent: true, opacity: flg.length ? BEAM_OP * PHI : BEAM_OP, blending: THREE.AdditiveBlending, depthWrite: false }));
-      scene.add(line); beams.push({ line, curve, dept: d.id, group: g.id, op: flg.length ? BEAM_OP * PHI : BEAM_OP });
-      /* the same packet also travels the floor: monument → zone junction */
-      beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx + hx, 1.6, d.cz + hz), new THREE.Vector3(d.cx, 1.6, d.cz)), dept: d.id, group: g.id });
+      if (!OS_MODE) {
+        /* beam: checkpoint cap → brain */
+        const from = new THREE.Vector3(d.cx + hx, H + 8, d.cz + hz);
+        const to = new THREE.Vector3(0, 300, -640);
+        const mid = from.clone().lerp(to, .5); mid.y += 110;
+        const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
+        const pts = curve.getPoints(40);
+        const bg = new THREE.BufferGeometry().setFromPoints(pts);
+        /* a flagged checkpoint tints its beam — trouble is visible from the doorway */
+        const line = new THREE.Line(bg, new THREE.LineBasicMaterial({ color: flg.length ? 0xe08a7c : hsl(d.hue, .5, .6), transparent: true, opacity: flg.length ? BEAM_OP * PHI : BEAM_OP, blending: THREE.AdditiveBlending, depthWrite: false }));
+        scene.add(line); beams.push({ line, curve, dept: d.id, group: g.id, op: flg.length ? BEAM_OP * PHI : BEAM_OP });
+        /* the same packet also travels the floor: monument → zone junction */
+        beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(d.cx + hx, 1.6, d.cz + hz), new THREE.Vector3(d.cx, 1.6, d.cz)), dept: d.id, group: g.id });
+      }
     });
 
     /* focus-dimming inventory — every zone surface that should recede when
@@ -1483,7 +1498,7 @@ function buildWorld() {
   });
 
   /* monument rings + caps: 29 trios → 2 instanced draws */
-  if (monRings.length) {
+  if (!OS_MODE && monRings.length) {
     const ri = new THREE.InstancedMesh(
       new THREE.TorusGeometry(13, 1.1, 10, 48),
       new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: .8, roughness: .3, emissive: 0xffffff, emissiveIntensity: .25, transparent: true, opacity: .95 }),
@@ -1656,11 +1671,11 @@ function buildWorld() {
   }
 
   /* one riser: CORE foot → CORE (was duplicated once per zone before) */
-  beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(0, 1.6, -640), new THREE.Vector3(0, 300, -640)), dept: 'core' });
+  if (!OS_MODE) beams.push({ curve: new THREE.LineCurve3(new THREE.Vector3(0, 1.6, -640), new THREE.Vector3(0, 300, -640)), dept: 'core' });
 
   /* THE FLOOR INSTRUMENT — concentric arcs at F(4)..F(8) centred on the CORE
      foot, each labelled with its radius. The whole room stands on one dial. */
-  {
+  if (!OS_MODE) {
     const arcCol = new THREE.Color(0x8a90c0);
     const inside = (x, z) => Math.abs(x) < ROOM.hw - 6 && z > -ROOM.depth + 6 && z < ROOM.depth - 6;
     for (let n = 4; n <= 8; n++) {
@@ -1684,7 +1699,7 @@ function buildWorld() {
   /* THE FLOOR LEDGER — the room's dead centre carries the freshest truth: the
      M most recently active lanes on a golden-angle spiral, newest at the core.
      Pure scheduler data (last-run timestamps); ages fade with rank. */
-  {
+  if (!OS_MODE) {
     const nowMs = Date.now();
     const recent = nodes.filter(n => n.last)
       .map(n => ({ n, age: (nowMs - new Date(n.last)) / 60000 }))
@@ -1718,6 +1733,7 @@ function buildWorld() {
   mkMerged(segPos, segCol, false); mkMerged(segPosA, segColA, true);
 
   /* agents — an instanced swarm, orbiting their checkpoint (working) */
+  if (!OS_MODE) {
   const count = nodes.length;
   agentMesh = new THREE.InstancedMesh(
     new THREE.SphereGeometry(3.1, 12, 12),
@@ -1745,11 +1761,12 @@ function buildWorld() {
     agentMesh.setMatrixAt(i, mtx);
   });
   agentMesh.instanceColor && (agentMesh.instanceColor.needsUpdate = true);
+  }
 
   /* pulses — F(2) packets on the network; speed quantized to powers of φ,
      phases seeded by the golden ratio (low-discrepancy), routes fixed.
      ONE instanced draw, not 55 meshes. */
-  {
+  if (!OS_MODE) {
     const PC = FIB(2);
     const inst = new THREE.InstancedMesh(new THREE.SphereGeometry(2.1, 8, 8),
       new THREE.MeshBasicMaterial({ color: 0xeceaf6, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false }), PC);
@@ -1810,15 +1827,15 @@ function buildWorld() {
     T.tex.needsUpdate = true;
   }
   /* four live panels — sides + back, each a different real view of the system */
-  const panel = (title, list, x, y, z, rotY) => {
-    const T = mkTerm(258, 162, title); T.list = list;
+  const panel = (title, list, x, y, z, rotY, w = 258, h = 162) => {
+    const T = mkTerm(w, h, title); T.list = list;
     T.mesh.position.set(x, y, z); T.mesh.rotation.y = rotY;
     scene.add(T.mesh); terms.push(T);
   };
-  /* panels FLOAT off the walls like the reference's windows — parallax separates
-     them from the surface, tilted slightly into the room */
-  panel('LIVE NOW', byStatus(['running', 'ok']), -ROOM.hw + 34, 160, 660, Math.PI / 2 - .09);
-  panel('SYSTEM LOG', byStatus(['running', 'ok', 'flag', 'dormant']), ROOM.hw - 34, 160, 660, -Math.PI / 2 + .09);
+  /* panels FLOAT off the walls like the reference's windows. In OS mode the
+     side pair grows toward wall-scale — the reference's terminal face. */
+  panel('LIVE NOW', byStatus(['running', 'ok']), -ROOM.hw + 34, 190, 660, Math.PI / 2 - .09, FIB(6), FIB(6) * .625);
+  panel('SYSTEM LOG', byStatus(['running', 'ok', 'flag', 'dormant']), ROOM.hw - 34, 190, 660, -Math.PI / 2 + .09, FIB(6), FIB(6) * .625);
   panel('ALERTS', byStatus(['flag', 'dormant']), -480, 196, -ROOM.depth + 34, .07);
   panel('ACTIVITY', byStatus(['running', 'flag', 'ok']), 480, 196, -ROOM.depth + 34, -.07);
   terms.forEach(drawTerm);
