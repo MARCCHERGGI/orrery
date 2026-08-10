@@ -773,3 +773,9 @@ scores: U10 L10 D10 De10 A10 P8
 shipped: mirror floor. Marco: "the most important part is the underneath part... you're not doing it right." Re-read xref.mp4 frames — the reference's signature is a true planar reflection: walls, orb, monuments visibly continue BENEATH the ground line. Replaced the opaque grid floor with three.js Reflector (clipBias .003, tex ≤1024 dpr-scaled, color 0xb8bde0, y=-.2) under a .38-opacity grid plane so the reflection reads through it.
 evidence: local verify round 2 screenshot READ (panels/monuments/orb/arcs mirrored); live 0222d52 hash MATCH; live screenshot READ post-reload — mirror confirmed on prod; sweep {reel:false,errs:0}. Perf: 605 calls / 242k tris — the reflection pass ~doubles draws; the old ≤350 budget is superseded by this Marco-directed feature (P8, accepted).
 next-observe: portrait perf with the mirror (reflection tex is dpr-capped but untested on 390x844); og.png now shows the pre-mirror room — recapture is Marco's call. Tour test still gated on 21 hist columns (~08-10 14:00Z).
+
+## 89 · 2026-08-09 · systemic · DEPTH+ALIVE (Marco: "not there yet. keep upgrading")
+scores: U10 L9 D10 De10 A10 P8
+shipped: luminosity pass vs the X reference — bloom .38/.45/.82 → .75/.55/.72, exposure 1.02→1.12, orb plane 250→377 (FIB proper) with saturated chroma (frost/speck/spec constants shifted cyan + sat 1.42 gain 1.12 pre-ACES), CORE rings additive, portal edge .28→.55, CORE glow light 1.7/700→2.6/900.
+evidence: local screenshots READ (orb now saturated cyan-plasma dominating the frame like the reference; wall text still legible); perf {calls:604, tris:238054} errs 0; live BF211229 hash MATCH; prod screenshot READ (mirror carries tile reflections, monument glows hot); sweep {reel:false,errs:0} on prod.
+next-observe: L9 — white agent-swarm dots bloom into hot blobs at close range; watch legibility at level 2. Floor still lacks the reference's big color washes → iter 90.
