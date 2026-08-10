@@ -563,6 +563,17 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2),
     new THREE.MeshStandardMaterial({ map: floorT, color: 0x8e93c2, roughness: .36, metalness: .5, side: THREE.DoubleSide, transparent: true, opacity: .38, depthWrite: true }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+  /* dot matrix — the reference floor: rows of small emitters receding to the
+     horizon, doubled by the mirror beneath. One draw, F(1)-spaced φ-grid. */
+  const dm = [];
+  for (let dx = -ROOM.hw + FIB(1); dx < ROOM.hw; dx += FIB(1))
+    for (let dz = -ROOM.depth + FIB(1); dz < 0; dz += FIB(1))
+      dm.push(dx, 1.2, dz);
+  const dmg = new THREE.BufferGeometry();
+  dmg.setAttribute('position', new THREE.Float32BufferAttribute(dm, 3));
+  scene.add(new THREE.Points(dmg, new THREE.PointsMaterial({
+    color: 0x9fb4e8, size: 1.9, transparent: true, opacity: .5,
+    blending: THREE.AdditiveBlending, depthWrite: false })));
   /* the roof is a RIM, not a lid — the center opens to sky. The atrium opening
      spans |x|<400, -600<z<400; everything above it is visible from inside. */
   const ceilT = gridTex(true); ceilT.repeat.set(8, 11);
@@ -638,13 +649,13 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   shR.rotation.y = -Math.PI / 2; shR.position.set(ROOM.hw - .8, ROOM.h / 2, ROOM.depth - SH / 2); scene.add(shR);
 }
 
-/* ====================== the solar system overhead ======================
-   Through the atrium opening: a sun, seven planets on tilted orbits, an
-   asteroid belt, stars. The machine room runs under a working orrery —
-   the name made literal. All sky materials ignore fog (it would eat them). */
+/* ====================== the void overhead ======================
+   The reference's top is BLACK — a few stars, nothing else. The room's
+   single ceiling feature is THE RECORD (the fleet cardiogram); everything
+   competing with it (sun, planets, orbits, belt, nebulae) is gone.
+   planets stays as an empty array so the animate loop no-ops. */
 const planets = [];
 {
-  const SUN = new THREE.Vector3(0, 840, -80);
   const sky = new THREE.Group(); scene.add(sky);
   /* stars */
   const NS = 520, sg = new THREE.BufferGeometry(), sa = new Float32Array(NS * 3);
@@ -654,7 +665,7 @@ const planets = [];
     sa[i * 3 + 2] = -1500 + Math.random() * 2200;
   }
   sg.setAttribute('position', new THREE.BufferAttribute(sa, 3));
-  const starM = new THREE.PointsMaterial({ color: 0xe6e9ff, size: 2.2, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false });
+  const starM = new THREE.PointsMaterial({ color: 0xe6e9ff, size: 2.2, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false });
   starM.fog = false; sky.add(new THREE.Points(sg, starM));
   /* near star layer — bigger, sparser, lower: the void gets parallax depth */
   const NS2 = FIB(4), sg2 = new THREE.BufferGeometry(), sa2 = new Float32Array(NS2 * 3);
@@ -664,119 +675,8 @@ const planets = [];
     sa2[i * 3 + 2] = -1200 + Math.random() * 1800;
   }
   sg2.setAttribute('position', new THREE.BufferAttribute(sa2, 3));
-  const starM2 = new THREE.PointsMaterial({ color: 0xaebaff, size: 3.4, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false });
+  const starM2 = new THREE.PointsMaterial({ color: 0xaebaff, size: 3.4, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false });
   starM2.fog = false; sky.add(new THREE.Points(sg2, starM2));
-  /* nebula wash — faint colour so the atrium reads deep, not empty */
-  const nc = document.createElement('canvas'); nc.width = nc.height = 256;
-  const ng = nc.getContext('2d');
-  const nr = ng.createRadialGradient(128, 128, 10, 128, 128, 128);
-  nr.addColorStop(0, 'rgba(150,160,255,.32)'); nr.addColorStop(.5, 'rgba(100,90,210,.12)'); nr.addColorStop(1, 'rgba(60,50,140,0)');
-  ng.fillStyle = nr; ng.fillRect(0, 0, 256, 256);
-  const nebT = new THREE.CanvasTexture(nc);
-  [[-700, 1150, -900, FIB(7), 0x7f8cff], [650, 1350, -400, FIB(7), 0x8be2b9], [80, 980, -1250, FIB(8), 0xbfa7ff]].forEach(([x, y, z, s, tint]) => {
-    const m = new THREE.SpriteMaterial({ map: nebT, color: tint, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .42 });
-    m.fog = false;
-    const sp = new THREE.Sprite(m); sp.scale.set(s, s, 1); sp.position.set(x, y, z); sky.add(sp);
-  });
-  /* sun */
-  const sunM = new THREE.MeshBasicMaterial({ color: 0xffe9c4 }); sunM.fog = false;
-  const sun = new THREE.Mesh(new THREE.SphereGeometry(55, 24, 24), sunM);
-  sun.position.copy(SUN); sky.add(sun);
-  const gc = document.createElement('canvas'); gc.width = gc.height = 128;
-  const gg = gc.getContext('2d');
-  const gr = gg.createRadialGradient(64, 64, 4, 64, 64, 64);
-  gr.addColorStop(0, 'rgba(255,214,150,.9)'); gr.addColorStop(.4, 'rgba(255,190,110,.28)'); gr.addColorStop(1, 'rgba(255,180,90,0)');
-  gg.fillStyle = gr; gg.fillRect(0, 0, 128, 128);
-  const glowM = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gc), blending: THREE.AdditiveBlending, depthWrite: false });
-  glowM.fog = false;
-  const glow = new THREE.Sprite(glowM); glow.scale.set(FIB(6), FIB(6), 1); glow.position.copy(SUN); sky.add(glow);
-  /* inner graduation ring — the instrument begins at the sun */
-  const sunRingPts = [];
-  for (let a = 0; a <= 96; a++) { const th = a / 96 * Math.PI * 2; sunRingPts.push(new THREE.Vector3(SUN.x + Math.cos(th) * FIB(3), SUN.y, SUN.z + Math.sin(th) * FIB(3))); }
-  const srM = new THREE.LineBasicMaterial({ color: 0xcabf9a, transparent: true, opacity: .3 }); srM.fog = false;
-  sky.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(sunRingPts), srM));
-  /* procedural planet skins — each world gets weather, not a flat color */
-  const ptex = (draw) => {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 128;
-    draw(c.getContext('2d'), 256, 128);
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-  };
-  const rnd = (a, b) => a + Math.random() * (b - a);
-  const texBands = (base, tones) => ptex((g, w, h) => {
-    g.fillStyle = base; g.fillRect(0, 0, w, h);
-    for (let y = 0; y < h; y += rnd(4, 10)) {
-      g.fillStyle = tones[Math.floor(Math.random() * tones.length)];
-      g.globalAlpha = rnd(.25, .6); g.fillRect(0, y, w, rnd(3, 9));
-    }
-    g.globalAlpha = 1;
-  });
-  const texRock = (base, spot, caps) => ptex((g, w, h) => {
-    g.fillStyle = base; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 260; i++) {
-      g.fillStyle = spot; g.globalAlpha = rnd(.08, .3);
-      g.beginPath(); g.arc(Math.random() * w, Math.random() * h, rnd(1, 7), 0, 7); g.fill();
-    }
-    if (caps) { g.globalAlpha = .85; g.fillStyle = '#f2ede2'; g.fillRect(0, 0, w, 7); g.fillRect(0, h - 7, w, 7); }
-    g.globalAlpha = 1;
-  });
-  const texEarth = () => ptex((g, w, h) => {
-    g.fillStyle = '#2a5ea8'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#3d7a45';
-    for (let i = 0; i < 26; i++) { g.globalAlpha = rnd(.5, .85); g.beginPath(); g.ellipse(Math.random() * w, rnd(10, h - 10), rnd(8, 26), rnd(5, 14), rnd(0, 3), 0, 7); g.fill(); }
-    g.fillStyle = '#c9a36a';
-    for (let i = 0; i < 10; i++) { g.globalAlpha = rnd(.3, .5); g.beginPath(); g.ellipse(Math.random() * w, rnd(30, h - 30), rnd(4, 10), rnd(3, 7), 0, 0, 7); g.fill(); }
-    g.fillStyle = '#ffffff';
-    for (let i = 0; i < 30; i++) { g.globalAlpha = rnd(.15, .4); g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, rnd(10, 30), rnd(2, 5), 0, 0, 7); g.fill(); }
-    g.globalAlpha = .9; g.fillRect(0, 0, w, 6); g.fillRect(0, h - 6, w, 6); g.globalAlpha = 1;
-  });
-  const SKINS = [
-    () => texRock('#8f8a82', '#5f5b54'),
-    () => texBands('#d9b98a', ['#e8cf9f', '#c9a875', '#efe0b8']),
-    texEarth,
-    () => texRock('#b56b4a', '#7e4632', true),
-    () => texBands('#c99a63', ['#e3c193', '#a97a4d', '#e8d9c2', '#b5652f']),
-    () => texBands('#d8c79e', ['#e8dcc0', '#c2ad7e', '#efe6cd']),
-    () => texBands('#3f6fd1', ['#5b8ae0', '#2f55a8', '#7fa8ef']),
-  ];
-  /* seven orbits on the module: rₙ = 144·φ^(n/2), periods by Kepler T ∝ r^1.5
-     (T₀ = 13 s at r = 144), inclination shared, ascending node rotated by Θ per
-     planet, size drawn from the Fibonacci set, axial spin from powers of φ. */
-  const SIZES = [8, 13, 8, 13, 21, 13, 8];
-  for (let i = 0; i < 7; i++) {
-    const r = FIB(4) * Math.pow(PHI, i / 2);
-    const period = 13 * Math.pow(r / FIB(4), 1.5);
-    const node = i * GA;
-    const m = new THREE.MeshBasicMaterial({ map: SKINS[i]() }); m.fog = false;
-    const p = new THREE.Mesh(new THREE.SphereGeometry(SIZES[i], 24, 24), m);
-    p.rotation.z = TILT * ((i % 2) * 2 - 1);
-    sky.add(p);
-    if (i === 5) { /* the ringed one */
-      const rg = new THREE.Mesh(new THREE.TorusGeometry(SIZES[i] * PHI, SIZES[i] / PHI / 3.5, 2, 48),
-        new THREE.MeshBasicMaterial({ color: 0xcabf9a, transparent: true, opacity: .7 }));
-      rg.material.fog = false; rg.rotation.x = Math.PI / 2.6; p.add(rg);
-    }
-    /* orbit line traces the exact path the planet flies */
-    const pts = [];
-    for (let a = 0; a <= 96; a++) {
-      const th = a / 96 * Math.PI * 2;
-      pts.push(new THREE.Vector3(SUN.x + Math.cos(th) * r, SUN.y + Math.sin(th - node) * r * TILT, SUN.z + Math.sin(th) * r));
-    }
-    const om = new THREE.LineBasicMaterial({ color: 0x8a90c0, transparent: true, opacity: .16 }); om.fog = false;
-    sky.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), om));
-    planets.push({ mesh: p, r, node, speed: (Math.PI * 2) / (period * 1000), phase: i * GA, sun: SUN, spin: .0003 * Math.pow(PHI, i % 3) });
-  }
-  /* asteroid belt fills the annulus between the 4th and 5th orbits */
-  const beltIn = FIB(4) * Math.pow(PHI, 3 / 2), beltOut = FIB(4) * Math.pow(PHI, 4 / 2);
-  const NB = FIB(4), bg2 = new THREE.BufferGeometry(), ba = new Float32Array(NB * 3);
-  for (let i = 0; i < NB; i++) {
-    const th = i * GA, rr = beltIn + ((i * PHI) % 1) * (beltOut - beltIn);
-    ba[i * 3] = SUN.x + Math.cos(th) * rr;
-    ba[i * 3 + 1] = SUN.y + (((i * PHI * PHI) % 1) * 2 - 1) * 13;
-    ba[i * 3 + 2] = SUN.z + Math.sin(th) * rr;
-  }
-  bg2.setAttribute('position', new THREE.BufferAttribute(ba, 3));
-  const beltM = new THREE.PointsMaterial({ color: 0xb8b4a8, size: 2.4, transparent: true, opacity: .4, depthWrite: false });
-  beltM.fog = false; sky.add(new THREE.Points(bg2, beltM));
 }
 
 /* THE PORTAL — the screen is literally the opening of the room.
@@ -2062,6 +1962,10 @@ function frame(now) {
       if (dd.dimPill) dd.dimPill.emissiveIntensity = .9 * f;
     }
   }
+  /* air beams read as a chaotic web from the doorway — they exist only for the
+     focused dept (or a hovered monument). The wide view stays void + mirror. */
+  const fd = level >= 1 && deptList[deptIdx] ? deptList[deptIdx].id : null;
+  for (const b of beams) if (b.line) b.line.visible = b.dept === fd || b._hot === true;
   if (!reduced && pulseMeshes && pulseMeshes.inst) {
     pulseMeshes.data.forEach((pd, i) => {
       pd.p += pd.sp;
@@ -2218,8 +2122,10 @@ function setHover(i) {
   canvas.style.cursor = i >= 0 ? 'pointer' : '';
   const si = i >= 0 ? i : selMonIdx();
   const u = si >= 0 ? monRings[si] : null;
-  for (const b of beams) if (b.line)
-    b.line.material.opacity = (u && b.group === u.group && b.dept === u.dept) ? .85 : (b.op || BEAM_OP);
+  for (const b of beams) if (b.line) {
+    b._hot = !!(u && b.group === u.group && b.dept === u.dept);
+    b.line.material.opacity = b._hot ? .85 : (b.op || BEAM_OP);
+  }
   const g = monInst && monInst.ghost;
   if (g) {
     g.visible = !!u;
