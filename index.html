@@ -15,7 +15,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://orrery-red-eight.vercel.app/">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23080a18'/><circle cx='32' cy='32' r='17' fill='none' stroke='%238be2b9' stroke-width='3'/><ellipse cx='32' cy='32' rx='17' ry='7' fill='none' stroke='%238be2b9' stroke-width='2' opacity='.7'/><line x1='32' y1='15' x2='32' y2='49' stroke='%238be2b9' stroke-width='2' opacity='.7'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23080a18'/><circle cx='32' cy='32' r='17' fill='none' stroke='%2357d9ff' stroke-width='3'/><ellipse cx='32' cy='32' rx='17' ry='7' fill='none' stroke='%2357d9ff' stroke-width='2' opacity='.7'/><line x1='32' y1='15' x2='32' y2='49' stroke='%2357d9ff' stroke-width='2' opacity='.7'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -35,7 +35,7 @@
     --ink:  #eceaf6;
     --ink-dim: #a9a9c4;
     --ink-faint: #8c8cab;
-    --accent: #8be2b9;
+    --accent: #57d9ff;
     --danger: #e08a7c;
     --line: rgba(236,234,246,.10);
     --serif: "Cormorant Garamond", "Didot", "Bodoni MT", Georgia, serif;
@@ -69,7 +69,7 @@
   #intro h1 {
     font-family: var(--serif); font-weight: 500; letter-spacing: .3em; text-indent: .3em;
     font-size: clamp(26px, 4.8vw, 54px);
-    text-shadow: 0 0 44px rgba(139,226,185,.28);
+    text-shadow: 0 0 44px rgba(87,217,255,.28);
   }
   #intro p.sub { margin-top: 14px; color: var(--ink-dim); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
   #intro p.hint { margin-top: 44px; color: var(--ink-faint); font-size: 12px; letter-spacing: .12em; }
@@ -109,15 +109,15 @@
   header .counts button.cbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   header .right { margin-left: auto; display: flex; align-items: center; gap: 14px; pointer-events: auto; }
   header .age { font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
-  header #rec, header #face, header #find {
+  header #rec, header #face, header #find, header #full {
     font: 600 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase;
     color: var(--ink-dim); background: rgba(27,31,56,.9); border: 1px solid var(--line);
     border-radius: 999px; padding: 8px 14px; cursor: pointer; transition: color var(--t-quick), border-color var(--t-quick);
   }
-  header #rec:hover, header #face:hover, header #find:hover { color: var(--ink); border-color: rgba(236,234,246,.3); }
-  header #rec:focus-visible, header #face:focus-visible, header #find:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  header #rec:hover, header #face:hover, header #find:hover, header #full:hover { color: var(--ink); border-color: rgba(236,234,246,.3); }
+  header #rec:focus-visible, header #face:focus-visible, header #find:focus-visible, header #full:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   header #find { font-size: 14px; padding: 6px 12px; }
-  header #face.on { color: var(--accent); border-color: rgba(139,226,185,.5); }
+  header #face.on { color: var(--accent); border-color: rgba(87,217,255,.5); }
   @media (max-width: 820px) {   /* phones AND portrait tablets — 768 was word-wrapping the age readout */
     header { flex-wrap: wrap; }
     /* the age readout is the site's own honesty signal (ambers when stale) —
@@ -244,7 +244,7 @@
   #legend .chip { display: inline-flex; align-items: center; gap: 8px; }
   #legend .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-dim); }
   #legend .dot.ok { background: #e9e7f4; }
-  #legend .dot.running { background: var(--accent); box-shadow: 0 0 8px rgba(139,226,185,.8); }
+  #legend .dot.running { background: var(--accent); box-shadow: 0 0 8px rgba(87,217,255,.8); }
   #legend .dot.flag { background: var(--danger); border-radius: 1px; transform: rotate(45deg); }
   #legend .dot.dormant { background: var(--ink-faint); opacity: .5; }
   @media (max-width: 900px) { #legend { display: none; } }
@@ -281,6 +281,7 @@ window.__fleetP = fetch('https://raw.githubusercontent.com/MARCCHERGGI/orrery/ma
     <span class="age" id="age"></span>
     <button id="find" title="Find an agent — press /" aria-label="Find an agent">⌕</button>
     <button id="face" title="Head tracking — the room follows your head through the webcam">☺ face</button>
+    <button id="full" title="Fullscreen — press F">⛶ full</button>
     <button id="rec" title="Cinematic tour — press R">● tour</button>
   </span>
 </header>
@@ -463,6 +464,16 @@ $('face').addEventListener('click', async () => {
     setTimeout(() => { btn.textContent = '☺ face'; }, 2000);
   }
 });
+
+/* fullscreen — the portal illusion needs the bezel-to-bezel frame */
+const toggleFull = () => {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+};
+$('full').addEventListener('click', toggleFull);
+document.addEventListener('fullscreenchange', () => {
+  $('full').textContent = document.fullscreenElement ? '✕ full' : '⛶ full';
+});
 addEventListener('wheel', e => {
   if (level === 0 && PORTAL.mix > .5) {
     /* at the window: scroll leans you toward / away from the opening */
@@ -493,7 +504,7 @@ key.shadow.bias = -0.0005;
 key.shadow.mapSize.set(2048, 2048);
 Object.assign(key.shadow.camera, { left: -760, right: 760, top: 980, bottom: -980, near: 1, far: 2200 });
 key.shadow.bias = -.0004;
-const rim = new THREE.DirectionalLight(0x8be2b9, .3); rim.position.set(-400, 300, -500); scene.add(rim);
+const rim = new THREE.DirectionalLight(0x57d9ff, .3); rim.position.set(-400, 300, -500); scene.add(rim);
 
 /* ═══════════════ THE SYSTEM — one equation governs every dimension ═══════════════
    φ = (1+√5)/2. Base module M = 21. Every radius, height, spacing, orbit and
@@ -560,7 +571,7 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
     textureHeight: 512,
     color: 0xb8bde0,
   });
-  mirror.rotation.x = -Math.PI / 2; mirror.position.y = -.2; scene.add(mirror);
+  mirror.rotation.x = -Math.PI / 2; mirror.position.y = -.2; mirror.name = 'floor-mirror'; scene.add(mirror);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2),
     new THREE.MeshStandardMaterial({ map: floorT, color: 0x8e93c2, roughness: .36, metalness: .5, side: THREE.DoubleSide, transparent: true, opacity: .38, depthWrite: true }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
@@ -602,8 +613,9 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
     const g = wpc.getContext('2d');
     g.fillStyle = '#04061a'; g.fillRect(0, 0, 1024, 432);
     g.globalCompositeOperation = 'lighter';
-    [[305, 500], [265, 445], [225, 390], [200, 335], [172, 280], [138, 225]].forEach(([h, r]) => {
-      g.strokeStyle = `hsla(${h}, 95%, 56%, .48)`;
+    /* one-family aurora: cyan→indigo only — the rainbow read as noise (Marco) */
+    [[249, 500], [237, 445], [226, 390], [215, 335], [204, 280], [193, 225]].forEach(([h, r]) => {
+      g.strokeStyle = `hsla(${h}, 68%, 52%, .42)`;
       g.lineWidth = 62; g.filter = 'blur(24px)';
       g.beginPath(); g.arc(512, 620, r, Math.PI * 1.12, Math.PI * 1.88); g.stroke();
     });
@@ -745,7 +757,7 @@ function fitPortal() {
   /* hairline light along the cut edge */
   const edge = new THREE.LineSegments(
     new THREE.EdgesGeometry(new THREE.PlaneGeometry(PORTAL.w, PORTAL.h)),
-    new THREE.LineBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .55 }));
+    new THREE.LineBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .55 }));
   edge.position.set(0, PORTAL.cy, PORTAL.z); aperture.add(edge);
 
   /* inner frame lip — a physical NEAR layer hugging the opening; it shears fast
@@ -758,7 +770,7 @@ function fitPortal() {
   };
   lip(PORTAL.w, 6, 0, T - 3); lip(PORTAL.w, 6, 0, B + 3);
   lip(6, PORTAL.h, L + 3, PORTAL.cy); lip(6, PORTAL.h, R - 3, PORTAL.cy);
-  const hlM = new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .55 });
+  const hlM = new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .55 });
   const hl = (w, h, x, y) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), hlM);
     m.position.set(x, y, PORTAL.z - 15.2); aperture.add(m);
@@ -1096,7 +1108,7 @@ void main() {
 `;
 let jarvis = null;
 const STATUS_COLOR = {
-  ok: new THREE.Color(0xe9e7f4), running: new THREE.Color(0x8be2b9),
+  ok: new THREE.Color(0xe9e7f4), running: new THREE.Color(0x57d9ff),
   flag: new THREE.Color(0xe08a7c), dormant: new THREE.Color(0x494d6e),
 };
 
@@ -1123,7 +1135,7 @@ function buildWorld() {
     const { g, c, d } = T;
     T.blink = blink;
     g.clearRect(0, 0, c.width, c.height);
-    const COL = { running: '#8be2b9', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
+    const COL = { running: '#57d9ff', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
     const { cols, cell, ox, oy } = tileGrid(T);
     d.nodes.forEach((nd, i) => {
       const x = ox + (i % cols) * cell, y = oy + Math.floor(i / cols) * cell;
@@ -1145,7 +1157,7 @@ function buildWorld() {
       if (nd.hist) {
         const sw = (tw - 8) / 21;
         if (sw >= 1.2) {
-          const HC = { o: 'rgba(201,199,221,.75)', r: '#8be2b9', f: '#e08a7c', d: 'rgba(93,96,132,.8)' };
+          const HC = { o: 'rgba(201,199,221,.75)', r: '#57d9ff', f: '#e08a7c', d: 'rgba(93,96,132,.8)' };
           const sy = y + 5 + th - 7;
           for (let k = 0; k < nd.hist.length && k < 21; k++) {
             g.fillStyle = HC[nd.hist[nd.hist.length - 1 - k]] || HC.o;
@@ -1227,9 +1239,9 @@ function buildWorld() {
       flag: Math.min(1, Math.max(0, (nodes.filter(n => n.status === 'flag').length / (nodes.length || 1) - .05) * 2.2)) };
     orbMat.uniforms.uFlag.value = jarvis.flag;
     /* orbital rings at F(3)·φ⁰·¹·² = 89 · 144 · 233 — the Fibonacci triple */
-    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(FIB(3), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(FIB(3), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring0.rotation.x = Math.PI / 2.1; ring0.rotation.y = -.4; brain.add(ring0);
-    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(FIB(4), 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(FIB(4), 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring1.rotation.x = Math.PI / 2.4; brain.add(ring1);
     const ring2 = new THREE.Mesh(new THREE.TorusGeometry(FIB(5), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring2.rotation.x = Math.PI / 1.8; ring2.rotation.y = .7; brain.add(ring2);
@@ -1665,7 +1677,7 @@ function buildWorld() {
     if (HL) {
       const hc = document.createElement('canvas'); hc.width = 336; hc.height = 64;
       const hg = hc.getContext('2d');
-      const HK = { d: 'rgba(93,96,132,.5)', o: 'rgba(201,199,221,.7)', r: 'rgba(139,226,185,.95)', f: 'rgba(224,138,124,.95)' };
+      const HK = { d: 'rgba(93,96,132,.5)', o: 'rgba(201,199,221,.7)', r: 'rgba(87,217,255,.95)', f: 'rgba(224,138,124,.95)' };
       const cw = hc.width / 21;
       /* hairline baseline spans all 21 slots — the extent reads as an
          instrument filling up, not a fragment floating alone */
@@ -1822,7 +1834,7 @@ function buildWorld() {
      lanes stay listed but sink — the wall tells today's truth before history */
   const byStatus = st => nodes.filter(n => st.includes(n.status))
     .sort((a, b) => new Date(b.last || 0) - new Date(a.last || 0));
-  const TCOL = { running: '#8be2b9', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
+  const TCOL = { running: '#57d9ff', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
   const ageShort = t => {
     if (!t) return '';
     const s = (Date.now() - new Date(t)) / 1000;
@@ -1832,10 +1844,10 @@ function buildWorld() {
   function drawTerm(T) {
     const { g, c } = T;
     g.fillStyle = 'rgba(10,12,26,.96)'; g.fillRect(0, 0, c.width, c.height);
-    g.strokeStyle = 'rgba(139,226,185,.45)'; g.lineWidth = 2; g.strokeRect(1, 1, c.width - 2, c.height - 2);
-    g.fillStyle = '#8be2b9'; g.font = '600 22px Consolas, monospace';
+    g.strokeStyle = 'rgba(87,217,255,.45)'; g.lineWidth = 2; g.strokeRect(1, 1, c.width - 2, c.height - 2);
+    g.fillStyle = '#57d9ff'; g.font = '600 22px Consolas, monospace';
     g.fillText('▮ ' + T.title, 18, 34);
-    g.fillStyle = 'rgba(139,226,185,.3)'; g.fillRect(0, 46, c.width, 1);
+    g.fillStyle = 'rgba(87,217,255,.3)'; g.fillRect(0, 46, c.width, 1);
     g.font = '20px Consolas, monospace';
     for (let i = 0; i < 11 && T.list.length; i++) {
       const n = T.list[(T.row + i) % T.list.length];
@@ -2058,7 +2070,29 @@ function frame(now) {
   }
   composer.render();
 }
-const liveLoop = (t) => { try { frame(t); } catch (e) { /* a bad frame must not stop the world */ } };
+/* performance governor — "assure extreme speed": if a machine can't hold the
+   frame, shed the two costly passes in order (bloom, then the mirror's second
+   scene render). Degrade-only, no oscillation; strong GPUs never trigger it. */
+const perfGov = { last: 0, acc: 0, n: 0, tier: 0, warm: 0 };
+const liveLoop = (t) => {
+  if (perfGov.warm < 120) perfGov.warm++;       /* shader-compile stutter amnesty */
+  else if (perfGov.tier < 3 && perfGov.last) {
+    const dt = t - perfGov.last;
+    if (dt < 250) { perfGov.acc += dt; perfGov.n++; }
+    if (perfGov.n >= 45) {                       /* verdict every ~3/4s of frames */
+      const avg = perfGov.acc / perfGov.n; perfGov.acc = 0; perfGov.n = 0;
+      if (avg > 20) {                            /* can't hold 50fps → shed a pass */
+        perfGov.tier++;
+        if (perfGov.tier === 1) bloom.enabled = false;
+        else if (perfGov.tier === 2) { const m = scene.getObjectByName('floor-mirror'); if (m) m.visible = false; }
+        else { renderer.setPixelRatio(1); composer.setPixelRatio?.(1); resize(); }
+      }
+    }
+  }
+  perfGov.last = t;
+  try { frame(t); } catch (e) { /* a bad frame must not stop the world */ }
+};
+window.__gov = () => perfGov.tier;
 renderer.setAnimationLoop(reduced ? null : liveLoop);
 /* verification: freeze the live loop so __step-driven state can be captured deterministically */
 window.__hold = (v) => { renderer.setAnimationLoop(v ? null : (reduced ? null : liveLoop)); return v ? 'held' : 'released'; };
@@ -2267,7 +2301,7 @@ const BADGE = {
   dormant: { text: 'dormant',          color: 'var(--ink-faint)' },
 };
 const STATUS_SHORT = { ok: 'ok', running: 'running', flag: 'flagged', dormant: 'dormant' };
-const DOT = { ok: '#e9e7f4', running: '#8be2b9', flag: '#e08a7c', dormant: 'rgba(140,141,171,.5)' };
+const DOT = { ok: '#e9e7f4', running: '#57d9ff', flag: '#e08a7c', dormant: 'rgba(140,141,171,.5)' };
 
 /* relative time from the scheduler's real per-lane timestamps */
 const relAgo = t => {
@@ -2455,6 +2489,7 @@ addEventListener('keydown', e => {
   if (reel) { if (e.key === 'Escape' || e.key.toLowerCase() === 'r') exitReel(); return; }
   if (e.key === '/') { e.preventDefault(); search.classList.add('show'); search.focus(); return; }
   if (e.key.toLowerCase() === 'r') { startReel(); return; }
+  if (e.key.toLowerCase() === 'f') { toggleFull(); return; }
   if (e.key === 'Escape') { up(); return; }
   if (e.key === 'Enter' && focusIdx >= 0) { open(nodes[focusIdx]); return; }
   if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Tab'].includes(e.key)) {
@@ -2648,6 +2683,9 @@ function hud() {
 function boot(data) {
   fleet = data;
   deptList = fleet.departments.map(d => ({ ...d, nodes: [] }));
+  /* OS mode palette: one family, not a rainbow — every dept hue folded into the
+     cyan→indigo band (193-249), 8 steps apart. Differentiation stays; noise goes. */
+  if (OS_MODE) deptList.forEach((d, i) => { d.hue = 193 + (i % 8) * 8; });
   depts = {}; deptList.forEach(d => depts[d.id] = d);
   groupsByDept = {};
   (fleet.groups || []).forEach(g => { (groupsByDept[g.dept] = groupsByDept[g.dept] || []).push(g); });
