@@ -761,3 +761,9 @@ scores: U10 L10 D10 De10 A10 P10
 shipped: nothing. 20:00 refresh landed on schedule (fe6f6ba 20:00:05), hist {7:145}, and the LIVE page shows it: fresh-load probe sky {HL:7}, errs 0, calls 320. THE RECORD now carries real variation (flag stratum 17,18,18,17,17,18,17 across columns) — the cardiogram is no longer uniform strata but a moving trace. Full pipeline warden→gen-data→git→raw CDN→page verified end-to-end within 90 s of the commit.
 evidence: git log + node hist analysis + live probe after reload.
 next-observe: strips at 13 columns ~05:00Z (13th sample). Fundamental ~87 — candidate: none pending; honest no-op acceptable. Sweep next cycle.
+
+## 87 · 2026-08-09 · fundamental · (verdict — tour revision deferred with date)
+scores: U10 L10 D10 De10 A10 P10
+shipped: verdict only. Research: is the 10s tour still the reel's best footage given surfaces added after its choreography (flag beams 66, run columns 74, cardiogram 75)? Read tourKeys: the wide dive/pull-back beats DO film the flag beams; the hero-monument beat (5600-7400) frames run columns when the hero has a live member; only the cardiogram is never in frame (CORE-close camera y=315 vs band y=554 — above the lens). At 7/21 columns the band is a partial patch: adding a look-up beat TODAY films half-empty footage. DEFER with a date: when hist reaches 21 columns (~2026-08-10 14:00Z / 10:00 local), test lifting the 8600ms pull-back tgt toward [0,320,-350] so the full band crosses the upper frame, and re-verify with the one-eval phase-trace harness (iter-67 pattern). Do not touch tourKeys before then.
+evidence: tourKeys read (2467-2498); standing sweep {reel:false,errs:0} — tour still exits clean every cycle via the sweep.
+next-observe: hist column count each cycle; at 21, the tour test is UNBLOCKED and becomes the top pick. Strips check at 13 columns ~05:00Z. Iters 88+ systemic.
