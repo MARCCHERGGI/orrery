@@ -612,6 +612,11 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   const wp = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2 - 4, ROOM.h - 4),
     new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(wpc) }));
   wp.position.set(0, ROOM.h / 2, -ROOM.depth + .8); scene.add(wp);
+  /* the MASTER screen: the wallpaper itself gets a bezel rim, so the back wall
+     reads as monitor #1 and the eight floating displays as its extensions */
+  const wpRim = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(ROOM.hw * 2 - 4, ROOM.h - 4)),
+    new THREE.LineBasicMaterial({ color: 0x3fd6ff, transparent: true, opacity: .9 }));
+  wpRim.position.set(0, ROOM.h / 2, -ROOM.depth + 1.6); scene.add(wpRim);
 
   /* neon edge strips where surfaces meet — the box reads as a box */
   const strip = (w, x, y, z, rotY) => {
@@ -1307,10 +1312,32 @@ function buildWorld() {
     { x: -255, z: -650, nx: 0, nz: 1 }, { x: 255, z: -650, nx: 0, nz: 1 },
     { x: 450, z: -470, nx: -1, nz: 0 }, { x: 450, z: -40, nx: -1, nz: 0 }, { x: 450, z: 390, nx: -1, nz: 0 },
   ];
+  /* OS mode — Marco's own words (2026-08-10): "8 screens within the screen,
+     screen extend, it creates an optical illusion." Each dept is a φ-ratio
+     BEZELED MONITOR floating in the void: two receding rows flanking the
+     master screen (the back-wall wallpaper). Not walls — displays. */
+  const MONA = [
+    { x: -455, z: 480, r: 1.05 }, { x: -505, z: -30, r: .95 }, { x: -455, z: -520, r: .8 },
+    { x: -240, z: -690, r: .18 }, { x: 240, z: -690, r: -.18 },
+    { x: 455, z: 480, r: -1.05 }, { x: 505, z: -30, r: -.95 }, { x: 455, z: -520, r: -.8 },
+  ];
+  const MW = FIB(6), MH = FIB(5);   /* 377 × 233 — the golden-ratio display */
   D.forEach((d, i) => {
     const s = SLOTS[i % SLOTS.length];
-    d.cx = s.x; d.cz = s.z; d.nx = s.nx; d.nz = s.nz;
+    const mn = MONA[i % MONA.length];
+    if (OS_MODE) { d.cx = mn.x; d.cz = mn.z; d.nx = s.nx; d.nz = s.nz; }
+    else { d.cx = s.x; d.cz = s.z; d.nx = s.nx; d.nz = s.nz; }
     const zone = new THREE.Group(); zone.position.set(d.cx, 0, d.cz); world.add(zone); d.groupObj = zone;
+    if (OS_MODE) {
+      zone.rotation.y = mn.r;
+      /* the monitor body: dark bezel behind, hot rim around the frame */
+      const bez = new THREE.Mesh(new THREE.PlaneGeometry(MW + 16, MH + 16),
+        new THREE.MeshBasicMaterial({ color: 0x04050e, side: THREE.DoubleSide }));
+      bez.position.set(0, 258, -1.5); zone.add(bez);
+      const rim = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(MW + 16, MH + 16)),
+        new THREE.LineBasicMaterial({ color: 0x3fd6ff, transparent: true, opacity: .85 }));
+      rim.position.set(0, 258, .5); zone.add(rim);
+    }
 
     /* district = a graduated instrument dial etched on the floor: hairline
        circles at F(3) and F(4), 21 radial tick marks, no glow wash */
@@ -1331,7 +1358,7 @@ function buildWorld() {
       bleed.rotation.set(-Math.PI / 2, 0, s.nx === 1 ? Math.PI / 2 : -Math.PI / 2);
       bleed.position.set(s.nx === 1 ? -ROOM.hw + FIB(4) / 2 : ROOM.hw - FIB(4) / 2, .7, d.cz);
     }
-    world.add(bleed);
+    if (!OS_MODE) world.add(bleed);
     zone.add(disc); zoneDiscs.push(disc);
     if (!OS_MODE) {
       const dialCol = hsl(d.hue, .5, .62), dialFaintCol = hsl(d.hue, .4, .55);
@@ -1346,8 +1373,10 @@ function buildWorld() {
 
     /* zone nameplate painted on the wall behind the district */
     const zl = makePlate(d.label, { size: 78, serif: true, sub: d.tagline || '', hue: d.hue, scale: .5 });
-    /* pushed flush to the wall plane, rotated to face into the room */
-    if (s.nx === 1) { zl.position.set(-ROOM.hw - d.cx + 3, 330, 0); zl.rotation.y = Math.PI / 2; }
+    /* pushed flush to the wall plane, rotated to face into the room —
+       or, in OS mode, floating just above its monitor's bezel */
+    if (OS_MODE) { zl.position.set(0, 258 + MH / 2 + 42, 2); }
+    else if (s.nx === 1) { zl.position.set(-ROOM.hw - d.cx + 3, 330, 0); zl.rotation.y = Math.PI / 2; }
     else if (s.nx === -1) { zl.position.set(ROOM.hw - d.cx - 3, 330, 0); zl.rotation.y = -Math.PI / 2; }
     else { zl.position.set(0, 330, -ROOM.depth - d.cz + 3); }
     zone.add(zl);
@@ -1360,7 +1389,7 @@ function buildWorld() {
     const strip = makePlate(
       `${role} · ${d.nodes.length} UNITS · ${zc('ok')} OK${zc('running') ? ' · ' + zc('running') + ' LIVE' : ''}${zc('flag') ? ' · ' + zc('flag') + ' ALERTS' : ''}`,
       { size: 26, hue: d.hue, scale: .34 });
-    strip.position.copy(zl.position); strip.position.y = 246; strip.rotation.copy(zl.rotation);
+    strip.position.copy(zl.position); strip.position.y = OS_MODE ? 258 - MH / 2 - 30 : 246; strip.rotation.copy(zl.rotation);
     zone.add(strip);
 
     /* zone color wash — the box interior glows in bands, one hue per district */
@@ -1368,7 +1397,7 @@ function buildWorld() {
       new THREE.MeshBasicMaterial({ color: hsl(d.hue, .5, .55), transparent: true, opacity: .09, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     wash.position.copy(zl.position); wash.position.y = ROOM.h / 2 - 10; wash.rotation.copy(zl.rotation);
     if (s.nx === 1) wash.position.x -= .5; else if (s.nx === -1) wash.position.x += .5; else wash.position.z -= .5;
-    zone.add(wash);
+    if (!OS_MODE) zone.add(wash);
 
     /* uplight — floor light washing up the wall base (bleedTex flipped: the
        bright edge sits at the floor). Light ON the surface, per the iter-53
@@ -1377,14 +1406,16 @@ function buildWorld() {
       new THREE.MeshBasicMaterial({ map: bleedTex, color: hsl(d.hue, .6, .55), transparent: true, opacity: .26, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     up.position.copy(zl.position); up.position.y = FIB(2); up.rotation.copy(zl.rotation); up.rotation.z += Math.PI;
     if (s.nx === 1) up.position.x -= .8; else if (s.nx === -1) up.position.x += .8; else up.position.z -= .8;
-    zone.add(up);
+    if (!OS_MODE) zone.add(up);
 
     /* the agent tile grid on this zone's wall — every lane, an icon on the OS */
-    const tc = document.createElement('canvas'); tc.width = 512; tc.height = 512;
+    const tc = document.createElement('canvas');
+    if (OS_MODE) { tc.width = 640; tc.height = 396; } else { tc.width = 512; tc.height = 512; }
     const ttex = new THREE.CanvasTexture(tc); ttex.anisotropy = 4;
-    const tmesh = new THREE.Mesh(new THREE.PlaneGeometry(FIB(5), FIB(5)),
+    const tmesh = new THREE.Mesh(new THREE.PlaneGeometry(OS_MODE ? MW - 26 : FIB(5), OS_MODE ? MH - 16 : FIB(5)),
       new THREE.MeshBasicMaterial({ map: ttex, transparent: true, depthWrite: false }));
-    if (s.nx === 1) { tmesh.position.set(-ROOM.hw - d.cx + 5, 140, 0); tmesh.rotation.y = Math.PI / 2; }
+    if (OS_MODE) { tmesh.position.set(0, 258, 0); }
+    else if (s.nx === 1) { tmesh.position.set(-ROOM.hw - d.cx + 5, 140, 0); tmesh.rotation.y = Math.PI / 2; }
     else if (s.nx === -1) { tmesh.position.set(ROOM.hw - d.cx - 5, 140, 0); tmesh.rotation.y = -Math.PI / 2; }
     else { tmesh.position.set((d.cx > 0 ? FIB(5) : -FIB(5)) - d.cx, 140, -ROOM.depth - d.cz + 5); }
     zone.add(tmesh);
