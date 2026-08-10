@@ -779,3 +779,9 @@ scores: U10 L9 D10 De10 A10 P8
 shipped: luminosity pass vs the X reference — bloom .38/.45/.82 → .75/.55/.72, exposure 1.02→1.12, orb plane 250→377 (FIB proper) with saturated chroma (frost/speck/spec constants shifted cyan + sat 1.42 gain 1.12 pre-ACES), CORE rings additive, portal edge .28→.55, CORE glow light 1.7/700→2.6/900.
 evidence: local screenshots READ (orb now saturated cyan-plasma dominating the frame like the reference; wall text still legible); perf {calls:604, tris:238054} errs 0; live BF211229 hash MATCH; prod screenshot READ (mirror carries tile reflections, monument glows hot); sweep {reel:false,errs:0} on prod.
 next-observe: L9 — white agent-swarm dots bloom into hot blobs at close range; watch legibility at level 2. Floor still lacks the reference's big color washes → iter 90.
+
+## 90 · 2026-08-09 · systemic · DEPTH+DENSITY (reference floor language)
+scores: U10 L9 D10 De10 A10 P8
+shipped: floor soak. Wall bleed washes deepened F(3)->F(5) (89->233) at opacity .5 so each zone's color floods the floor; new F(6) radial cyan wash under the CORE so the room's center carries orb light instead of void. With the iter-88 mirror underneath, the floor now reads as the reference's: color-soaked glass.
+evidence: local screenshot READ (amber/green/purple washes across the mirror, text legible); perf {calls:606, tris:237048} errs 0; live 622A05DD hash MATCH; prod wide screenshot READ (orb + sun + washes + reflections all present); sweep {reel:false,errs:0}.
+next-observe: og.png is now two looks behind (pre-mirror, pre-luminosity) — recapture is Marco's call. Portrait perf with mirror+bloom still untested. White swarm-dot bloom at close range (L9 from 89) unchanged — acceptable so far.
