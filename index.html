@@ -1343,6 +1343,16 @@ function buildWorld() {
     scene.add(pool);
     const pad = new THREE.Mesh(new THREE.CircleGeometry(26, 32), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .3, depthWrite: false }));
     pad.rotation.x = -Math.PI / 2; pad.position.set(0, 1.1, -640); scene.add(pad);
+    /* the CORE's light washes the center floor — F(6) radial pool of orb-cyan,
+       so the middle of the room carries color like the reference, not void */
+    const wc2 = document.createElement('canvas'); wc2.width = wc2.height = 128;
+    const wg2 = wc2.getContext('2d');
+    const wgr2 = wg2.createRadialGradient(64, 64, 4, 64, 64, 64);
+    wgr2.addColorStop(0, 'rgba(120,200,255,.55)'); wgr2.addColorStop(.5, 'rgba(80,150,255,.2)'); wgr2.addColorStop(1, 'rgba(80,150,255,0)');
+    wg2.fillStyle = wgr2; wg2.fillRect(0, 0, 128, 128);
+    const wash = new THREE.Mesh(new THREE.CircleGeometry(FIB(6), 48),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(wc2), transparent: true, opacity: .5, blending: THREE.AdditiveBlending, depthWrite: false }));
+    wash.rotation.x = -Math.PI / 2; wash.position.set(0, .5, -640); scene.add(wash);
   }
 
   /* zones live along the walls — 3 left, 2 back, 3 right, like rooms in the reference */
@@ -1374,15 +1384,16 @@ function buildWorld() {
     );
     disc.rotation.x = -Math.PI / 2; disc.position.y = .6; disc.userData = { kind: 'zone', dept: d.id };
 
-    /* the zone's wall light pools on the floor at its base (F(6) × F(3)) */
-    const bleed = new THREE.Mesh(new THREE.PlaneGeometry(FIB(6), FIB(3)),
-      new THREE.MeshBasicMaterial({ map: bleedTex, color: hsl(d.hue, .6, .5), transparent: true, opacity: .38, blending: THREE.AdditiveBlending, depthWrite: false }));
+    /* the zone's wall light washes DEEP across the floor (F(6) × F(5)) — the
+       reference floor is soaked in wall color, not edged with it */
+    const bleed = new THREE.Mesh(new THREE.PlaneGeometry(FIB(6), FIB(5)),
+      new THREE.MeshBasicMaterial({ map: bleedTex, color: hsl(d.hue, .6, .5), transparent: true, opacity: .5, blending: THREE.AdditiveBlending, depthWrite: false }));
     if (s.nz === 1) {
       bleed.rotation.set(-Math.PI / 2, 0, 0);
-      bleed.position.set(d.cx, .7, -ROOM.depth + FIB(3) / 2);
+      bleed.position.set(d.cx, .7, -ROOM.depth + FIB(5) / 2);
     } else {
       bleed.rotation.set(-Math.PI / 2, 0, s.nx === 1 ? Math.PI / 2 : -Math.PI / 2);
-      bleed.position.set(s.nx === 1 ? -ROOM.hw + FIB(3) / 2 : ROOM.hw - FIB(3) / 2, .7, d.cz);
+      bleed.position.set(s.nx === 1 ? -ROOM.hw + FIB(5) / 2 : ROOM.hw - FIB(5) / 2, .7, d.cz);
     }
     world.add(bleed);
     zone.add(disc); zoneDiscs.push(disc);
