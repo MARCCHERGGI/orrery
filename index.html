@@ -713,7 +713,9 @@ function fitPortal() {
   PORTAL.cy = Math.min(ROOM.h - PORTAL.h / 2, Math.max(PORTAL.h / 2, 244));
   /* portrait: the slot narrows, so the eye steps back (wider view through it)
      and lateral travel shrinks in proportion — otherwise it's tunnel-onto-wall */
-  PORTAL.dist = a >= 1 ? 560 : Math.min(1400, 560 / a * .9);
+  /* the reference is a deep TUNNEL: eye close to the glass (wide angle), far
+     end small. 400 puts the horizontal field ≈117° — sides sweep, back recedes. */
+  PORTAL.dist = a >= 1 ? 400 : Math.min(1400, 400 / a * .9);
   PORTAL.gain = Math.min(1, a);
   aperture.clear();
   const L = -PORTAL.w / 2, R = PORTAL.w / 2, B = PORTAL.cy - PORTAL.h / 2, T = PORTAL.cy + PORTAL.h / 2;
@@ -1302,10 +1304,12 @@ function buildWorld() {
   const bleedTex = new THREE.CanvasTexture(bc);
   /* universal system-role keywords — readable anywhere in the world */
   const ROLE = { revenue: 'OUTPUT', content: 'MEDIA', hunt: 'SEARCH', senses: 'INPUT', self: 'REPAIR', empire: 'GOALS', bridge: 'LINK', markets: 'SIGNALS' };
+  /* tunnel spread: content runs the FULL length of the side walls, front
+     panels hug the mouth so foreshortening starts at the screen edge */
   const SLOTS = [
-    { x: -450, z: -470, nx: 1, nz: 0 }, { x: -450, z: -40, nx: 1, nz: 0 }, { x: -450, z: 390, nx: 1, nz: 0 },
+    { x: -450, z: -560, nx: 1, nz: 0 }, { x: -450, z: -60, nx: 1, nz: 0 }, { x: -450, z: 560, nx: 1, nz: 0 },
     { x: -255, z: -650, nx: 0, nz: 1 }, { x: 255, z: -650, nx: 0, nz: 1 },
-    { x: 450, z: -470, nx: -1, nz: 0 }, { x: 450, z: -40, nx: -1, nz: 0 }, { x: 450, z: 390, nx: -1, nz: 0 },
+    { x: 450, z: -560, nx: -1, nz: 0 }, { x: 450, z: -60, nx: -1, nz: 0 }, { x: 450, z: 560, nx: -1, nz: 0 },
   ];
   D.forEach((d, i) => {
     const s = SLOTS[i % SLOTS.length];
@@ -2450,13 +2454,13 @@ function tourKeys() {
      circling the laptop): big lateral swings, a low lean-in, a high pull-back.
      px/py are eye parallax targets, dist is how far the eye sits off the glass. */
   if (OS_MODE) return [
-    { t: 0,     px: 0,     py: .05,  dist: 1050 },
-    { t: 1800,  px: -1.35, py: .12,  dist: 760 },
-    { t: 3600,  px: -.85,  py: -.42, dist: 520 },
-    { t: 5400,  px: .95,   py: -.25, dist: 430 },
-    { t: 7200,  px: 1.35,  py: .42,  dist: 700 },
-    { t: 8800,  px: .25,   py: .1,   dist: 900 },
-    { t: 10000, px: 0,     py: .05,  dist: 1050 },
+    { t: 0,     px: 0,     py: .05,  dist: 880 },
+    { t: 1800,  px: -1.35, py: .12,  dist: 620 },
+    { t: 3600,  px: -.85,  py: -.42, dist: 410 },
+    { t: 5400,  px: .95,   py: -.25, dist: 330 },
+    { t: 7200,  px: 1.35,  py: .42,  dist: 560 },
+    { t: 8800,  px: .25,   py: .1,   dist: 740 },
+    { t: 10000, px: 0,     py: .05,  dist: 880 },
   ];
   /* exactly 10 seconds: dive through the portal → glancing sweep along the
      icon-grid wall → a hero monument → JARVIS close → pull back out.
