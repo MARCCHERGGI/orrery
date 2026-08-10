@@ -377,7 +377,7 @@ let selected = null, focusIdx = -1, query = '', entered = false, reel = false, t
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.02;
+renderer.toneMappingExposure = 1.12;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
@@ -387,7 +387,8 @@ const camera = new THREE.PerspectiveCamera(60, 1, 1, 4000);
 camera.position.set(0, 260, 1500);
 
 /* cinematic pipeline — bloom is what separates "a render" from "footage".
-   Threshold .82 keeps text crisp; only true emitters glow (sun, orb, neon, pulses). */
+   Reference-matched (X 3D-OS video): emitters BLAST — threshold .72 lets the orb,
+   neon, pulses and bright text halo like the reference; legibility verified by eye. */
 window.__perf = (ms) => {   /* draw calls + triangles across ONE full composer frame */
   renderer.info.autoReset = false; renderer.info.reset();
   window.__step(ms ?? performance.now());
@@ -397,7 +398,7 @@ window.__perf = (ms) => {   /* draw calls + triangles across ONE full composer f
 };
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .38, .45, .82);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .75, .55, .72);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
@@ -820,7 +821,7 @@ function fitPortal() {
   /* hairline light along the cut edge */
   const edge = new THREE.LineSegments(
     new THREE.EdgesGeometry(new THREE.PlaneGeometry(PORTAL.w, PORTAL.h)),
-    new THREE.LineBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .28 }));
+    new THREE.LineBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .55 }));
   edge.position.set(0, PORTAL.cy, PORTAL.z); aperture.add(edge);
 
   /* inner frame lip — a physical NEAR layer hugging the opening; it shears fast
@@ -1093,11 +1094,11 @@ void main() {
   vec3 voidCol  = vec3(0.010, 0.025, 0.095);
   vec3 plasma   = vec3(0.040, 0.155, 0.410);
   vec3 cyan     = vec3(0.210, 0.520, 0.880);
-  vec3 frost    = vec3(0.620, 0.870, 1.000);
+  vec3 frost    = vec3(0.430, 0.790, 1.000);
   vec3 lineCol  = vec3(0.200, 0.500, 0.850);
   vec3 arcCol   = vec3(0.400, 0.800, 1.000);
   vec3 warmLow  = vec3(0.320, 0.420, 0.780);
-  vec3 speckC   = vec3(0.700, 0.900, 1.000);
+  vec3 speckC   = vec3(0.480, 0.840, 1.000);
 
   float breath = 0.55 - uAmp * 0.18 + sin(uNoiseTime * 7.0) * 0.06 * uAmp;
   vec3 col = mix(voidCol, plasma, pow(z, breath));
@@ -1117,7 +1118,7 @@ void main() {
   col += speckC * speckle   * 0.85;
   col = mix(col, frost,   microSheen * 0.18 * pow(z, 0.4));
   col += speckC * microSpark * 0.45 * pow(z, 0.5);
-  col += vec3(0.94, 0.97, 1.00) * (keySpec + keyHalo) * (0.55 + uAmp * 0.35);
+  col += vec3(0.62, 0.86, 1.00) * (keySpec + keyHalo) * (0.55 + uAmp * 0.35);
   col *= (1.0 - pupil * 0.85);
   col *= (1.0 - iris * 0.25);
   col += vec3(0.20, 0.45, 0.78) * irisBlades;
@@ -1150,6 +1151,11 @@ void main() {
 
   col   *= uMorph;
   alpha *= uMorph * edgeAA;
+
+  /* reference-matched chroma: saturate before tonemap so the orb reads as
+     COLOR under bloom, not a white ball (X 3D-OS reference, Marco-directed) */
+  float lum2 = dot(col, vec3(0.299, 0.587, 0.114));
+  col = mix(vec3(lum2), col, 1.42) * 1.12;
 
   col = ACESFilm(col);
 
@@ -1278,7 +1284,7 @@ function buildWorld() {
       fragmentShader: SNOISE + JARVIS_FRAG,
       transparent: true, depthWrite: false, depthTest: true,
     });
-    const orb = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), orbMat);
+    const orb = new THREE.Mesh(new THREE.PlaneGeometry(377, 377), orbMat);
     orb.renderOrder = 3;
     orb.frustumCulled = false;
     brain.add(orb);
@@ -1292,13 +1298,13 @@ function buildWorld() {
       flag: Math.min(1, Math.max(0, (nodes.filter(n => n.status === 'flag').length / (nodes.length || 1) - .05) * 2.2)) };
     orbMat.uniforms.uFlag.value = jarvis.flag;
     /* orbital rings at F(3)·φ⁰·¹·² = 89 · 144 · 233 — the Fibonacci triple */
-    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(FIB(3), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .3 }));
+    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(FIB(3), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring0.rotation.x = Math.PI / 2.1; ring0.rotation.y = -.4; brain.add(ring0);
-    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(FIB(4), 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .5 }));
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(FIB(4), 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x8be2b9, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring1.rotation.x = Math.PI / 2.4; brain.add(ring1);
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(FIB(5), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .21 }));
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(FIB(5), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring2.rotation.x = Math.PI / 1.8; ring2.rotation.y = .7; brain.add(ring2);
-    const glow = new THREE.PointLight(0x6ea8ff, 1.7, 700); brain.add(glow);
+    const glow = new THREE.PointLight(0x6ea8ff, 2.6, 900); brain.add(glow);
     brain.position.set(0, 300, -640);
     const lbl = makeLabel('CORE', { size: 60, serif: true }); lbl.position.set(0, 182, 0); brain.add(lbl);
     const c = s => nodes.filter(n => n.status === s).length;
