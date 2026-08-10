@@ -1,5 +1,10 @@
 # ORRERY
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
+![dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen.svg)
+![one HTML file](https://img.shields.io/badge/build-one_HTML_file-black.svg)
+
+
 **A live AI ecosystem, standing on a base you can fly through.** Every light is a
 real scheduled agent. Every status is a real last-run result. Zones are
 departments, the monuments are checkpoints, and the swarms orbiting them are the
