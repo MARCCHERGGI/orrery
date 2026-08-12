@@ -3,7 +3,7 @@
   "title": "AI COMMAND CENTER",
   "subtitle": "one company · run live by autonomous AI agents",
   "operator": "Marco Hergi · NYC",
-  "exported": "2026-08-12T06:47:11.994Z",
+  "exported": "2026-08-12T07:48:58.378Z",
   "source": "warden fleet-health"
  },
  "departments": [
@@ -277,8 +277,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 15 min",
-   "last": "2026-08-12T06:52:01.000Z",
-   "next": "2026-08-12T07:07:00.000Z",
+   "last": "2026-08-12T07:52:01.000Z",
+   "next": "2026-08-12T08:07:00.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -293,7 +293,7 @@
    "last": "2026-08-11T13:00:00.000Z",
    "next": "2026-08-12T13:00:00.000Z",
    "mass": 2,
-   "hist": "oooooooooooo"
+   "hist": "ooooooooooooo"
   },
   {
    "id": "ClaudeAcosSteward",
@@ -303,8 +303,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 15 min",
-   "last": "2026-08-12T06:47:01.000Z",
-   "next": "2026-08-12T07:02:00.000Z",
+   "last": "2026-08-12T07:47:01.000Z",
+   "next": "2026-08-12T08:02:00.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -493,6 +493,19 @@
    "hist": "fffffffffffffffffffff"
   },
   {
+   "id": "ClaudeCrucibleEvolve",
+   "label": "Crucible Evolve",
+   "dept": "self",
+   "group": "field",
+   "status": "flag",
+   "detail": "NEVER_RAN",
+   "cadence": "every 3 h",
+   "last": "1999-11-30T05:00:00.000Z",
+   "next": "2026-08-12T09:00:00.000Z",
+   "mass": 2,
+   "hist": "f"
+  },
+  {
    "id": "ClaudeCryptoTrader",
    "label": "Crypto Trader",
    "dept": "markets",
@@ -585,8 +598,8 @@
    "detail": "OK",
    "cadence": "daily 03:30",
    "replaces": "an ops director — drives a 20-goal life portfolio forward daily",
-   "last": "2026-08-11T07:43:39.000Z",
-   "next": "2026-08-12T07:36:04.000Z",
+   "last": "2026-08-12T07:31:33.000Z",
+   "next": "2026-08-13T07:59:12.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -636,8 +649,8 @@
    "detail": "STILL_RUNNING (running)",
    "cadence": "every 15 min",
    "replaces": "an SRE on-call — audits, heals and restarts 144 scheduled lanes every 15 minutes",
-   "last": "2026-08-12T06:47:08.000Z",
-   "next": "2026-08-12T07:02:13.000Z",
+   "last": "2026-08-12T07:48:54.000Z",
+   "next": "2026-08-12T08:01:37.000Z",
    "mass": 3,
    "hist": "rrrrrrrrrrrrrrrrrrrrr"
   },
@@ -662,7 +675,7 @@
    "detail": "OK",
    "cadence": "daily 04:00",
    "last": "2026-08-11T08:28:47.000Z",
-   "next": "2026-08-12T08:06:25.000Z",
+   "next": "2026-08-13T08:08:51.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1050,8 +1063,8 @@
    "detail": "OK",
    "cadence": "every 15 min",
    "replaces": "a store manager — watches the merch reserve rail",
-   "last": "2026-08-12T06:58:07.000Z",
-   "next": "2026-08-12T07:13:06.000Z",
+   "last": "2026-08-12T07:58:07.000Z",
+   "next": "2026-08-12T08:13:06.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1093,7 +1106,7 @@
    "last": "2026-08-12T03:47:51.000Z",
    "next": "2026-08-13T02:45:00.000Z",
    "mass": 3,
-   "hist": "ooooooroooooooooooooo"
+   "hist": "ooooorooooooooooooooo"
   },
   {
    "id": "ClaudeNycTechWeekly",
@@ -1107,7 +1120,7 @@
    "last": "2026-08-12T04:01:37.000Z",
    "next": "2026-08-12T11:00:00.000Z",
    "mass": 3,
-   "hist": "ffffffffffffffffffooo"
+   "hist": "fffffffffffffffffoooo"
   },
   {
    "id": "ClaudeOathForge",
@@ -1165,8 +1178,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 1 h",
-   "last": "2026-08-12T07:00:01.000Z",
-   "next": "2026-08-12T08:00:00.000Z",
+   "last": "2026-08-12T08:00:01.000Z",
+   "next": "2026-08-12T09:00:00.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1180,7 +1193,7 @@
    "cadence": "daily 07:30",
    "replaces": "a project manager checking claims — verifies each \"shipped\" against commits, deploys and Stripe",
    "last": "2026-08-11T11:30:41.000Z",
-   "next": "2026-08-12T11:57:35.000Z",
+   "next": "2026-08-12T11:44:52.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1301,8 +1314,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 20 min",
-   "last": "2026-08-12T06:36:12.000Z",
-   "next": "2026-08-12T07:17:18.000Z",
+   "last": "2026-08-12T07:57:44.000Z",
+   "next": "2026-08-12T08:18:01.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1314,8 +1327,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 30 min",
-   "last": "2026-08-12T06:43:01.000Z",
-   "next": "2026-08-12T07:13:00.000Z",
+   "last": "2026-08-12T07:43:01.000Z",
+   "next": "2026-08-12T08:13:00.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1327,8 +1340,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 10 min",
-   "last": "2026-08-12T06:54:48.000Z",
-   "next": "2026-08-12T07:04:31.000Z",
+   "last": "2026-08-12T07:55:11.000Z",
+   "next": "2026-08-12T08:05:52.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1403,7 +1416,7 @@
    "cadence": "daily 05:20",
    "replaces": "a weekly retro — reads its own telemetry and ships one self-improvement daily at 05:20",
    "last": "2026-08-11T09:44:13.000Z",
-   "next": "2026-08-12T09:41:48.000Z",
+   "next": "2026-08-12T09:38:02.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1441,7 +1454,7 @@
    "cadence": "every 6 h",
    "replaces": "a social analyst — snapshots five platforms every 6 hours",
    "last": "2026-08-12T04:37:07.000Z",
-   "next": "2026-08-12T10:17:42.000Z",
+   "next": "2026-08-12T10:34:21.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1537,8 +1550,8 @@
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "at logon",
    "replaces": "a pocket assistant — the phone-side line into everything here",
-   "last": "2026-08-12T06:59:52.000Z",
-   "next": "2026-08-12T07:00:51.000Z",
+   "last": "2026-08-12T07:59:52.000Z",
+   "next": "2026-08-12T08:00:51.000Z",
    "mass": 3,
    "hist": "rrrrrrrrrrrrrrrrrrrrr"
   },
@@ -1550,8 +1563,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 5 min",
-   "last": "2026-08-12T07:00:01.000Z",
-   "next": "2026-08-12T07:05:00.000Z",
+   "last": "2026-08-12T08:00:01.000Z",
+   "next": "2026-08-12T08:05:00.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1708,10 +1721,10 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 15 min",
-   "last": "2026-08-12T06:51:01.000Z",
-   "next": "2026-08-12T07:06:00.000Z",
+   "last": "2026-08-12T07:51:01.000Z",
+   "next": "2026-08-12T08:06:00.000Z",
    "mass": 2,
-   "hist": "ooooooooooooo"
+   "hist": "oooooooooooooo"
   },
   {
    "id": "CrowResident",
@@ -1747,7 +1760,7 @@
    "detail": "OK",
    "cadence": "daily 09:42",
    "last": "2026-08-12T03:47:51.000Z",
-   "next": "2026-08-12T13:54:41.000Z",
+   "next": "2026-08-12T13:55:53.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1952,7 +1965,7 @@
    "detail": "OK",
    "cadence": "daily 07:15",
    "last": "2026-08-11T11:35:08.000Z",
-   "next": "2026-08-12T11:20:20.000Z",
+   "next": "2026-08-12T11:35:54.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1976,8 +1989,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "at logon",
-   "last": "2026-08-12T06:59:11.000Z",
-   "next": "2026-08-12T07:00:10.000Z",
+   "last": "2026-08-12T07:59:11.000Z",
+   "next": "2026-08-12T08:00:10.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1991,7 +2004,7 @@
    "cadence": "at logon",
    "last": "2026-08-12T04:08:32.000Z",
    "mass": 2,
-   "hist": "rrrrrrrrrrrrrrrrrfrrr"
+   "hist": "rrrrrrrrrrrrrrrrfrrrr"
   },
   {
    "id": "OpenClaw-Distiller",
@@ -2058,12 +2071,12 @@
    "label": "Wifi Heal",
    "dept": "senses",
    "group": "the-house",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "flag",
+   "detail": "TERMINATED",
    "cadence": "at logon",
    "last": "2026-08-12T05:48:06.000Z",
    "mass": 2,
-   "hist": "rrfrrfrrfrrffrrrrfrfr"
+   "hist": "rfrrfrrfrrffrrrrfrfrf"
   }
  ]
 }
