@@ -3,7 +3,7 @@
   "title": "AI COMMAND CENTER",
   "subtitle": "one company · run live by autonomous AI agents",
   "operator": "Marco Hergi · NYC",
-  "exported": "2026-08-22T06:48:33.734Z",
+  "exported": "2026-08-22T07:48:41.860Z",
   "source": "warden fleet-health"
  },
  "departments": [
@@ -262,13 +262,13 @@
    "label": "18M24",
    "dept": "bridge",
    "group": "operators",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 15 min",
-   "last": "2026-08-22T06:58:01.000Z",
-   "next": "2026-08-22T07:13:00.000Z",
+   "last": "2026-08-22T07:58:01.000Z",
+   "next": "2026-08-22T08:13:00.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooofrorrr"
+   "hist": "oooooooooooooofrorrro"
   },
   {
    "id": "ClaudeAcosKeeper",
@@ -278,10 +278,10 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 15 min",
-   "last": "2026-08-22T06:52:01.000Z",
-   "next": "2026-08-22T07:07:00.000Z",
+   "last": "2026-08-22T07:52:01.000Z",
+   "next": "2026-08-22T08:07:00.000Z",
    "mass": 2,
-   "hist": "ooooooooooofooooooooo"
+   "hist": "oooooooooofoooooooooo"
   },
   {
    "id": "ClaudeAcosReplyCheck",
@@ -301,13 +301,13 @@
    "label": "Acos Steward",
    "dept": "self",
    "group": "field",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 15 min",
-   "last": "2026-08-22T06:47:01.000Z",
-   "next": "2026-08-22T07:02:00.000Z",
+   "last": "2026-08-22T07:47:01.000Z",
+   "next": "2026-08-22T08:02:00.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooorrrrr"
+   "hist": "ooooooooooooooorrrrro"
   },
   {
    "id": "ClaudeAffiliateTick",
@@ -328,13 +328,13 @@
    "label": "Agent Hub",
    "dept": "self",
    "group": "field",
-   "status": "running",
-   "detail": "REQUEST_REFUSED (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 2 min",
-   "last": "2026-08-22T06:58:20.000Z",
-   "next": "2026-08-22T07:00:19.000Z",
+   "last": "2026-08-22T07:58:20.000Z",
+   "next": "2026-08-22T08:00:19.000Z",
    "mass": 2,
-   "hist": "oooooooroooooooorrrrr"
+   "hist": "ooooooroooooooorrrrro"
   },
   {
    "id": "ClaudeAlwaysOn",
@@ -344,8 +344,8 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "every 5 min",
-   "last": "2026-08-22T06:57:01.000Z",
-   "next": "2026-08-22T07:02:00.000Z",
+   "last": "2026-08-22T07:57:01.000Z",
+   "next": "2026-08-22T08:02:00.000Z",
    "mass": 2,
    "hist": "rrrrrrrrrrrrrrrrrrrrr"
   },
@@ -420,20 +420,20 @@
    "cadence": "at logon",
    "last": "2026-08-22T03:15:30.000Z",
    "mass": 2,
-   "hist": "rrrrrrrrrrrrrrrfooooo"
+   "hist": "rrrrrrrrrrrrrrfoooooo"
   },
   {
    "id": "ClaudeBursaryImprove",
    "label": "Bursary Improve",
    "dept": "revenue",
    "group": "storefronts",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "daily 06:30",
    "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T10:39:17.000Z",
+   "next": "2026-08-22T10:41:06.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooorrrrrr"
+   "hist": "oooooooooooooorrrrrro"
   },
   {
    "id": "ClaudeCapitalMeter",
@@ -443,8 +443,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 15 min",
-   "last": "2026-08-22T06:53:09.000Z",
-   "next": "2026-08-22T07:08:08.000Z",
+   "last": "2026-08-22T07:53:09.000Z",
+   "next": "2026-08-22T08:08:08.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -456,10 +456,10 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "every 5 min",
-   "last": "2026-08-22T06:57:01.000Z",
-   "next": "2026-08-22T07:02:00.000Z",
+   "last": "2026-08-22T07:57:01.000Z",
+   "next": "2026-08-22T08:02:00.000Z",
    "mass": 2,
-   "hist": "orrrrrrrrrrfooorrrrrr"
+   "hist": "rrrrrrrrrrfooorrrrrrr"
   },
   {
    "id": "ClaudeChannelManager",
@@ -470,7 +470,7 @@
    "detail": "OK",
    "cadence": "daily 07:30",
    "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T11:45:19.000Z",
+   "next": "2026-08-22T11:54:19.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -483,7 +483,7 @@
    "detail": "OK",
    "cadence": "weekly 08:00",
    "last": "2026-08-16T12:27:08.000Z",
-   "next": "2026-08-23T12:26:39.000Z",
+   "next": "2026-08-23T12:26:00.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -492,13 +492,13 @@
    "label": "Clv Resolve",
    "dept": "markets",
    "group": "polymarket",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 30 min",
-   "last": "2026-08-22T06:45:54.000Z",
-   "next": "2026-08-22T07:13:46.000Z",
+   "last": "2026-08-22T07:47:54.000Z",
+   "next": "2026-08-22T08:19:30.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooooroorr"
+   "hist": "oooooooooooooooroorro"
   },
   {
    "id": "ClaudeContentEngine",
@@ -510,7 +510,7 @@
    "cadence": "daily 07:50",
    "replaces": "a content team — drafts, schedules and grades platform-native posts",
    "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T11:52:34.000Z",
+   "next": "2026-08-22T12:16:48.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -524,7 +524,7 @@
    "cadence": "daily 08:30",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooffffff"
+   "hist": "oooooooooooooofffffff"
   },
   {
    "id": "ClaudeCrucibleEvolve",
@@ -534,8 +534,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 1 h",
-   "last": "2026-08-22T06:12:34.000Z",
-   "next": "2026-08-22T07:12:33.000Z",
+   "last": "2026-08-22T07:12:34.000Z",
+   "next": "2026-08-22T08:12:33.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -559,10 +559,10 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 5 min",
-   "last": "2026-08-22T06:57:01.000Z",
-   "next": "2026-08-22T07:02:00.000Z",
+   "last": "2026-08-22T07:57:01.000Z",
+   "next": "2026-08-22T08:02:00.000Z",
    "mass": 2,
-   "hist": "o"
+   "hist": "oo"
   },
   {
    "id": "ClaudeDaily0800",
@@ -582,13 +582,13 @@
    "label": "Deeds",
    "dept": "self",
    "group": "field",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 15 min",
-   "last": "2026-08-22T06:47:12.000Z",
-   "next": "2026-08-22T07:02:11.000Z",
+   "last": "2026-08-22T07:47:12.000Z",
+   "next": "2026-08-22T08:02:11.000Z",
    "mass": 2,
-   "hist": "oooooooooroooooorrrrr"
+   "hist": "ooooooooroooooorrrrro"
   },
   {
    "id": "ClaudeDeedsAudit",
@@ -598,8 +598,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 30 min",
-   "last": "2026-08-22T06:54:13.000Z",
-   "next": "2026-08-22T07:24:12.000Z",
+   "last": "2026-08-22T07:54:13.000Z",
+   "next": "2026-08-22T08:24:12.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -608,13 +608,13 @@
    "label": "Diary Datafy",
    "dept": "content",
    "group": "the-diary",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 10 min",
-   "last": "2026-08-22T06:59:48.000Z",
-   "next": "2026-08-22T07:08:41.000Z",
+   "last": "2026-08-22T07:58:58.000Z",
+   "next": "2026-08-22T08:07:11.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooooroorr"
+   "hist": "oooooooooooooooroorro"
   },
   {
    "id": "ClaudeDiscoveryEngine",
@@ -649,10 +649,10 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "every 15 min",
-   "last": "2026-08-22T06:54:01.000Z",
-   "next": "2026-08-22T07:09:00.000Z",
+   "last": "2026-08-22T07:54:01.000Z",
+   "next": "2026-08-22T08:09:00.000Z",
    "mass": 2,
-   "hist": "orrrrrrrrrrfooorrrrrr"
+   "hist": "rrrrrrrrrrfooorrrrrrr"
   },
   {
    "id": "ClaudeEdenTick",
@@ -662,8 +662,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 1 h",
-   "last": "2026-08-22T06:08:42.000Z",
-   "next": "2026-08-22T08:01:00.000Z",
+   "last": "2026-08-22T07:57:59.000Z",
+   "next": "2026-08-22T09:01:32.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -675,10 +675,10 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "every 10 min",
-   "last": "2026-08-22T06:58:01.000Z",
-   "next": "2026-08-22T07:08:00.000Z",
+   "last": "2026-08-22T07:58:01.000Z",
+   "next": "2026-08-22T08:08:00.000Z",
    "mass": 2,
-   "hist": "orrrrrrrrrrfooorrrrrr"
+   "hist": "rrrrrrrrrrfooorrrrrrr"
   },
   {
    "id": "ClaudeEmpireBrief",
@@ -691,7 +691,7 @@
    "last": "2026-08-22T01:49:11.000Z",
    "next": "2026-08-22T13:00:00.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooofooooo"
+   "hist": "oooooooooooooofoooooo"
   },
   {
    "id": "ClaudeEmpireEvolve",
@@ -702,7 +702,7 @@
    "detail": "OK",
    "cadence": "daily 04:45",
    "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T09:14:05.000Z",
+   "next": "2026-08-22T09:02:08.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -715,7 +715,7 @@
    "detail": "OK",
    "cadence": "daily 06:30",
    "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T10:42:05.000Z",
+   "next": "2026-08-22T10:41:35.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -728,8 +728,8 @@
    "detail": "OK",
    "cadence": "daily 03:30",
    "replaces": "an ops director — drives a 20-goal life portfolio forward daily",
-   "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T07:47:53.000Z",
+   "last": "2026-08-22T07:32:32.000Z",
+   "next": "2026-08-23T07:37:15.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -752,26 +752,26 @@
    "label": "Evolve Arena",
    "dept": "self",
    "group": "field",
-   "status": "running",
-   "detail": "REQUEST_REFUSED (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 45 min",
-   "last": "2026-08-22T06:41:01.000Z",
-   "next": "2026-08-22T07:26:00.000Z",
+   "last": "2026-08-22T07:26:01.000Z",
+   "next": "2026-08-22T08:11:00.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooofrrrrr"
+   "hist": "oooooooooooooofrrrrro"
   },
   {
    "id": "ClaudeEvolveHarness",
    "label": "Evolve Harness",
    "dept": "self",
    "group": "field",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 20 min",
-   "last": "2026-08-22T06:57:11.000Z",
-   "next": "2026-08-22T07:17:10.000Z",
+   "last": "2026-08-22T07:57:11.000Z",
+   "next": "2026-08-22T08:17:10.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooorrfror"
+   "hist": "oooooooooooooorrfroro"
   },
   {
    "id": "ClaudeEvolveLoop",
@@ -806,7 +806,7 @@
    "detail": "OK",
    "cadence": "every 2 h",
    "last": "2026-08-22T06:47:25.000Z",
-   "next": "2026-08-22T08:53:02.000Z",
+   "next": "2026-08-22T08:42:44.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -819,8 +819,8 @@
    "detail": "STILL_RUNNING (running)",
    "cadence": "every 15 min",
    "replaces": "an SRE on-call — audits, heals and restarts 144 scheduled lanes every 15 minutes",
-   "last": "2026-08-22T06:47:32.000Z",
-   "next": "2026-08-22T07:01:00.000Z",
+   "last": "2026-08-22T07:48:36.000Z",
+   "next": "2026-08-22T08:03:59.000Z",
    "mass": 3,
    "hist": "rrrrrrrrrrrrrrrrrrrrr"
   },
@@ -829,13 +829,13 @@
    "label": "Floor Guard",
    "dept": "revenue",
    "group": "war-room",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "flag",
+   "detail": "FLOOR_BREACHED",
    "cadence": "every 5 min",
-   "last": "2026-08-22T06:57:02.000Z",
-   "next": "2026-08-22T07:03:39.000Z",
+   "last": "2026-08-22T07:57:30.000Z",
+   "next": "2026-08-22T08:02:51.000Z",
    "mass": 2,
-   "hist": "ffffffffffffffffrfrrr"
+   "hist": "fffffffffffffffrfrrrf"
   },
   {
    "id": "ClaudeForgetSweep",
@@ -846,7 +846,7 @@
    "detail": "OK",
    "cadence": "daily 04:00",
    "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T08:15:23.000Z",
+   "next": "2026-08-23T08:03:10.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -858,23 +858,23 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "every 15 min",
-   "last": "2026-08-22T06:49:01.000Z",
-   "next": "2026-08-22T07:04:00.000Z",
+   "last": "2026-08-22T07:49:01.000Z",
+   "next": "2026-08-22T08:04:00.000Z",
    "mass": 2,
-   "hist": "orrrrrrrrrrfooorroror"
+   "hist": "rrrrrrrrrrfooorrororr"
   },
   {
    "id": "ClaudeGoalMatrix",
    "label": "Goal Matrix",
    "dept": "self",
    "group": "truth",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 20 min",
-   "last": "2026-08-22T06:45:42.000Z",
-   "next": "2026-08-22T07:05:01.000Z",
+   "last": "2026-08-22T07:45:00.000Z",
+   "next": "2026-08-22T08:09:40.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooorooor"
+   "hist": "oooooooooooooooroooro"
   },
   {
    "id": "ClaudeGpuTranscribe",
@@ -886,20 +886,20 @@
    "cadence": "at logon",
    "last": "2026-08-22T02:01:26.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooorrfff"
+   "hist": "ooooooooooooooorrffff"
   },
   {
    "id": "ClaudeHarnessLoop",
    "label": "Harness Loop",
    "dept": "self",
    "group": "field",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 1 h",
-   "last": "2026-08-22T06:03:21.000Z",
-   "next": "2026-08-22T07:03:20.000Z",
+   "last": "2026-08-22T07:03:21.000Z",
+   "next": "2026-08-22T08:03:20.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooooffffr"
+   "hist": "oooooooooooooooffffro"
   },
   {
    "id": "ClaudeHUD",
@@ -911,7 +911,7 @@
    "cadence": "at logon",
    "last": "2026-08-22T03:19:59.000Z",
    "mass": 1,
-   "hist": "rrrrrrrrrrrrrrrrrdddd"
+   "hist": "rrrrrrrrrrrrrrrrddddd"
   },
   {
    "id": "ClaudeHundredToday",
@@ -934,7 +934,7 @@
    "cadence": "every 30 min",
    "last": "2026-08-22T02:59:01.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooofooooo"
+   "hist": "oooooooooooooofoooooo"
   },
   {
    "id": "ClaudeIadolaBridge",
@@ -946,7 +946,7 @@
    "cadence": "at logon",
    "last": "2026-08-22T01:32:00.000Z",
    "mass": 1,
-   "hist": "rrrrrrrrrrrrrrrdddddd"
+   "hist": "rrrrrrrrrrrrrrddddddd"
   },
   {
    "id": "ClaudeIadolaBriefs",
@@ -959,7 +959,7 @@
    "replaces": "an IG growth analyst — daily briefs from real per-post follow data",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 3,
-   "hist": "fffffffffffffffdddddd"
+   "hist": "ffffffffffffffddddddd"
   },
   {
    "id": "ClaudeIadolaLedger",
@@ -971,7 +971,7 @@
    "cadence": "daily 07:10",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 1,
-   "hist": "ooooooooooooooodddddd"
+   "hist": "ooooooooooooooddddddd"
   },
   {
    "id": "ClaudeIadolaOrb",
@@ -983,7 +983,7 @@
    "cadence": "at logon",
    "last": "2026-08-22T01:31:25.000Z",
    "mass": 1,
-   "hist": "rrrrrrrrrrrrrrrdddddd"
+   "hist": "rrrrrrrrrrrrrrddddddd"
   },
   {
    "id": "ClaudeIadolaRadar",
@@ -995,7 +995,7 @@
    "cadence": "daily 06:10",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 1,
-   "hist": "ooooooooooooooodddddd"
+   "hist": "ooooooooooooooddddddd"
   },
   {
    "id": "ClaudeIgCreators",
@@ -1007,7 +1007,7 @@
    "cadence": "daily 09:00",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 1,
-   "hist": "roooooooooooooodddddd"
+   "hist": "ooooooooooooooddddddd"
   },
   {
    "id": "ClaudeIgDeepScan",
@@ -1068,7 +1068,7 @@
    "cadence": "every 15 min",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooffffff"
+   "hist": "oooooooooooooofffffff"
   },
   {
    "id": "ClaudeIGPeers",
@@ -1080,7 +1080,7 @@
    "cadence": "daily 07:30",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooffffff"
+   "hist": "oooooooooooooofffffff"
   },
   {
    "id": "ClaudeIgStoryPool",
@@ -1117,7 +1117,7 @@
    "cadence": "every 4 h",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooffffff"
+   "hist": "oooooooooooooofffffff"
   },
   {
    "id": "ClaudeIgVoiceEval",
@@ -1129,20 +1129,20 @@
    "cadence": "daily 09:30",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 1,
-   "hist": "ooooooooooooooodddddd"
+   "hist": "ooooooooooooooddddddd"
   },
   {
    "id": "ClaudeJarvisMiniLoop",
    "label": "Jarvis Mini Loop",
    "dept": "bridge",
    "group": "operators",
-   "status": "running",
-   "detail": "REQUEST_REFUSED (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 6 h",
    "last": "2026-08-22T03:47:02.000Z",
-   "next": "2026-08-22T09:55:57.000Z",
+   "next": "2026-08-22T09:33:02.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooorrrrrr"
+   "hist": "oooooooooooooorrrrrro"
   },
   {
    "id": "ClaudeJobHunt",
@@ -1155,7 +1155,7 @@
    "replaces": "a recruiter working nights — finds, scores and queues applications 24/7",
    "last": "2026-08-22T01:51:01.000Z",
    "mass": 3,
-   "hist": "ooooooooooooooofooooo"
+   "hist": "oooooooooooooofoooooo"
   },
   {
    "id": "ClaudeJobHuntDigest",
@@ -1167,7 +1167,7 @@
    "cadence": "daily 09:00",
    "last": "2026-08-22T01:49:11.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooofooooo"
+   "hist": "oooooooooooooofoooooo"
   },
   {
    "id": "ClaudeKeepAlive",
@@ -1189,8 +1189,8 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "at logon",
-   "last": "2026-08-22T06:59:15.000Z",
-   "next": "2026-08-22T07:00:14.000Z",
+   "last": "2026-08-22T07:59:15.000Z",
+   "next": "2026-08-22T08:00:14.000Z",
    "mass": 2,
    "hist": "rrrrrrrrrrrrrrrrrrrrr"
   },
@@ -1205,7 +1205,7 @@
    "last": "2026-08-22T02:12:35.000Z",
    "next": "2026-08-23T02:12:34.000Z",
    "mass": 2,
-   "hist": "ooooooooofffffffooooo"
+   "hist": "oooooooofffffffoooooo"
   },
   {
    "id": "ClaudeLinkedInJobs",
@@ -1217,7 +1217,7 @@
    "cadence": "every 3 h",
    "last": "2026-08-22T03:08:01.000Z",
    "mass": 2,
-   "hist": "ofooooooooffffffooooo"
+   "hist": "fooooooooffffffoooooo"
   },
   {
    "id": "ClaudeLiveFire",
@@ -1252,9 +1252,9 @@
    "status": "flag",
    "detail": "TERMINATED",
    "last": "2026-08-22T02:33:48.000Z",
-   "next": "2026-08-22T11:04:07.000Z",
+   "next": "2026-08-22T11:06:37.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooorrffff"
+   "hist": "oooooooooooooorrfffff"
   },
   {
    "id": "ClaudeLuckScanner",
@@ -1266,7 +1266,7 @@
    "cadence": "daily 07:15",
    "replaces": "a scholarship office — 100+ keyless opportunities a day",
    "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T11:16:04.000Z",
+   "next": "2026-08-22T11:24:52.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1301,35 +1301,35 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "at logon",
-   "last": "2026-08-22T07:00:01.000Z",
-   "next": "2026-08-22T07:01:00.000Z",
+   "last": "2026-08-22T08:00:01.000Z",
+   "next": "2026-08-22T08:01:00.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooooooroo"
+   "hist": "ooooooooooooooooorooo"
   },
   {
    "id": "ClaudeMarketCatalog",
    "label": "Market Catalog",
    "dept": "hunt",
    "group": "fortune",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 6 h",
    "last": "2026-08-22T05:14:47.000Z",
-   "next": "2026-08-22T11:05:36.000Z",
+   "next": "2026-08-22T10:37:36.000Z",
    "mass": 2,
-   "hist": "ooooorooooooooorrforr"
+   "hist": "oooorooooooooorrforro"
   },
   {
    "id": "ClaudeMarketWatch",
    "label": "Market Watch",
    "dept": "markets",
    "group": "field",
-   "status": "flag",
-   "detail": "STACK_BUFFER_OVERRUN",
+   "status": "running",
+   "detail": "STILL_RUNNING (running)",
    "cadence": "at logon",
    "last": "2026-08-22T06:50:51.000Z",
    "mass": 2,
-   "hist": "rrrrrrrrrrrrrrrrrfrrf"
+   "hist": "rrrrrrrrrrrrrrrrfrrfr"
   },
   {
    "id": "ClaudeMerchBridge",
@@ -1340,8 +1340,8 @@
    "detail": "OK",
    "cadence": "every 15 min",
    "replaces": "a store manager — watches the merch reserve rail",
-   "last": "2026-08-22T06:58:07.000Z",
-   "next": "2026-08-22T07:13:06.000Z",
+   "last": "2026-08-22T07:58:07.000Z",
+   "next": "2026-08-22T08:13:06.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1376,13 +1376,13 @@
    "label": "Native Viewport",
    "dept": "self",
    "group": "field",
-   "status": "running",
-   "detail": "REQUEST_REFUSED (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 1 min",
-   "last": "2026-08-22T06:59:19.000Z",
-   "next": "2026-08-22T07:00:18.000Z",
+   "last": "2026-08-22T07:59:19.000Z",
+   "next": "2026-08-22T08:00:18.000Z",
    "mass": 2,
-   "hist": "ooooooororoooooororrr"
+   "hist": "oooooororoooooororrro"
   },
   {
    "id": "ClaudeNycScout",
@@ -1396,7 +1396,7 @@
    "last": "2026-08-22T02:45:01.000Z",
    "next": "2026-08-23T02:45:00.000Z",
    "mass": 3,
-   "hist": "ffffffffffffffffrffff"
+   "hist": "fffffffffffffffrfffff"
   },
   {
    "id": "ClaudeNycTechWeekly",
@@ -1410,7 +1410,7 @@
    "last": "2026-08-22T02:03:03.000Z",
    "next": "2026-08-22T11:00:00.000Z",
    "mass": 3,
-   "hist": "ffffffffffffffffooooo"
+   "hist": "fffffffffffffffoooooo"
   },
   {
    "id": "ClaudeOathForge",
@@ -1420,8 +1420,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 3 h",
-   "last": "2026-08-22T05:06:52.000Z",
-   "next": "2026-08-22T08:12:00.000Z",
+   "last": "2026-08-22T07:55:07.000Z",
+   "next": "2026-08-22T11:00:14.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1445,8 +1445,8 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "at logon",
-   "last": "2026-08-22T06:55:52.000Z",
-   "next": "2026-08-22T07:00:51.000Z",
+   "last": "2026-08-22T07:55:52.000Z",
+   "next": "2026-08-22T08:00:51.000Z",
    "mass": 2,
    "hist": "rrrrrrrrrrrrrrrrrrrrr"
   },
@@ -1455,13 +1455,13 @@
    "label": "Oracle Grade",
    "dept": "empire",
    "group": "oracles",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 2 h",
    "last": "2026-08-22T06:35:51.000Z",
-   "next": "2026-08-22T08:21:42.000Z",
+   "next": "2026-08-22T08:26:31.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooooooor"
+   "hist": "oooooooooooooooooooro"
   },
   {
    "id": "ClaudeOracleSweep",
@@ -1471,8 +1471,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 30 min",
-   "last": "2026-08-22T06:53:44.000Z",
-   "next": "2026-08-22T07:27:38.000Z",
+   "last": "2026-08-22T07:59:00.000Z",
+   "next": "2026-08-22T08:24:49.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1484,10 +1484,10 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 1 h",
-   "last": "2026-08-22T07:00:01.000Z",
-   "next": "2026-08-22T08:00:00.000Z",
+   "last": "2026-08-22T08:00:01.000Z",
+   "next": "2026-08-22T09:00:00.000Z",
    "mass": 2,
-   "hist": "roooooooooooooooooooo"
+   "hist": "ooooooooooooooooooooo"
   },
   {
    "id": "ClaudeOutcomeWitness",
@@ -1523,8 +1523,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 30 min",
-   "last": "2026-08-22T06:56:12.000Z",
-   "next": "2026-08-22T07:26:37.000Z",
+   "last": "2026-08-22T07:52:36.000Z",
+   "next": "2026-08-22T08:26:55.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1594,13 +1594,13 @@
    "label": "Precog",
    "dept": "self",
    "group": "field",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 5 min",
-   "last": "2026-08-22T06:57:01.000Z",
-   "next": "2026-08-22T07:02:00.000Z",
+   "last": "2026-08-22T07:57:01.000Z",
+   "next": "2026-08-22T08:02:00.000Z",
    "mass": 2,
-   "hist": "ooooooooooofoooorrrrr"
+   "hist": "oooooooooofoooorrrrro"
   },
   {
    "id": "ClaudeProfitLoop",
@@ -1634,10 +1634,10 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 20 min",
-   "last": "2026-08-22T06:35:23.000Z",
-   "next": "2026-08-22T07:19:51.000Z",
+   "last": "2026-08-22T07:59:06.000Z",
+   "next": "2026-08-22T08:20:04.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooooorroo"
+   "hist": "oooooooooooooooorrooo"
   },
   {
    "id": "ClaudeRelayReap",
@@ -1647,8 +1647,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 30 min",
-   "last": "2026-08-22T06:43:01.000Z",
-   "next": "2026-08-22T07:13:00.000Z",
+   "last": "2026-08-22T07:43:01.000Z",
+   "next": "2026-08-22T08:13:00.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1657,13 +1657,13 @@
    "label": "Relay Watchdog",
    "dept": "bridge",
    "group": "relays",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 10 min",
-   "last": "2026-08-22T06:53:35.000Z",
-   "next": "2026-08-22T07:06:21.000Z",
+   "last": "2026-08-22T07:53:51.000Z",
+   "next": "2026-08-22T08:04:37.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooooooor"
+   "hist": "oooooooooooooooooooro"
   },
   {
    "id": "ClaudeResearchTick",
@@ -1677,7 +1677,7 @@
    "last": "2026-08-22T02:12:28.000Z",
    "next": "2026-08-23T02:12:27.000Z",
    "mass": 3,
-   "hist": "ffffffffffffffffrffff"
+   "hist": "fffffffffffffffrfffff"
   },
   {
    "id": "ClaudeResidentGuard",
@@ -1687,8 +1687,8 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "at logon",
-   "last": "2026-08-22T06:59:30.000Z",
-   "next": "2026-08-22T07:00:29.000Z",
+   "last": "2026-08-22T07:59:30.000Z",
+   "next": "2026-08-22T08:00:29.000Z",
    "mass": 2,
    "hist": "rrrrrrrrrrrrrrrrrrrrr"
   },
@@ -1714,7 +1714,7 @@
    "detail": "OK",
    "cadence": "weekly 09:13",
    "last": "2026-08-17T17:46:43.000Z",
-   "next": "2026-08-24T13:17:36.000Z",
+   "next": "2026-08-24T13:19:23.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1726,10 +1726,10 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 5 min",
-   "last": "2026-08-22T06:58:01.000Z",
-   "next": "2026-08-22T07:03:00.000Z",
+   "last": "2026-08-22T07:58:01.000Z",
+   "next": "2026-08-22T08:03:00.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooooooroo"
+   "hist": "ooooooooooooooooorooo"
   },
   {
    "id": "ClaudeSelfEval",
@@ -1742,7 +1742,7 @@
    "last": "2026-08-22T02:12:29.000Z",
    "next": "2026-08-22T08:12:28.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooofooooo"
+   "hist": "oooooooooooooofoooooo"
   },
   {
    "id": "ClaudeSelfTick",
@@ -1763,13 +1763,13 @@
    "label": "Sharp Engine",
    "dept": "self",
    "group": "learning",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 6 h",
-   "last": "2026-08-22T06:43:42.000Z",
-   "next": "2026-08-22T12:33:45.000Z",
+   "last": "2026-08-22T07:34:41.000Z",
+   "next": "2026-08-22T12:34:16.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooooooor"
+   "hist": "oooooooooooooooooooro"
   },
   {
    "id": "ClaudeSkillForge",
@@ -1795,7 +1795,7 @@
    "replaces": "a social analyst — snapshots five platforms every 6 hours",
    "last": "2026-08-22T01:37:04.000Z",
    "mass": 3,
-   "hist": "ooooooooooooooodddddd"
+   "hist": "ooooooooooooooddddddd"
   },
   {
    "id": "ClaudeSovereignHeartbeat",
@@ -1805,10 +1805,10 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 30 min",
-   "last": "2026-08-22T06:51:01.000Z",
-   "next": "2026-08-22T07:21:00.000Z",
+   "last": "2026-08-22T07:51:01.000Z",
+   "next": "2026-08-22T08:21:00.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooofooooo"
+   "hist": "oooooooooooooofoooooo"
   },
   {
    "id": "ClaudeSovereignViewer",
@@ -1818,10 +1818,10 @@
    "status": "running",
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "every 5 min",
-   "last": "2026-08-22T06:56:01.000Z",
-   "next": "2026-08-22T07:01:00.000Z",
+   "last": "2026-08-22T07:56:01.000Z",
+   "next": "2026-08-22T08:01:00.000Z",
    "mass": 2,
-   "hist": "orrrrrrrrrrfooorrrrrr"
+   "hist": "rrrrrrrrrrfooorrrrrrr"
   },
   {
    "id": "ClaudeSpendMeter",
@@ -1831,10 +1831,10 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 1 h",
-   "last": "2026-08-22T06:24:33.000Z",
-   "next": "2026-08-22T07:27:53.000Z",
+   "last": "2026-08-22T07:26:50.000Z",
+   "next": "2026-08-22T08:25:21.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooooofooo"
+   "hist": "oooooooooooooooofoooo"
   },
   {
    "id": "ClaudeStageBatch",
@@ -1876,13 +1876,13 @@
    "label": "Sub Bridge",
    "dept": "bridge",
    "group": "relays",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 10 min",
-   "last": "2026-08-22T06:57:01.000Z",
-   "next": "2026-08-22T07:07:00.000Z",
+   "last": "2026-08-22T07:57:01.000Z",
+   "next": "2026-08-22T08:07:00.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooorrrrr"
+   "hist": "ooooooooooooooorrrrro"
   },
   {
    "id": "ClaudeTelegramBridge",
@@ -1893,8 +1893,8 @@
    "detail": "REQUEST_REFUSED (running)",
    "cadence": "at logon",
    "replaces": "a pocket assistant — the phone-side line into everything here",
-   "last": "2026-08-22T06:59:52.000Z",
-   "next": "2026-08-22T07:00:51.000Z",
+   "last": "2026-08-22T07:59:52.000Z",
+   "next": "2026-08-22T08:00:51.000Z",
    "mass": 3,
    "hist": "rrrrrrrrrrrrrrrrrrrrr"
   },
@@ -1903,13 +1903,13 @@
    "label": "Telegram Watchdog",
    "dept": "bridge",
    "group": "telegram",
-   "status": "running",
-   "detail": "STILL_RUNNING (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 5 min",
-   "last": "2026-08-22T07:00:01.000Z",
-   "next": "2026-08-22T07:05:00.000Z",
+   "last": "2026-08-22T08:00:01.000Z",
+   "next": "2026-08-22T08:05:00.000Z",
    "mass": 2,
-   "hist": "oooooooooooooooooooor"
+   "hist": "oooooooooooooooooooro"
   },
   {
    "id": "ClaudeTimEmailWatch",
@@ -1931,8 +1931,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "every 30 min",
-   "last": "2026-08-22T06:53:55.000Z",
-   "next": "2026-08-22T07:23:54.000Z",
+   "last": "2026-08-22T07:53:55.000Z",
+   "next": "2026-08-22T08:23:54.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -1953,27 +1953,27 @@
    "label": "War Plan Loop",
    "dept": "revenue",
    "group": "war-room",
-   "status": "running",
-   "detail": "REQUEST_REFUSED (running)",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 1 h",
    "replaces": "a founder’s conscience — stages armed launches, never sends without Marco",
-   "last": "2026-08-22T06:12:32.000Z",
-   "next": "2026-08-22T07:12:31.000Z",
+   "last": "2026-08-22T07:12:32.000Z",
+   "next": "2026-08-22T08:12:31.000Z",
    "mass": 3,
-   "hist": "ooooooooooooooorrfrrr"
+   "hist": "oooooooooooooorrfrrro"
   },
   {
    "id": "ClaudeWarPlanTick",
    "label": "War Plan Tick",
    "dept": "revenue",
    "group": "war-room",
-   "status": "flag",
-   "detail": "TERMINATED",
+   "status": "ok",
+   "detail": "OK",
    "cadence": "every 1 h",
-   "last": "2026-08-22T06:12:33.000Z",
-   "next": "2026-08-22T07:12:32.000Z",
+   "last": "2026-08-22T07:12:33.000Z",
+   "next": "2026-08-22T08:12:32.000Z",
    "mass": 2,
-   "hist": "ooooooooooooooorfffff"
+   "hist": "oooooooooooooorfffffo"
   },
   {
    "id": "ClaudeWCAutoFire",
@@ -2067,8 +2067,8 @@
    "detail": "OK",
    "cadence": "every 1 h",
    "replaces": "looking out the window, but at 6am and in writing",
-   "last": "2026-08-22T06:29:38.000Z",
-   "next": "2026-08-22T07:32:46.000Z",
+   "last": "2026-08-22T07:28:20.000Z",
+   "next": "2026-08-22T08:39:53.000Z",
    "mass": 3,
    "hist": "ooooooooooooooooooooo"
   },
@@ -2118,7 +2118,7 @@
    "detail": "OK",
    "cadence": "daily 09:42",
    "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T14:06:50.000Z",
+   "next": "2026-08-22T14:04:48.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -2323,7 +2323,7 @@
    "detail": "OK",
    "cadence": "daily 07:15",
    "last": "2026-08-22T01:37:04.000Z",
-   "next": "2026-08-22T11:31:21.000Z",
+   "next": "2026-08-22T11:40:47.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -2347,8 +2347,8 @@
    "status": "ok",
    "detail": "OK",
    "cadence": "at logon",
-   "last": "2026-08-22T07:00:11.000Z",
-   "next": "2026-08-22T07:01:10.000Z",
+   "last": "2026-08-22T07:59:12.000Z",
+   "next": "2026-08-22T08:00:10.000Z",
    "mass": 2,
    "hist": "ooooooooooooooooooooo"
   },
@@ -2362,7 +2362,7 @@
    "cadence": "at logon",
    "last": "2026-08-22T02:01:26.000Z",
    "mass": 2,
-   "hist": "rrrrrrrrrrrrrrrfrrrrr"
+   "hist": "rrrrrrrrrrrrrrfrrrrrr"
   },
   {
    "id": "OpenClaw-Distiller",
@@ -2434,7 +2434,7 @@
    "cadence": "at logon",
    "last": "2026-08-22T02:01:26.000Z",
    "mass": 2,
-   "hist": "rrrrrrrrrrrrrrrfrrrrr"
+   "hist": "rrrrrrrrrrrrrrfrrrrrr"
   }
  ]
 }
