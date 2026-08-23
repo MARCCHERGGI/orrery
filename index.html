@@ -832,7 +832,7 @@ function makePlate(text, opts) {
 
 /* ============================== build world from data ============================== */
 const world = new THREE.Group(); scene.add(world);
-let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, terms = [], junRings = [], tilePanels = [], ledgerPlates = [], monRings = [], monInst = null, corePulse = null, dust = null, runCol = null;
+let agentMesh = null, agentData = [], hubMeshes = [], zoneDiscs = [], beams = [], pulseMeshes = null, terms = [], junRings = [], tilePanels = [], ledgerPlates = [], monRings = [], monInst = null, corePulse = null, dust = null, runCol = null, netPulse = null;
 const brain = new THREE.Group(); scene.add(brain);
 
 const BEAM_OP = .38;
@@ -1000,8 +1000,220 @@ const STATUS_COLOR = {
   flag: new THREE.Color(0xe08a7c), dormant: new THREE.Color(0x494d6e),
 };
 
+/* ═════════════ SPECIALIZED SCREENS — each monitor shows its real surface ═════════════
+   Not decoration: every number here is either baked from verified local data
+   (data/panels.json) or fetched live (/api/quote). Unknown values render as
+   "—", never as invented figures. */
+let panelData = null, goldData = null;
+(async () => {
+  try { panelData = await (await fetch('data/panels.json?v=' + Date.now())).json(); } catch {}
+  try {
+    let r = await fetch('/api/quote').catch(() => null);
+    if (!r || !r.ok) r = await fetch('https://orrery-red-eight.vercel.app/api/quote');
+    if (r.ok) goldData = await r.json();
+  } catch {}
+  if (tilePanels.draw) for (const T of tilePanels) tilePanels.draw(T, T.blink, T.hover);
+  setInterval(async () => {
+    try { const r = await fetch('/api/quote'); if (r.ok) { goldData = await r.json(); } } catch {}
+  }, 600000);
+})();
+const SERIF = '"Cormorant Garamond", Georgia, serif';
+const SANS = 'Inter, system-ui, sans-serif';
+function specChrome(g, hue, title, sub) {
+  g.clearRect(0, 0, 640, 396);
+  g.fillStyle = 'rgba(10,12,26,.55)'; g.fillRect(0, 0, 640, 396);
+  g.strokeStyle = `hsla(${hue},60%,62%,.45)`; g.lineWidth = 1; g.strokeRect(6.5, 6.5, 627, 383);
+  g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  g.font = `500 30px ${SERIF}`; g.fillStyle = 'rgba(236,234,246,.95)';
+  g.fillText(title.split('').join(' '), 26, 46);
+  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
+  g.textAlign = 'right'; g.fillText(sub || '', 614, 44);
+  g.textAlign = 'left';
+  g.strokeStyle = 'rgba(140,150,220,.25)';
+  g.beginPath(); g.moveTo(26, 60); g.lineTo(614, 60); g.stroke();
+}
+const fmtK = v => v == null ? '—' : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(v);
+const detR = i => { const v = Math.sin(i * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
+function specIG(T) {
+  const g = T.g, P = (panelData || {}).ig || {};
+  specChrome(g, T.d.hue, 'INSTAGRAM', P.url || '');
+  /* profile block */
+  g.strokeStyle = '#e08a7c'; g.lineWidth = 3;
+  g.beginPath(); g.arc(78, 140, 40, 0, 7); g.stroke();
+  g.fillStyle = `hsla(${T.d.hue},50%,60%,.25)`; g.beginPath(); g.arc(78, 140, 35, 0, 7); g.fill();
+  g.font = `500 44px ${SERIF}`; g.fillStyle = 'rgba(236,234,246,.95)'; g.textAlign = 'center';
+  g.fillText('M', 78, 156);
+  g.textAlign = 'left';
+  g.font = `700 26px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
+  g.fillText('@' + (P.handle || '—'), 138, 128);
+  g.font = `600 14px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
+  g.fillText(`FOLLOWERS ${fmtK(P.followers)}   ·   POSTS ${fmtK(P.posts)}`, 138, 156);
+  g.fillStyle = '#ffd489';
+  g.fillText(`HOOK GATE ${P.hookGate ?? '—'}% — reels ship above it only`, 138, 180);
+  /* 3×3 recent grid, right side */
+  for (let i = 0; i < 9; i++) {
+    const x = 380 + (i % 3) * 78, y = 210 + ((i / 3) | 0) * 58;
+    g.fillStyle = `hsla(${(T.d.hue + i * 14) % 360},48%,${34 + detR(i) * 22}%,.8)`;
+    g.beginPath(); g.roundRect(x, y, 70, 50, 6); g.fill();
+    if (i % 3 === 0) {
+      g.fillStyle = 'rgba(236,234,246,.85)';
+      g.beginPath(); g.moveTo(x + 30, y + 18); g.lineTo(x + 44, y + 25); g.lineTo(x + 30, y + 32); g.fill();
+    }
+  }
+  g.font = `600 15px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.9)';
+  g.fillText('REEL 1 OF 3 — staged, awaiting post', 26, 236);
+  g.fillStyle = 'rgba(169,169,196,.9)'; g.font = `500 13px ${SANS}`;
+  g.fillText('lane: IG → affiliate engine (war-plan PRIMARY)', 26, 262);
+  g.fillText('IADOLA gate live · iadola.vercel.app', 26, 284);
+  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
+  g.fillText((panelData || {}).updated ? 'profile data as of ' + panelData.updated : '', 26, 372);
+}
+function specGold(T) {
+  const g = T.g, GD = goldData;
+  specChrome(g, T.d.hue, 'GOLD', GD ? GD.src : 'connecting…');
+  const px = GD && GD.price != null ? GD.price : null;
+  g.font = `700 52px ${SANS}`; g.fillStyle = '#ffd489';
+  g.fillText(px == null ? '— — —' : '$' + px.toLocaleString('en-US'), 26, 122);
+  if (GD && GD.chg != null) {
+    const up = GD.chg >= 0;
+    g.font = `700 20px ${SANS}`; g.fillStyle = up ? '#57d9ff' : '#e08a7c';
+    g.fillText(`${up ? '▲' : '▼'} ${Math.abs(GD.chg)} (${Math.abs(GD.chgPct)}%)`, 320, 122);
+    g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)'; g.fillText('vs prior close', 320, 142);
+  }
+  /* 1-month close line */
+  const cl2 = GD && GD.closes && GD.closes.length > 2 ? GD.closes : null;
+  const cx0 = 26, cy0 = 168, cw = 588, ch = 160;
+  g.strokeStyle = 'rgba(140,150,220,.18)';
+  for (let i = 0; i <= 4; i++) { const y = cy0 + ch * i / 4; g.beginPath(); g.moveTo(cx0, y); g.lineTo(cx0 + cw, y); g.stroke(); }
+  if (cl2) {
+    const mn = Math.min(...cl2), mx = Math.max(...cl2), sp = mx - mn || 1;
+    g.beginPath();
+    cl2.forEach((v, i) => {
+      const x = cx0 + cw * i / (cl2.length - 1), y = cy0 + ch - (v - mn) / sp * ch;
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    });
+    g.strokeStyle = '#ffd489'; g.lineWidth = 2.5; g.stroke();
+    g.lineTo(cx0 + cw, cy0 + ch); g.lineTo(cx0, cy0 + ch); g.closePath();
+    g.fillStyle = 'rgba(255,212,137,.10)'; g.fill();
+    const lx = cx0 + cw, ly = cy0 + ch - (cl2[cl2.length - 1] - mn) / sp * ch;
+    g.fillStyle = Date.now() % 1600 < 800 ? '#ffd489' : 'rgba(255,212,137,.4)';
+    g.beginPath(); g.arc(lx - 2, ly, 5, 0, 7); g.fill();
+    g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
+    g.fillText('$' + mx.toLocaleString(), cx0 + 4, cy0 + 14);
+    g.fillText('$' + mn.toLocaleString(), cx0 + 4, cy0 + ch - 6);
+  }
+  g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
+  g.fillText(GD && GD.hi52 ? `52-WEEK  ${GD.lo52.toLocaleString()} — ${GD.hi52.toLocaleString()}` : 'awaiting quote…', 26, 362);
+  g.fillStyle = 'rgba(140,150,220,.7)'; g.font = `500 12px ${SANS}`;
+  g.textAlign = 'right'; g.fillText('30 days · refreshed every 10 min', 614, 362); g.textAlign = 'left';
+}
+function specRevenue(T) {
+  const g = T.g, R = (panelData || {}).revenue || {};
+  specChrome(g, T.d.hue, 'REVENUE', R.note || '');
+  const kpi = (x, label, v, hot) => {
+    g.font = `700 44px ${SANS}`; g.fillStyle = hot ? '#ffd489' : 'rgba(236,234,246,.95)';
+    g.fillText(v == null ? '—' : '$' + v.toLocaleString(), x, 140);
+    g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
+    g.fillText(label, x, 165);
+  };
+  kpi(26, 'MRR', R.mrr); kpi(230, 'LAST 30 DAYS', R.d30); kpi(434, 'LIFETIME', R.lifetime, true);
+  /* 12-week honesty strip — flat is flat; the wall does not flatter */
+  const s = R.series || [];
+  const bx = 26, by = 220, bw = 588, bh = 90;
+  g.strokeStyle = 'rgba(140,150,220,.18)'; g.strokeRect(bx + .5, by + .5, bw, bh);
+  const mx2 = Math.max(1, ...s);
+  s.forEach((v, i) => {
+    const w = bw / s.length - 8;
+    const h = Math.max(2, v / mx2 * (bh - 12));
+    g.fillStyle = v > 0 ? '#ffd489' : 'rgba(140,150,220,.35)';
+    g.fillRect(bx + 6 + i * (bw / s.length), by + bh - 6 - h, w, h);
+  });
+  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
+  g.fillText('LAST 12 WEEKS', bx, by - 10);
+  g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.85)';
+  g.fillText('meter: live Stripe · no self-inflicted signals counted', 26, 356);
+}
+function specMemory(T) {
+  const g = T.g, MM = (panelData || {}).memory || {};
+  specChrome(g, T.d.hue, 'MEMORY', 'MEMORY.md index');
+  g.font = `700 56px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
+  g.fillText(MM.total ?? '—', 26, 136);
+  g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
+  g.fillText('MEMORIES ON FILE', 26, 160);
+  const rows = [['PROJECT', MM.project], ['REFERENCE', MM.reference], ['FEEDBACK', MM.feedback], ['USER', MM.user]];
+  const bmax = Math.max(1, ...rows.map(r => r[1] || 0));
+  rows.forEach((r2, i) => {
+    const y = 208 + i * 40;
+    g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.9)';
+    g.fillText(r2[0], 26, y + 4);
+    g.fillStyle = `hsla(${T.d.hue},52%,62%,.28)`; g.fillRect(130, y - 10, 220, 18);
+    g.fillStyle = `hsla(${T.d.hue},60%,66%,.95)`; g.fillRect(130, y - 10, (r2[1] || 0) / bmax * 220, 18);
+    g.fillStyle = 'rgba(236,234,246,.95)'; g.fillText(String(r2[1] ?? '—'), 362, y + 4);
+  });
+  /* recall web — structure only, no titles: a public wall never leaks content */
+  const nodes2 = [];
+  for (let i = 0; i < 26; i++) nodes2.push({ x: 430 + detR(i) * 180, y: 110 + detR(i + 40) * 240 });
+  g.strokeStyle = `hsla(${T.d.hue},55%,65%,.28)`; g.lineWidth = 1;
+  nodes2.forEach((n, i) => {
+    const j = (i * 7 + 3) % nodes2.length, k = (i * 11 + 5) % nodes2.length;
+    g.beginPath(); g.moveTo(n.x, n.y); g.lineTo(nodes2[j].x, nodes2[j].y); g.stroke();
+    if (i % 2) { g.beginPath(); g.moveTo(n.x, n.y); g.lineTo(nodes2[k].x, nodes2[k].y); g.stroke(); }
+  });
+  nodes2.forEach((n, i) => {
+    g.fillStyle = i % 5 ? 'rgba(212,215,240,.75)' : '#57d9ff';
+    g.beginPath(); g.arc(n.x, n.y, i % 5 ? 2.2 : 3.6, 0, 7); g.fill();
+  });
+  g.font = `500 12px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
+  g.fillText('linked recall · [[name]] graph · counts real, titles private', 26, 372);
+}
+function specStore(T) {
+  const g = T.g, S = (panelData || {}).store || {};
+  specChrome(g, T.d.hue, 'STORE', S.url || '');
+  g.font = `600 15px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.9)';
+  g.fillText(S.name || '', 26, 92);
+  (S.products || []).forEach((p, i) => {
+    const y = 122 + i * 62;
+    g.fillStyle = `hsla(${T.d.hue},45%,55%,.16)`;
+    g.beginPath(); g.roundRect(26, y, 588, 50, 8); g.fill();
+    g.strokeStyle = `hsla(${T.d.hue},55%,62%,.5)`; g.lineWidth = 1; g.stroke();
+    /* tee glyph */
+    g.strokeStyle = 'rgba(236,234,246,.8)'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(48, y + 16); g.lineTo(58, y + 10); g.lineTo(66, y + 14); g.lineTo(74, y + 10); g.lineTo(84, y + 16);
+    g.lineTo(78, y + 24); g.lineTo(78, y + 40); g.lineTo(54, y + 40); g.lineTo(54, y + 24); g.closePath(); g.stroke();
+    g.font = `600 17px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
+    g.fillText(p.n, 104, y + 31);
+    g.font = `700 20px ${SANS}`; g.fillStyle = '#ffd489'; g.textAlign = 'right';
+    g.fillText('$' + p.p, 598, y + 33); g.textAlign = 'left';
+  });
+  g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
+  g.fillText(S.scan || '', 26, 352);
+  g.fillStyle = 'rgba(140,150,220,.7)'; g.font = `500 12px ${SANS}`;
+  g.fillText('print-on-demand · Printful → Stripe checkout', 26, 372);
+}
+function specGoals(T) {
+  const g = T.g, GO = (panelData || {}).goals || {};
+  specChrome(g, T.d.hue, 'GOALS', GO.plan || '');
+  g.font = `700 40px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
+  g.fillText(`$${(GO.current ?? 0).toLocaleString()} / $${(GO.target ?? 0).toLocaleString()}`, 26, 124);
+  g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
+  g.fillText(`FIRST EXTERNAL DOLLAR RUN — DEADLINE ${GO.deadline || '—'}`, 26, 150);
+  const p = Math.min(1, (GO.current || 0) / (GO.target || 1));
+  g.fillStyle = 'rgba(140,150,220,.25)'; g.fillRect(26, 170, 588, 14);
+  g.fillStyle = '#ffd489'; g.fillRect(26, 170, Math.max(4, 588 * p), 14);
+  (GO.lanes || []).forEach((ln, i) => {
+    const y = 232 + i * 42;
+    g.fillStyle = i === 0 ? '#57d9ff' : 'rgba(169,169,196,.9)';
+    g.font = `700 16px ${SANS}`; g.fillText('▸', 26, y);
+    g.font = `600 16px ${SANS}`; g.fillStyle = i === 0 ? 'rgba(236,234,246,.95)' : 'rgba(212,215,240,.85)';
+    g.fillText(ln, 48, y);
+  });
+  g.font = `500 12px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
+  g.fillText('progress = verified external revenue only', 26, 372);
+}
+const SPEC = { revenue: specRevenue, content: specIG, markets: specGold, self: specMemory, hunt: specStore, empire: specGoals };
+
 function buildWorld() {
-  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = []; monRings = []; monInst = null; corePulse = null; dust = null; runCol = null; hover.i = -1;
+  world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = []; monRings = []; monInst = null; corePulse = null; dust = null; runCol = null; netPulse = null; hover.i = -1;
 
   /* every agent is an app tile on its zone's wall — in the reference the walls
      ARE the OS: icon grids covering luminous surfaces. 5 columns, cells on the
@@ -1012,6 +1224,7 @@ function buildWorld() {
     return { cols, rows, cell, ox: (c.width - cols * cell) / 2, oy: (c.height - rows * cell) / 2 };
   }
   function tileAt(T, uv) {
+    if (T.spec) return -1;   /* specialized screens have no tile cells */
     const { cols, cell, ox, oy } = tileGrid(T);
     const px = uv.x * T.c.width, py = (1 - uv.y) * T.c.height;
     const col = Math.floor((px - ox) / cell), row = Math.floor((py - oy) / cell);
@@ -1022,6 +1235,7 @@ function buildWorld() {
   function drawTilePanel(T, blink, hoverIdx = -1) {
     const { g, c, d } = T;
     T.blink = blink;
+    if (T.spec) { T.spec(T); T.tex.needsUpdate = true; return; }
     g.clearRect(0, 0, c.width, c.height);
     const COL = { running: '#57d9ff', ok: '#c9c7dd', flag: '#e08a7c', dormant: '#5d6084' };
     const { cols, cell, ox, oy } = tileGrid(T);
@@ -1438,7 +1652,7 @@ function buildWorld() {
     else { tmesh.position.set((d.cx > 0 ? FIB(5) : -FIB(5)) - d.cx, 140, -ROOM.depth - d.cz + 5); }
     zone.add(tmesh);
     tmesh.userData = { kind: 'tiles', dept: d.id };
-    const TP = { c: tc, g: tc.getContext('2d'), tex: ttex, d, mesh: tmesh, hover: -1 };
+    const TP = { c: tc, g: tc.getContext('2d'), tex: ttex, d, mesh: tmesh, hover: -1, spec: OS_MODE ? SPEC[d.id] || null : null };
     tilePanels.push(TP); drawTilePanel(TP, true);
 
     if (!OS_MODE) {
@@ -1827,6 +2041,94 @@ function buildWorld() {
       pulseMeshes.data.push({ beam: i % Math.max(1, beams.length), p: (i * PHI) % 1, sp: .0013 * Math.pow(PHI, (i % 5) - 2) });
   }
 
+  /* ═════════ THE UNDERFLOOR — the nervous system beneath the OS ═════════
+     Cable harnesses run from every monitor's foot to the spine root under
+     CORTEX; relay clusters web between them; each cluster is stitched dense
+     with hairline chords so the mesh reads as thousands of strings knotting
+     into patterned ganglia. ONE additive LineSegments + two Points + one
+     instanced packet mesh — four draw calls for the whole nervous system. */
+  {
+    const NP = [], NC = [];
+    const nseg = (x1, z1, x2, z2, r, g2, b, o) => {
+      NP.push(x1, 0, z1, x2, 0, z2);
+      NC.push(r * o, g2 * o, b * o, r * o, g2 * o, b * o);
+    };
+    const ROOT = { x: 0, z: -640 };
+    /* deterministic scatter — rebuilds identical on every refresh */
+    const clusters = [];
+    for (let i = 0; i < 14; i++) {
+      const cx2 = (detR(i * 3 + 1) * 2 - 1) * 520, cz2 = -690 + detR(i * 5 + 2) * 1150;
+      clusters.push({ x: cx2, z: cz2, pts: [] });
+      const n = 6 + Math.floor(detR(i * 7 + 3) * 8);
+      for (let k = 0; k < n; k++) {
+        clusters[i].pts.push({
+          x: cx2 + (detR(i * 31 + k) * 2 - 1) * 52,
+          z: cz2 + (detR(i * 77 + k + 7) * 2 - 1) * 52,
+        });
+      }
+    }
+    /* ganglion webs: node→2 siblings + dense hairline chords */
+    clusters.forEach((cl, ci) => {
+      cl.pts.forEach((p, i) => {
+        const j = (i + 1) % cl.pts.length, k = (i + 2) % cl.pts.length;
+        nseg(p.x, p.z, cl.pts[j].x, cl.pts[j].z, .35, .55, .95, .5);
+        nseg(p.x, p.z, cl.pts[k].x, cl.pts[k].z, .35, .55, .95, .32);
+      });
+      for (let h2 = 0; h2 < 52; h2++) {
+        const a = cl.pts[Math.floor(detR(ci * 131 + h2) * cl.pts.length)];
+        const bx2 = a.x + (detR(ci * 313 + h2) * 2 - 1) * 34;
+        const bz2 = a.z + (detR(ci * 517 + h2) * 2 - 1) * 34;
+        nseg(a.x, a.z, bx2, bz2, .3, .45, .85, .14);
+      }
+    });
+    /* inter-cluster relays: each cluster to its 2 nearest neighbours */
+    clusters.forEach((cl, ci) => {
+      const near = clusters.map((o, oi) => [((o.x - cl.x) ** 2 + (o.z - cl.z) ** 2), oi])
+        .filter(x => x[1] !== ci).sort((a2, b2) => a2[0] - b2[0]).slice(0, 2);
+      for (const [, oi] of near) nseg(cl.x, cl.z, clusters[oi].x, clusters[oi].z, .3, .75, 1, .3);
+    });
+    /* trunk harnesses: monitor foot → nearest cluster → root, 5-cable bundles */
+    const paths = [];
+    deptList.forEach((d, i) => {
+      const col = new THREE.Color().setHSL(d.hue / 360, .6, .6);
+      const near = clusters.map((o, oi) => [((o.x - d.cx) ** 2 + (o.z - d.cz) ** 2), oi])
+        .sort((a2, b2) => a2[0] - b2[0])[0][1];
+      const K = clusters[near];
+      paths.push([new THREE.Vector3(d.cx, 0, d.cz), new THREE.Vector3(K.x, 0, K.z), new THREE.Vector3(ROOT.x, 0, ROOT.z)]);
+      for (let b2 = 0; b2 < 5; b2++) {
+        const off = (b2 - 2) * 3.4, o2 = b2 === 2 ? .6 : .3;
+        nseg(d.cx + off, d.cz + off * .4, K.x + off, K.z + off * .4, col.r, col.g, col.b, o2);
+        nseg(K.x + off, K.z + off * .4, ROOT.x + off, ROOT.z + off * .4, col.r, col.g, col.b, o2);
+      }
+    });
+    const ngeo = new THREE.BufferGeometry();
+    ngeo.setAttribute('position', new THREE.Float32BufferAttribute(NP, 3));
+    ngeo.setAttribute('color', new THREE.Float32BufferAttribute(NC, 3));
+    const net = new THREE.LineSegments(ngeo, new THREE.LineBasicMaterial({
+      vertexColors: true, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false }));
+    net.position.y = 1.4; net.frustumCulled = false; world.add(net);
+    /* node dots + hot ganglion cores */
+    const dot = (pts, size, color, op) => {
+      const g3 = new THREE.BufferGeometry();
+      g3.setAttribute('position', new THREE.Float32BufferAttribute(pts.flatMap(p => [p.x, 1.8, p.z]), 3));
+      const m = new THREE.Points(g3, new THREE.PointsMaterial({
+        color, size, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
+      m.frustumCulled = false; world.add(m);
+    };
+    dot(clusters.flatMap(c2 => c2.pts), 3.4, 0xa8c4f4, .8);
+    dot(clusters, 7.5, 0x57d9ff, .95);
+    /* packets — data running the trunks toward the spine, all night long */
+    const PN = 18;
+    const inst = new THREE.InstancedMesh(new THREE.SphereGeometry(2.3, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xcfe6ff, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false }), PN);
+    inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    inst.frustumCulled = false;
+    world.add(inst);
+    netPulse = { inst, paths, data: [] };
+    for (let i = 0; i < PN; i++)
+      netPulse.data.push({ path: i % paths.length, p: (i * PHI) % 1, sp: .00006 * (1 + (i % 4)) });
+  }
+
   /* wall terminals — live system log rendered from the real fleet, like the floating
      windows in the reference. Every line is a real lane's real last result. */
   const mkTerm = (w, h, title) => {
@@ -2202,6 +2504,23 @@ function frame(now) {
       }
     });
     pulseMeshes.inst.instanceMatrix.needsUpdate = true;
+  }
+  /* underfloor packets — dept foot → ganglion → spine root, fixed harness routes */
+  if (!reduced && netPulse) {
+    const dt2 = 16;
+    netPulse.data.forEach((pd, i) => {
+      pd.p += pd.sp * dt2;
+      if (pd.p >= 1) pd.p = 0;
+      const path = netPulse.paths[pd.path];
+      if (path) {
+        const k = pd.p * (path.length - 1), s0 = Math.min(path.length - 2, k | 0), f = k - s0;
+        dummy.position.lerpVectors(path[s0], path[s0 + 1], f);
+        dummy.position.y = 1.8;
+        dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.updateMatrix();
+        netPulse.inst.setMatrixAt(i, dummy.matrix);
+      }
+    });
+    netPulse.inst.instanceMatrix.needsUpdate = true;
   }
   composer.render();
 }
