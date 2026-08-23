@@ -2360,9 +2360,47 @@ const pickCortexVoice = () => {
   };
   cortexVoicePick = speechSynthesis.getVoices().map(v => [score(v), v]).filter(x => x[0] >= 0)
     .sort((a, b) => b[0] - a[0]).map(x => x[1])[0] || null;
-  window.__voice = () => cortexVoicePick ? cortexVoicePick.name + ' [' + cortexVoicePick.lang + ']' : null;
 };
 if ('speechSynthesis' in window) { pickCortexVoice(); speechSynthesis.addEventListener('voiceschanged', pickCortexVoice); }
+
+/* ---- Kokoro-82M: neural TTS running IN the tab. Apache-2.0, keyless, $0.
+   One-time ~90 MB model pull from the Hugging Face CDN (browser-cached after);
+   Web Speech covers the gap while it loads and any machine it fails on.
+   Synthesized lines are cached by text, so repeats are instant. */
+let kokoro = null, kokoroState = 'off', kokoroVoice = 'am_michael', kokoroAudio = null;
+const kokoroCache = new Map();
+async function loadKokoro() {
+  if (kokoroState !== 'off') return;
+  kokoroState = 'loading';
+  try {
+    const { KokoroTTS } = await import('https://cdn.jsdelivr.net/npm/kokoro-js@1/+esm');
+    const MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';
+    kokoro = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: navigator.gpu ? 'webgpu' : 'wasm' })
+      .catch(() => KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'wasm' }));
+    kokoroState = 'ready';
+  } catch { kokoroState = 'failed'; }
+}
+async function kokoroSpeak(text, done) {
+  let url = kokoroCache.get(text);
+  if (!url) {
+    const wav = await kokoro.generate(text, { voice: kokoroVoice, speed: 1.04 });
+    window.__klast = { samples: wav.audio.length, sr: wav.sampling_rate };
+    url = URL.createObjectURL(wav.toBlob());
+    kokoroCache.set(text, url);
+  }
+  if (kokoroAudio) kokoroAudio.pause();
+  kokoroAudio = new Audio(url);
+  window.__kdebug = () => JSON.stringify({ dur: kokoroAudio.duration, rs: kokoroAudio.readyState, err: kokoroAudio.error && kokoroAudio.error.code, paused: kokoroAudio.paused, t: kokoroAudio.currentTime });
+  kokoroAudio.onended = done;
+  await kokoroAudio.play();
+}
+window.__voice = () =>
+  kokoroState === 'ready'
+    ? 'Kokoro ' + kokoroVoice + (kokoroAudio ? ' dur=' + (Math.round(kokoroAudio.duration * 100) / 100) : '')
+    : (kokoroState === 'loading' ? '(Kokoro loading) ' : kokoroState === 'failed' ? '(Kokoro failed) ' : '') +
+      (cortexVoicePick ? cortexVoicePick.name + ' [' + cortexVoicePick.lang + ']' : 'null');
+window.__kvoice = v => { kokoroVoice = v; kokoroCache.clear(); return v; };
+window.__say = t => cortexSay(t || cortexStatusLine(), 'talk');
 function cortexGesture(mode, dur) {
   if (mind) mind.gest = { mode, t0: performance.now(), until: performance.now() + dur };
 }
@@ -2372,17 +2410,27 @@ function cortexSay(text, gest) {
   const dur = Math.max(2600, text.length * 62);
   cortexGesture(gest || 'talk', dur);
   capTimer = setTimeout(() => cortexCap.classList.remove('on'), dur + 600);
+  const done = () => {
+    clearTimeout(capTimer);
+    capTimer = setTimeout(() => cortexCap.classList.remove('on'), 900);
+    if (mind) mind.gest = { mode: 'idle', t0: performance.now(), until: 0 };
+  };
+  if (kokoroState === 'off') loadKokoro();
+  if (kokoroState === 'ready' && kokoro) {
+    try { speechSynthesis.cancel(); } catch {}
+    kokoroSpeak(text, done).catch(() => webSay(text, done));
+    return;
+  }
+  webSay(text, done);
+}
+function webSay(text, done) {
   if (!('speechSynthesis' in window)) return;
   try {
     if (!cortexVoicePick) pickCortexVoice();   /* some browsers load voices late */
     const u = new SpeechSynthesisUtterance(text);
     if (cortexVoicePick) u.voice = cortexVoicePick;
     u.rate = 1.06; u.pitch = 1.0; u.volume = .95;   /* brisk but not chipmunk — erudition over squeak */
-    u.onend = () => {
-      clearTimeout(capTimer);
-      capTimer = setTimeout(() => cortexCap.classList.remove('on'), 900);
-      if (mind) mind.gest = { mode: 'idle', t0: performance.now(), until: 0 };
-    };
+    u.onend = done;
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
   } catch {}
@@ -2750,6 +2798,7 @@ function enter() {
   setTimeout(() => intro.remove(), 1000);
   canvas.focus();
   armGyro();   /* inside the tap gesture — iOS permission prompts need that */
+  loadKokoro();   /* start the neural-voice pull now; Web Speech carries the greeting */
   setTimeout(() => {
     if (mind && nodes.length) cortexSay(`Salutations. CORTEX online — ${nodes.length} units under supervision, cognition nominal. Do peruse; every light is empirical.`);
   }, 1600);
