@@ -1242,8 +1242,11 @@ function specRevenue(T) {
     const y = by + bh * i / 2;
     g.strokeStyle = 'rgba(140,150,220,.14)'; g.setLineDash(i === 2 ? [3, 3] : []);
     g.beginPath(); g.moveTo(bx, y); g.lineTo(bx + bw, y); g.stroke(); g.setLineDash([]);
-    g.fillStyle = 'rgba(169,169,196,.75)';
-    g.fillText('$' + Math.round(mx2 * (1 - i / 2)).toLocaleString(), axr, y + 3);
+    /* an all-zero series has no honest scale — label only the $0 floor */
+    if (Math.max(...s) > 0 || i === 2) {
+      g.fillStyle = 'rgba(169,169,196,.75)';
+      g.fillText('$' + Math.round(mx2 * (1 - i / 2)).toLocaleString(), axr, y + 3);
+    }
   }
   if (s.length > 1) {
     const pts = s.map((v, i) => [bx + bw * i / (s.length - 1), by + bh - v / mx2 * (bh - 8)]);
