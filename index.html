@@ -1093,13 +1093,7 @@ function buildWorld() {
        Its state object keeps the old `jarvis` name only as internal plumbing. */
     jarvis = { noiseTime: 0, lastT: 0, mom: 0, load: Math.min(.35, nodes.filter(n => n.status === 'running').length * .05),
       flag: Math.min(1, Math.max(0, (nodes.filter(n => n.status === 'flag').length / (nodes.length || 1) - .05) * 2.2)) };
-    /* orbital rings sit OUTSIDE the tissue (brain max radius ~205 at S=185) */
-    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(232, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
-    ring0.rotation.x = Math.PI / 2.1; ring0.rotation.y = -.4; brain.add(ring0);
-    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(268, 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false }));
-    ring1.rotation.x = Math.PI / 2.4; brain.add(ring1);
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(325, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false }));
-    ring2.rotation.x = Math.PI / 1.8; ring2.rotation.y = .7; brain.add(ring2);
+    /* no orbit rings — Marco's call (2026-08-23): just the brain and the hands */
     const glow = new THREE.PointLight(0x6ea8ff, 2.6, 900); brain.add(glow);
     brain.position.set(0, 300, -640);
     const lbl = makeLabel('CORTEX', { size: 60, serif: true }); lbl.position.set(0, 252, 0); brain.add(lbl);
@@ -2349,10 +2343,21 @@ canvas.addEventListener('pointerup', e => {
 const cortexCap = $('cortex-cap');
 let capTimer = 0, statusIdx = 0, lastZoneSay = 0, cortexVoicePick = null;
 const pickCortexVoice = () => {
-  const vs = speechSynthesis.getVoices();
-  cortexVoicePick = vs.find(v => /en[-_]GB/i.test(v.lang) && /daniel|arthur|james|male/i.test(v.name))
-                 || vs.find(v => /en[-_]GB/i.test(v.lang))
-                 || vs.find(v => /^en/i.test(v.lang)) || null;
+  /* rank every installed voice; take the best. Neural/enhanced voices exist
+     on every modern OS — the default is never the good one. */
+  const score = (v) => {
+    let s = 0;
+    if (!/^en/i.test(v.lang)) return -1;
+    if (/en[-_]GB/i.test(v.lang)) s += 4;
+    if (/natural|neural|enhanced|premium|online/i.test(v.name)) s += 8;
+    if (/google uk english male/i.test(v.name)) s += 7;
+    if (/\b(daniel|arthur|george|ryan|oliver|alex)\b/i.test(v.name)) s += 5;
+    if (/female|samantha|victoria|kate|serena|zira/i.test(v.name)) s -= 3;
+    if (/compact|whisper|novelty|bad|albert|zarvox/i.test(v.name)) s -= 10;
+    return s;
+  };
+  cortexVoicePick = speechSynthesis.getVoices().map(v => [score(v), v]).filter(x => x[0] >= 0)
+    .sort((a, b) => b[0] - a[0]).map(x => x[1])[0] || null;
 };
 if ('speechSynthesis' in window) { pickCortexVoice(); speechSynthesis.addEventListener('voiceschanged', pickCortexVoice); }
 function cortexGesture(mode, dur) {
@@ -2368,7 +2373,7 @@ function cortexSay(text, gest) {
   try {
     const u = new SpeechSynthesisUtterance(text);
     if (cortexVoicePick) u.voice = cortexVoicePick;
-    u.rate = 1.08; u.pitch = 1.16; u.volume = .9;   /* brisk and a touch keen — the nerd register */
+    u.rate = 1.06; u.pitch = 1.0; u.volume = .95;   /* brisk but not chipmunk — erudition over squeak */
     u.onend = () => {
       clearTimeout(capTimer);
       capTimer = setTimeout(() => cortexCap.classList.remove('on'), 900);
