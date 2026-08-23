@@ -1561,6 +1561,7 @@ function buildWorld() {
     const zone = new THREE.Group(); zone.position.set(d.cx, 0, d.cz); world.add(zone); d.groupObj = zone;
     if (OS_MODE) {
       zone.rotation.y = mn.r;
+      d.rot = mn.r;   /* the tour flies head-on along this normal */
       /* the monitor body: dark bezel behind, hot rim around the frame */
       const bez = new THREE.Mesh(new THREE.PlaneGeometry(MW + 16, MH + 16),
         new THREE.MeshBasicMaterial({ color: 0x04050e, side: THREE.DoubleSide }));
@@ -2231,12 +2232,12 @@ function animateAgents(t) {
 const _m4 = new THREE.Matrix4(), _qc = new THREE.Quaternion(), _qp = new THREE.Quaternion();
 const _pc = new THREE.Vector3(), _pp = new THREE.Vector3();
 function applyCamera(t, dx, dy) {
-  const pk = reel ? (OS_MODE ? 1 : 0) : (level === 0 ? 1 : .45);
+  const pk = reel ? 0 : (level === 0 ? 1 : .45);   /* tour = deterministic flight, no hand sway */
   _pc.set(camBase.x + par.sx * 85 * pk + dx, camBase.y - par.sy * 48 * pk + dy, camBase.z);
   _m4.lookAt(_pc, tgtBase, camera.up); _qc.setFromRotationMatrix(_m4);
   const near = 1, fovT = near * Math.tan(THREE.MathUtils.degToRad(30));
   let l = -fovT * camera.aspect, r = fovT * camera.aspect, tp = fovT, bt = -fovT;
-  const goal = level === 0 && (OS_MODE || (!reel && !tour)) ? 1 : 0;
+  const goal = level === 0 && !reel && !tour ? 1 : 0;   /* portal stands down while the tour flies */
   PORTAL.mix += (goal - PORTAL.mix) * .07;
   if (PORTAL.mix < .001) PORTAL.mix = 0;
   if (PORTAL.mix > 0) {
@@ -2291,7 +2292,7 @@ function frame(now) {
       /* he is never a statue: hover bob, and while speaking a professor's
          nod + head tilt riding on top of the base forward lean */
       mind.g.position.y = Math.sin(t * .0016) * 5 + (talking ? Math.sin(t * .004) * 2 : 0);
-      mind.g.rotation.x += ((0.12 + (talking ? Math.sin(t * .0037) * .045 + Math.sin(t * .0011) * .02
+      mind.g.rotation.x += ((0.12 + (talking ? Math.sin(t * .0037) * .07 + Math.sin(t * .0011) * .03
                                              : Math.sin(t * .0009) * .02)) - mind.g.rotation.x) * .08;
       mind.g.rotation.z += (((talking ? Math.sin(t * .0021) * .03 : Math.sin(t * .0007) * .015)) - mind.g.rotation.z) * .08;
     }
@@ -2305,7 +2306,7 @@ function frame(now) {
       if (G.mode === 'talk') {
         if (!G.sub || t > (G.subUntil || 0)) {
           let nx; do { nx = TALK_GESTS[(Math.random() * TALK_GESTS.length) | 0]; } while (nx === G.sub);
-          G.sub = nx; G.subT0 = t; G.subUntil = t + 1300 + Math.random() * 1200;
+          G.sub = nx; G.subT0 = t; G.subUntil = t + 900 + Math.random() * 800;   /* fast cuts — he talks with his whole body */
           G.cNext = 0;
         }
         if (G.sub === 'conduct') {
@@ -2329,8 +2330,8 @@ function frame(now) {
         if (G.mode === 'talk') {
           tg = GEST_FN[G.sub](s, t, G);
           /* shimmer on top of every gesture — the hands never freeze */
-          tg.py = (tg.py || 0) + Math.sin(t * .006 + s * 1.7) * .03;
-          tg.rz = (tg.rz || 0) + Math.sin(t * .005 + s * 2) * .06;
+          tg.py = (tg.py || 0) + Math.sin(t * .008 + s * 1.7) * .06;
+          tg.rz = (tg.rz || 0) + Math.sin(t * .007 + s * 2) * .11;
         } else if (G.mode === 'aim') {
           /* commanding a specific zone: right hand reaches at the actual
              monitor, index out, beam live; left defers */
@@ -2922,22 +2923,24 @@ const reachPose = () => {
            rx: .95, ry: cl(-_ad.x * .4, -.5, .5), rz: -.5, curls: [-.85, .5, .55, .6] };
 };
 const GEST_FN = {
-  /* rhythmic downbeats — the workhorse "talking with your hands" */
-  beat(s, t) { const b = Math.abs(Math.sin(t * .008 + (s > 0 ? 0 : 1.1))); return { py: .16 + b * .14, px: s * .05, rx: .35 + b * .25, rz: s * .18, curl: -.12 }; },
+  /* rhythmic downbeats — the workhorse "talking with your hands".
+     Amplitudes run HOT (Marco: "not moving enough"): travel reads from the
+     doorway or it does not exist. */
+  beat(s, t) { const b = Math.abs(Math.sin(t * .011 + (s > 0 ? 0 : 1.1))); return { py: .22 + b * .3, px: s * .1, rx: .5 + b * .5, rz: s * .26, curl: -.15 }; },
   /* palms rotate open and up — "as you can plainly see" */
-  palmsUp(s, t) { return { py: .28 + Math.sin(t * .003 + s) * .04, px: s * .14, rx: 1.15, ry: -s * .15, rz: s * .1, curl: -.4 }; },
+  palmsUp(s, t) { return { py: .48 + Math.sin(t * .0045 + s) * .09, px: s * .2, rx: 1.35, ry: -s * .2, rz: s * .12, curl: -.45 }; },
   /* fingertips meet at the midline — the professor's steeple */
-  steeple(s) { return { px: -s * .44, py: .34, pz: .18, rx: .55, ry: -s * .25, rz: -s * .42, curl: -.05 }; },
+  steeple(s, t) { return { px: -s * .44, py: .38 + Math.sin(t * .004) * .05, pz: .2, rx: .6, ry: -s * .25, rz: -s * .42, curl: -.05 }; },
   /* right hand arcs across the audience; left holds court */
-  sweep(s, t, G) { const k = ((t - G.subT0) % 1600) / 1600, a = Math.sin(k * Math.PI); return s > 0 ? { px: .15 + a * .35, py: .42, rx: .8, ry: -a * .5, rz: -.35, curl: -.3 } : { py: .08, rz: -.1, curl: .05 }; },
+  sweep(s, t, G) { const k = ((t - G.subT0) % 1400) / 1400, a = Math.sin(k * Math.PI); return s > 0 ? { px: .2 + a * .55, py: .58, rx: .9, ry: -a * .7, rz: -.4, curl: -.3 } : { py: .18, rx: .3, rz: -.16, curl: .05 }; },
   /* thumb-and-index precision pinch — a fine point being made */
-  pinch(s) { return s > 0 ? { py: .5, px: .1, rx: .9, rz: -.3, curls: [.55, .5, -.2, -.25] } : { py: .12, rx: .25, curl: -.05 }; },
+  pinch(s, t) { return s > 0 ? { py: .62 + Math.sin(t * .006) * .05, px: .14, rx: 1.0, rz: -.35, curls: [.55, .5, -.2, -.25] } : { py: .2, rx: .35, curl: -.05 }; },
   /* both hands spread wide — the big picture */
-  expanse(s, t, G) { const k = Math.min(1, (t - G.subT0) / 900); return { px: s * .45 * k, py: .34, rx: .7, ry: s * .4 * k, curl: -.45 }; },
+  expanse(s, t, G) { const k = Math.min(1, (t - G.subT0) / 700); return { px: s * .7 * k, py: .5, rx: .8, ry: s * .55 * k, curl: -.5 }; },
   /* enumerating: fingers extend one by one on the right hand */
-  count(s, t, G) { if (s > 0) { const step = ((t - G.subT0) / 430 | 0) % 5; return { py: .5, px: .12, rx: .95, rz: -.35, curls: [0, 1, 2, 3].map(i => i < step ? -.7 : .3) }; } return { py: .1, rx: .3, curl: 0 }; },
+  count(s, t, G) { if (s > 0) { const step = ((t - G.subT0) / 400 | 0) % 5; return { py: .62, px: .16, rx: 1.05, rz: -.4, curls: [0, 1, 2, 3].map(i => i < step ? -.7 : .3) }; } return { py: .18, rx: .35, curl: 0 }; },
   /* emphatic karate-chop cadence, hands alternating */
-  chop(s, t) { const on = Math.sin(t * .001) > 0 ? 1 : -1; if (s === on) { const b = Math.abs(Math.sin(t * .0075)); return { py: .3 + b * .12, rx: .2, ry: -s * .3, rz: s * .55, curl: -.02 }; } return { py: .1, rz: s * .1, curl: -.05 }; },
+  chop(s, t) { const on = Math.sin(t * .0014) > 0 ? 1 : -1; if (s === on) { const b = Math.abs(Math.sin(t * .011)); return { py: .42 + b * .26, rx: .3, ry: -s * .35, rz: s * .8, curl: -.02 }; } return { py: .16, rz: s * .14, curl: -.05 }; },
   /* CONDUCTING THE MACHINE: right hand fires the control beam at live zones,
      hopping targets mid-sentence; left keeps the beat. The room answers. */
   conduct(s, t, G) {
@@ -3243,19 +3246,31 @@ search.addEventListener('input', () => {
 /* ============================== reel mode ============================== */
 let tourRun = 0;
 function tourKeys() {
-  /* OS mode: the reference's grammar — the room NEVER moves, the EYE does.
-     A 10-second orbit of the viewer around the fixed glass window (the phone
-     circling the laptop): big lateral swings, a low lean-in, a high pull-back.
-     px/py are eye parallax targets, dist is how far the eye sits off the glass. */
-  if (OS_MODE) return [
-    { t: 0,     px: 0,     py: .05,  dist: 1050 },
-    { t: 1800,  px: -1.35, py: .12,  dist: 760 },
-    { t: 3600,  px: -.85,  py: -.42, dist: 520 },
-    { t: 5400,  px: .95,   py: -.25, dist: 430 },
-    { t: 7200,  px: 1.35,  py: .42,  dist: 700 },
-    { t: 8800,  px: .25,   py: .1,   dist: 900 },
-    { t: 10000, px: 0,     py: .05,  dist: 1050 },
-  ];
+  /* OS mode: fly the CONTENT, don't orbit the glass. Marco's verdict on the
+     parallax orbit: "can't see shit." Head-on stops at the real screens —
+     brain → gold → instagram → revenue → a low skim over the underfloor
+     nerves — each held long enough to actually read. */
+  if (OS_MODE) {
+    const mon = (id, D = 330) => {
+      const d2 = deptList.find(x => x.id === id) || deptList[0];
+      const r = d2.rot || 0;
+      return {
+        pos: [d2.cx + Math.sin(r) * D, 262, d2.cz + Math.cos(r) * D],
+        tgt: [d2.cx, 252, d2.cz],
+      };
+    };
+    const g1 = mon('markets'), g2 = mon('content'), g3 = mon('revenue');
+    return [
+      { t: 0,     pos: [0, 300, 1500], tgt: [0, 220, -300] },
+      { t: 2200,  pos: [0, 330, -160], tgt: [0, 300, -640], act: () => { close(); setLevelSilent(0); } },   /* CORTEX close */
+      { t: 4800,  pos: g1.pos, tgt: g1.tgt },    /* gold, head-on */
+      { t: 7400,  pos: g2.pos, tgt: g2.tgt },    /* instagram, head-on */
+      { t: 10000, pos: g3.pos, tgt: g3.tgt },    /* revenue, head-on */
+      { t: 12600, pos: [340, 55, 420], tgt: [0, 6, -640] },   /* underfloor nerve skim */
+      { t: 14600, pos: [0, 260, 900], tgt: [0, 190, -350] },
+      { t: 16000, pos: [0, 300, 1240], tgt: [0, 200, -350] },
+    ];
+  }
   /* exactly 10 seconds: dive through the portal → glancing sweep along the
      icon-grid wall → a hero monument → JARVIS close → pull back out.
      Each run rotates the hero (instagram first, then every zone's biggest
@@ -3292,9 +3307,9 @@ const smooth = u => u * u * (3 - 2 * u);
 function startReel() {
   if (reel) return;
   reel = true; document.body.classList.add('reel'); close(); setLevelSilent(0);
-  /* OS mode records THROUGH the window projection — the illusion IS the shot.
-     Legacy mode zeroed it for a deterministic drone flight. */
-  PORTAL.mix = OS_MODE ? 1 : 0;
+  /* deterministic drone flight in both modes — the tour must READ, so the
+     off-axis window projection stands down while it runs */
+  PORTAL.mix = 0;
   tour = { keys: tourKeys(), start: performance.now() };
   $('live').textContent = 'cinematic tour running — tap or press escape to exit';
 }
@@ -3312,12 +3327,12 @@ function tourStep(now) {
   const a = K[i], b = K[Math.min(i + 1, K.length - 1)];
   if (a.act && !a.done) { a.done = true; a.act(); }
   const u = smooth(Math.min(1, (el - a.t) / Math.max(1, b.t - a.t)));
-  if (OS_MODE) {
-    /* eye-orbit: drive the viewer's parallax + lean, never the camera flight */
+  if (a.px !== undefined) {
+    /* legacy eye-orbit keys: drive parallax + lean, never the camera */
     par.x = a.px + (b.px - a.px) * u;
     par.y = a.py + (b.py - a.py) * u;
     PORTAL.dist = a.dist + (b.dist - a.dist) * u;
-    idle.lastMove = now;   /* the scripted eye owns the sway */
+    idle.lastMove = now;
     return;
   }
   camBase.set(
