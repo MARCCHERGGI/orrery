@@ -66,6 +66,15 @@
     transition: opacity 900ms cubic-bezier(.4,0,.2,1); z-index: 30;
   }
   #intro.gone { opacity: 0; pointer-events: none; }
+  #cortex-cap {
+    position: fixed; left: 50%; bottom: 15%; transform: translateX(-50%);
+    max-width: min(680px, 82vw); padding: 10px 18px; z-index: 5;
+    background: rgba(14,17,38,.82); border: 1px solid rgba(87,217,255,.35); border-radius: 10px;
+    color: var(--ink); font-size: 13px; line-height: 1.5; letter-spacing: .04em; text-align: center;
+    opacity: 0; transition: opacity .45s ease; pointer-events: none;
+  }
+  #cortex-cap.on { opacity: 1; }
+  #cortex-cap::before { content: 'CORTEX'; display: block; font-size: 11px; letter-spacing: .3em; color: var(--accent); margin-bottom: 3px; }
   #intro h1 {
     font-family: var(--serif); font-weight: 500; letter-spacing: .3em; text-indent: .3em;
     font-size: clamp(26px, 4.8vw, 54px);
@@ -256,6 +265,7 @@
 </head>
 <body>
 <canvas id="sky" aria-label="3D ecosystem. Arrow keys move between agents, Enter opens one, Escape goes up a level."></canvas>
+<div id="cortex-cap" aria-live="polite"></div>
 
 <div id="intro" role="button" tabindex="0" aria-label="Enter the world">
   <div>
@@ -1227,8 +1237,11 @@ function buildWorld() {
        tissue, cradling the brain from below: palm slab, four two-segment
        curled fingers, a thumb on the inner edge. Built per side so the
        chirality is real (no mirrored-scale normal tricks). */
+    const hands = [];
     const mkHand = (s) => {
       const h = new THREE.Group();
+      h.userData.side = s;
+      h.userData.fingers = [];
       const palm = new THREE.Mesh(foldConst(new THREE.SphereGeometry(1, 20, 14), 0.70), mindMat);
       palm.scale.set(0.17, 0.055, 0.22);
       h.add(palm);
@@ -1236,6 +1249,7 @@ function buildWorld() {
         const fg = new THREE.Group();
         fg.position.set(fx, 0, fz);
         fg.rotation.set(Math.PI / 2 - 0.55, rotY, 0);   // base curl up from the palm plane
+        fg.userData.baseRX = fg.rotation.x;
         const s1 = new THREE.Mesh(foldConst(new THREE.CapsuleGeometry(girth, len1, 3, 8), 0.66), mindMat);
         s1.position.y = len1 / 2 + girth; fg.add(s1);
         const k = new THREE.Group();                     // knuckle — second phalanx curls further
@@ -1244,6 +1258,7 @@ function buildWorld() {
         const s2 = new THREE.Mesh(foldConst(new THREE.CapsuleGeometry(girth * 0.86, len2, 3, 8), 0.66), mindMat);
         s2.position.y = len2 / 2 + girth * 0.6; k.add(s2);
         fg.add(k);
+        h.userData.fingers.push(fg);
         h.add(fg);
       };
       /* four fingers off the palm's front edge, longest in the middle */
@@ -1266,6 +1281,11 @@ function buildWorld() {
          cortex from below at front and back, above the hanging stem */
       h.position.set(s * 0.80, -0.40, 0.30);
       h.rotation.set(-1.05, -s * 0.5, s * 0.42);
+      h.userData.base = {
+        px: h.position.x, py: h.position.y, pz: h.position.z,
+        rx: h.rotation.x, ry: h.rotation.y, rz: h.rotation.z,
+      };
+      hands.push(h);
       return h;
     };
     anat.add(mkHand(1));
@@ -1284,7 +1304,7 @@ function buildWorld() {
     const aura = new THREE.Sprite(auraM);
     aura.scale.set(620, 620, 1);
     brain.add(aura);
-    mind = { g: anat, mat: mindMat };
+    mind = { g: anat, mat: mindMat, hands, gest: { mode: 'idle', t0: 0, until: 0 } };
     window.__mindVis = (body, rest) => { anat.visible = body; brain.children.forEach(ch => { if (ch !== anat) ch.visible = rest; }); return [body, rest]; };
     window.__mind = () => JSON.stringify({
       morph: +mindMat.uniforms.uMorph.value.toFixed(3),
@@ -1960,6 +1980,45 @@ function frame(now) {
   updateHover();
   if (!reduced) {
     brain.rotation.y = t * .00012;
+    /* the hands are the voice's body language — a small state machine of
+       poses, damped toward targets so every transition is fluid */
+    if (mind && mind.hands) {
+      const G = mind.gest;
+      if (G.mode !== 'idle' && G.until && t > G.until) G.mode = 'idle';
+      for (const h of mind.hands) {
+        const b = h.userData.base, s = h.userData.side;
+        let px = b.px, py = b.py, pz = b.pz, rx = b.rx, ry = b.ry, rz = b.rz, curl = 0;
+        if (G.mode === 'talk') {
+          /* explaining: both hands up, rolling emphasis, out of phase */
+          const w = t * .006;
+          py += .12 + Math.sin(w + s * 1.7) * .07;
+          px += s * Math.sin(w * .7 + s) * .06;
+          rx += Math.sin(w + s) * .22;
+          rz += s * (.2 + Math.sin(w * 1.3 + s * 2) * .14);
+          curl = Math.sin(w * 1.1 + s) * .18;
+        } else if (G.mode === 'point') {
+          /* presenting a lobe: right hand extends open, left defers */
+          if (s > 0) { px += .30; py += .60; pz += .15; rx += .95; rz -= .5; curl = -.35; }
+          else { py += .06; rz -= .12; }
+        } else if (G.mode === 'pull') {
+          /* pulling a card up out of the floor */
+          const k = Math.min(1, (t - G.t0) / 700);
+          py += k * .55; rx -= k * .55; curl = -.25 * k;
+        } else {
+          /* idle: the faint restlessness of a mind that never stops */
+          py += Math.sin(t * .0011 + s) * .02;
+          rz += Math.sin(t * .0009 + s * 2) * .04;
+          curl = Math.sin(t * .0013 + s) * .05;
+        }
+        h.position.x += (px - h.position.x) * .1;
+        h.position.y += (py - h.position.y) * .1;
+        h.position.z += (pz - h.position.z) * .1;
+        h.rotation.x += (rx - h.rotation.x) * .1;
+        h.rotation.y += (ry - h.rotation.y) * .1;
+        h.rotation.z += (rz - h.rotation.z) * .1;
+        for (const fg of h.userData.fingers) fg.rotation.x += ((fg.userData.baseRX + curl) - fg.rotation.x) * .12;
+      }
+    }
   }
   for (const pl of planets) {
     const ang = pl.phase + t * pl.speed;
@@ -2130,6 +2189,11 @@ function setLevel(lv, di, gid) {
   hover.i = -2; setHover(-1);   /* re-aim the selection shell at the new focus */
   crumbs(); kick();
   writeHash();
+  /* CORTEX comments on the lobe you just opened — pointing, of course */
+  if (level === 1 && focus && entered && !reel && performance.now() - lastZoneSay > 5000) {
+    lastZoneSay = performance.now();
+    cortexSay(cortexZoneLine(focus), 'point');
+  }
 }
 /* the view is an address — zone/checkpoint/agent state rides the URL hash so
    any view can be shared; replaceState keeps the back button out of it */
@@ -2273,8 +2337,69 @@ canvas.addEventListener('pointerup', e => {
     close(); setLevel(1, deptList.findIndex(d => d.id === u.dept));
     return;
   }
+  /* tapping CORTEX himself — he reports, verbosely */
+  if (mind && ray.intersectObject(mind.g, true).length) { cortexSay(cortexStatusLine(), 'talk'); return; }
   close();
 });
+
+/* ============================ CORTEX voice ============================ */
+/* He speaks — Web Speech API: zero keys, zero cost, works on a static page.
+   Nerdy register by construction; every number in every line is live fleet
+   telemetry, never fiction. Captions mirror the audio for muted machines. */
+const cortexCap = $('cortex-cap');
+let capTimer = 0, statusIdx = 0, lastZoneSay = 0, cortexVoicePick = null;
+const pickCortexVoice = () => {
+  const vs = speechSynthesis.getVoices();
+  cortexVoicePick = vs.find(v => /en[-_]GB/i.test(v.lang) && /daniel|arthur|james|male/i.test(v.name))
+                 || vs.find(v => /en[-_]GB/i.test(v.lang))
+                 || vs.find(v => /^en/i.test(v.lang)) || null;
+};
+if ('speechSynthesis' in window) { pickCortexVoice(); speechSynthesis.addEventListener('voiceschanged', pickCortexVoice); }
+function cortexGesture(mode, dur) {
+  if (mind) mind.gest = { mode, t0: performance.now(), until: performance.now() + dur };
+}
+function cortexSay(text, gest) {
+  cortexCap.textContent = text; cortexCap.classList.add('on');
+  clearTimeout(capTimer);
+  const dur = Math.max(2600, text.length * 62);
+  cortexGesture(gest || 'talk', dur);
+  capTimer = setTimeout(() => cortexCap.classList.remove('on'), dur + 600);
+  if (!('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    if (cortexVoicePick) u.voice = cortexVoicePick;
+    u.rate = 1.08; u.pitch = 1.16; u.volume = .9;   /* brisk and a touch keen — the nerd register */
+    u.onend = () => {
+      clearTimeout(capTimer);
+      capTimer = setTimeout(() => cortexCap.classList.remove('on'), 900);
+      if (mind) mind.gest = { mode: 'idle', t0: performance.now(), until: 0 };
+    };
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  } catch {}
+}
+function cortexStatusLine() {
+  const c = s => nodes.filter(n => n.status === s).length;
+  const ok = c('ok'), run = c('running'), fl = c('flag');
+  const lines = [
+    `Observe: ${run} concurrent processes traversing my lattice. Throughput is, if I may say so, asymptotically elegant.`,
+    `Telemetry digest: ${ok} nominal, ${run} live, ${fl} anomalies. The anomalies are non-trivial but eminently tractable.`,
+    `I currently supervise ${nodes.length} units across ${deptList.length} cortical territories. Cognitive load nominal. Ego: containerised.`,
+    fl ? `${fl} flags outstanding. I am attending to them with considerable rigour.`
+       : `Zero outstanding anomalies. Statistically suspicious, but I shall accept the compliment.`,
+    `My gyri are genuine anatomy — sixty-five thousand vertices. The backend, however, is where the real convolutions happen.`,
+    `In big-O terms, my oversight of this fleet is O of everything. Empirically verified. Q.E.D.`,
+  ];
+  return lines[statusIdx++ % lines.length];
+}
+function cortexZoneLine(d) {
+  const ns = d.nodes || [];
+  const live = ns.filter(n => n.status === 'running').length, fl = ns.filter(n => n.status === 'flag').length;
+  const quip = fl ? `${fl} anomalies detected — I have hypotheses.`
+    : live ? `${live} live processes. A hive of admirable industry.`
+    : `Presently quiescent. Even lobes must idle.`;
+  return `Ah — the ${d.label} lobe. ${ns.length} units under my supervision. ${quip}`;
+}
 
 /* ============================== cards ============================== */
 /* record dot colors — the room's status palette */
@@ -2327,6 +2452,7 @@ const isStale = n => {
 };
 
 function open(n) {
+  cortexGesture('pull', 1200);   /* he pulls the card up for you */
   selected = n; focusIdx = nodes.indexOf(n);
   writeHash();
   const d = depts[n.dept];
@@ -2615,6 +2741,9 @@ function enter() {
   setTimeout(() => intro.remove(), 1000);
   canvas.focus();
   armGyro();   /* inside the tap gesture — iOS permission prompts need that */
+  setTimeout(() => {
+    if (mind && nodes.length) cortexSay(`Salutations. CORTEX online — ${nodes.length} units under supervision, cognition nominal. Do peruse; every light is empirical.`);
+  }, 1600);
 }
 
 /* the portal on a phone: tilting the device moves the eye. The hold angle when
