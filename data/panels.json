@@ -1,0 +1,25 @@
+{
+  "updated": "2026-08-23",
+  "ig": { "handle": "marcohergi", "url": "instagram.com/marcohergi", "followers": null, "posts": null, "hookGate": 62 },
+  "revenue": { "mrr": 0, "d30": 0, "lifetime": 600, "series": [0,0,0,0,0,0,0,0,0,0,0,0], "note": "Stripe · Shift AI" },
+  "store": {
+    "name": "WEAR THE LINE", "url": "wear-the-line.vercel.app",
+    "products": [
+      { "n": "01 · Trained on New York", "p": 34 },
+      { "n": "02 · Drawn by the Machine", "p": 34 },
+      { "n": "03 · Human in the Loop", "p": 34 }
+    ],
+    "scan": "770 products scanned · TikTok Shop engine"
+  },
+  "memory": { "total": 245, "project": 163, "reference": 37, "feedback": 35, "user": 4 },
+  "goals": {
+    "target": 1000, "current": 0, "deadline": "SEP 06", "plan": "WAR PLAN v3",
+    "lanes": ["IG → affiliate engine — PRIMARY", "Merch — wear the line", "TikTok Shop — 2nd account"]
+  },
+  "links": [
+    { "n": "Stripe", "s": "live" }, { "n": "Vercel", "s": "live" }, { "n": "GitHub", "s": "live" },
+    { "n": "Kit", "s": "live" }, { "n": "Printful", "s": "live" }, { "n": "Whop", "s": "live" },
+    { "n": "Telegram", "s": "live" }, { "n": "Bing", "s": "live" }, { "n": "ProductHunt", "s": "live" },
+    { "n": "Gumroad", "s": "hold" }, { "n": "IG relay", "s": "hold" }, { "n": "Apify", "s": "live" }
+  ]
+}
