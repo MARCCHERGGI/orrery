@@ -920,7 +920,7 @@ void main() {
   /* key light — same lamp as the orb */
   vec3 keyDir = normalize(vec3(-0.42, 0.55, 0.72));
   float keyDot = max(0.0, dot(N, keyDir));
-  float lambert = 0.30 + keyDot * 0.55;
+  float lambert = 0.36 + keyDot * 0.52;
   float keySpec = pow(keyDot, 36.0) * 0.28;
 
   /* micro sparks */
@@ -945,7 +945,7 @@ void main() {
   col = mix(col, frost,   fresnel * 0.26);
   /* crease shadow — sulci sink toward black. The fold field is the texture;
      plasma and grid are kept quiet so the worms stay in charge. */
-  col *= mix(0.20, 1.0, smoothstep(0.20, 0.60, vF));
+  col *= mix(0.22, 1.0, smoothstep(0.34, 0.78, vF));
   col += speckC * microSpark * 0.5;
   col += vec3(0.62, 0.86, 1.00) * keySpec * (0.55 + uAmp * 0.35);
 
@@ -1179,13 +1179,20 @@ function buildWorld() {
       const wx = fbm(x * 1.15 + 5.2, y * 1.15, z * 1.15);
       const wy = fbm(x * 1.15, y * 1.15 + 9.7, z * 1.15);
       const wz = fbm(x * 1.15, y * 1.15, z * 1.15 + 3.1);
-      const qx = x * 3.8 + (wx - .5) * 3.2;
-      const qy = y * 3.8 + (wy - .5) * 3.2;
-      const qz = z * 3.8 + (wz - .5) * 3.2;
-      let worm = 1 - Math.abs(2 * bnNoise(qx, qy, qz) - 1);
-      worm = Math.pow(worm, 1.6);                            // sharpen the crest
+      const qx = x * 3.0 + (wx - .5) * 3.2;
+      const qy = y * 3.0 + (wy - .5) * 3.2;
+      const qz = z * 3.0 + (wz - .5) * 3.2;
+      /* INVERTED recipe — the sulci are the drawing, not the gyri. Ridge
+         lines of warped noise form thin CONNECTED winding channels (they
+         are zero-crossing networks, so they branch and join like real
+         sulci); everything between stays plump tissue. Two channel systems
+         at different scales cross-connect the network. */
+      const lineOf = (nx, ny, nz, p) => Math.pow(1 - Math.abs(2 * bnNoise(nx, ny, nz) - 1), p);
+      const s1 = lineOf(qx, qy, qz, 3.2);
+      const s2 = lineOf(qx * 1.63 + 31.7, qy * 1.63, qz * 1.63, 3.2) * .6;
+      const channel = Math.max(s1, s2);
       const fine = 1 - Math.abs(2 * bnNoise(qx * 2.7 + 11.4, qy * 2.7, qz * 2.7) - 1);
-      return worm * .78 + fine * .22;
+      return Math.max(0, Math.min(1, (1 - channel) * .9 + fine * .10));
     };
     /* cerebellum keeps the old laminar ridge — its anatomy IS parallel stripes */
     const ridge = (x, y, z) => {
@@ -1206,7 +1213,7 @@ function buildWorld() {
         let x = pos.getX(i), y = pos.getY(i), z2 = pos.getZ(i);
         const w = gyriField(x + side * 4.55, y + 1.85, z2);
         fold[i] = w;
-        const r = 1 + (w - 0.5) * 0.22;              // fold depth — deep enough to silhouette
+        const r = 1 + (w - 0.62) * 0.21;             // tissue domes up, channels cut deep
         x *= r; y *= r; z2 *= r;
         /* temporal lobe — the low lateral bulge every brain profile has */
         const tl = Math.max(0, -y) * (y > -0.75 ? 1 : 0) *
@@ -1216,7 +1223,7 @@ function buildWorld() {
         y -= tl * 0.06;
         x *= 0.62; y *= 0.72; z2 *= 1.06;            // hemisphere proportions: long > wide > tall
         if (x * side < 0) x *= 0.30;                 // flatten the medial wall
-        pos.setXYZ(i, x + side * 0.34, y, z2);       // longitudinal fissure
+        pos.setXYZ(i, x + side * 0.21, y, z2);       // fissure: a dark LINE, not a gap — the halves touch
       }
       g.setAttribute('aFold', new THREE.BufferAttribute(fold, 1));
       g.computeVertexNormals();
@@ -1264,6 +1271,10 @@ function buildWorld() {
     const stem = new THREE.Mesh(foldConst(new THREE.CylinderGeometry(0.10, 0.16, 0.52, 14, 1, false), 0.62), mindMat);
     stem.position.set(0, -0.72, -0.28); stem.rotation.x = 0.5;
     anat.add(stem);
+    /* corpus callosum — the cord that CONNECTS the halves, riding deep in the fissure */
+    const cc = new THREE.Mesh(foldConst(new THREE.SphereGeometry(1, 24, 16), 0.78), mindMat);
+    cc.scale.set(0.16, 0.30, 0.62); cc.position.set(0, 0.02, 0.02);
+    anat.add(cc);
     /* THE HANDS — CORTEX holds himself up. Two stylised hands in the same
        tissue, cradling the brain from below: palm slab, four two-segment
        curled fingers, a thumb on the inner edge. Built per side so the
