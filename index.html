@@ -2377,7 +2377,7 @@ canvas.addEventListener('pointerup', e => {
    Nerdy register by construction; every number in every line is live fleet
    telemetry, never fiction. Captions mirror the audio for muted machines. */
 const cortexCap = $('cortex-cap');
-let capTimer = 0, statusIdx = 0, lastZoneSay = 0, cortexVoicePick = null;
+let capTimer = 0, statusIdx = 0, lastZoneSay = 0, cortexVoicePick = null, sayGen = 0;
 const pickCortexVoice = () => {
   /* rank every installed voice; take the best. Neural/enhanced voices exist
      on every modern OS — the default is never the good one. */
@@ -2504,7 +2504,11 @@ function cortexSay(text, gest) {
   const dur = Math.max(2600, text.length * 62);
   cortexGesture(gest || 'talk', dur);
   capTimer = setTimeout(() => cortexCap.classList.remove('on'), dur + 600);
+  /* generation token: cancelling a previous line fires ITS onend/onended —
+     a stale done() must never stomp the line that replaced it */
+  const gen = ++sayGen;
   const done = () => {
+    if (gen !== sayGen) return;
     clearTimeout(capTimer);
     capTimer = setTimeout(() => cortexCap.classList.remove('on'), 900);
     if (mind) mind.gest = { mode: 'idle', t0: performance.now(), until: 0 };
