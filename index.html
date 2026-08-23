@@ -1287,17 +1287,8 @@ function buildWorld() {
     anat.scale.set(S, S, S);
     anat.rotation.x = 0.12;                           // slight forward tilt — reads as anatomy
     brain.add(anat);                                  // straight into the CORE group — he IS the core
-    /* soft aura behind the tissue — the halo the old billboard used to carry */
-    const gc = document.createElement('canvas'); gc.width = gc.height = 128;
-    const gg = gc.getContext('2d');
-    const gr = gg.createRadialGradient(64, 64, 8, 64, 64, 64);
-    gr.addColorStop(0, 'rgba(110,168,255,.45)'); gr.addColorStop(.5, 'rgba(87,150,255,.14)'); gr.addColorStop(1, 'rgba(87,150,255,0)');
-    gg.fillStyle = gr; gg.fillRect(0, 0, 128, 128);
-    const auraM = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .5 });
-    auraM.fog = false;
-    const aura = new THREE.Sprite(auraM);
-    aura.scale.set(620, 620, 1);
-    brain.add(aura);
+    /* no aura halo — bright effects off (Marco, 2026-08-23); the tissue
+       carries its own light */
     mind = { g: anat, mat: mindMat, hands, gest: { mode: 'idle', t0: 0, until: 0 } };
     window.__mindVis = (body, rest) => { anat.visible = body; brain.children.forEach(ch => { if (ch !== anat) ch.visible = rest; }); return [body, rest]; };
     window.__mind = () => JSON.stringify({
@@ -1974,6 +1965,9 @@ function frame(now) {
   updateHover();
   if (!reduced) {
     brain.rotation.y = t * .00012;
+    /* CORTEX faces the screen: cancel the group spin, hold a three-quarter
+       pose toward the viewer with a slow attentive sway — he watches you */
+    if (mind) mind.g.rotation.y = 1.02 - brain.rotation.y + Math.sin(t * .0005) * .12;
     /* the hands are the voice's body language — a small state machine of
        poses, damped toward targets so every transition is fluid */
     if (mind && mind.hands) {
@@ -2345,19 +2339,28 @@ let capTimer = 0, statusIdx = 0, lastZoneSay = 0, cortexVoicePick = null;
 const pickCortexVoice = () => {
   /* rank every installed voice; take the best. Neural/enhanced voices exist
      on every modern OS — the default is never the good one. */
+  /* exact-name tiers first — these are the voices that actually sound good
+     per platform (Chrome's Google UK, macOS Enhanced/Premium, Edge Neural) */
+  const EXACT = [
+    /aria.*natural|guy.*natural|ryan.*natural|sonia.*natural/i,   // Edge neural
+    /google uk english male/i,                                    // Chrome
+    /\b(jamie|oliver|daniel|serena)\b.*\b(premium|enhanced)\b/i,  // macOS downloaded
+    /google us english/i,
+  ];
   const score = (v) => {
     let s = 0;
     if (!/^en/i.test(v.lang)) return -1;
+    for (let i = 0; i < EXACT.length; i++) if (EXACT[i].test(v.name)) s += 40 - i * 4;
+    if (/natural|neural|enhanced|premium|online/i.test(v.name)) s += 10;
     if (/en[-_]GB/i.test(v.lang)) s += 4;
-    if (/natural|neural|enhanced|premium|online/i.test(v.name)) s += 8;
-    if (/google uk english male/i.test(v.name)) s += 7;
     if (/\b(daniel|arthur|george|ryan|oliver|alex)\b/i.test(v.name)) s += 5;
     if (/female|samantha|victoria|kate|serena|zira/i.test(v.name)) s -= 3;
-    if (/compact|whisper|novelty|bad|albert|zarvox/i.test(v.name)) s -= 10;
+    if (/compact|whisper|novelty|bad|albert|zarvox|trinoids|cellos|organ/i.test(v.name)) s -= 30;
     return s;
   };
   cortexVoicePick = speechSynthesis.getVoices().map(v => [score(v), v]).filter(x => x[0] >= 0)
     .sort((a, b) => b[0] - a[0]).map(x => x[1])[0] || null;
+  window.__voice = () => cortexVoicePick ? cortexVoicePick.name + ' [' + cortexVoicePick.lang + ']' : null;
 };
 if ('speechSynthesis' in window) { pickCortexVoice(); speechSynthesis.addEventListener('voiceschanged', pickCortexVoice); }
 function cortexGesture(mode, dur) {
@@ -2371,6 +2374,7 @@ function cortexSay(text, gest) {
   capTimer = setTimeout(() => cortexCap.classList.remove('on'), dur + 600);
   if (!('speechSynthesis' in window)) return;
   try {
+    if (!cortexVoicePick) pickCortexVoice();   /* some browsers load voices late */
     const u = new SpeechSynthesisUtterance(text);
     if (cortexVoicePick) u.voice = cortexVoicePick;
     u.rate = 1.06; u.pitch = 1.0; u.volume = .95;   /* brisk but not chipmunk — erudition over squeak */
