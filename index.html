@@ -1185,12 +1185,19 @@ function buildWorld() {
     });
     mindMat.uniforms.uFlag.value = jarvis.flag;
     const S = 185;
+    const FACE_YAW = 1.55;   /* anterior dead-on to the camera (calibrated by contact sheet 2026-08-23) */
     const anat = new THREE.Group();
+    /* the skull group carries the face-the-screen yaw ALONE, so the hands
+       (siblings, not children of it) keep screen-aligned axes: gesture px is
+       always lateral, pz always toward the camera */
+    const skull = new THREE.Group();
+    skull.rotation.y = FACE_YAW;
+    anat.add(skull);
     /* async GLB load, cached at module level so fleet-refresh rebuilds are
        instant and don't re-fetch. On load: bake world transforms, center,
        normalize to ~2.1 units long, compute aFold from curvature, re-wrap
        every piece in the tissue shader. */
-    const attachBrainGeos = (geos) => { for (const g of geos) anat.add(new THREE.Mesh(g, mindMat)); };
+    const attachBrainGeos = (geos) => { for (const g of geos) skull.add(new THREE.Mesh(g, mindMat)); };
     if (window.__brainGeos) attachBrainGeos(window.__brainGeos);
     else new GLTFLoader().load('brain.glb', (gltf) => {
       let geos = [];
@@ -1289,7 +1296,11 @@ function buildWorld() {
     brain.add(anat);                                  // straight into the CORE group — he IS the core
     /* no aura halo — bright effects off (Marco, 2026-08-23); the tissue
        carries its own light */
-    mind = { g: anat, mat: mindMat, hands, gest: { mode: 'idle', t0: 0, until: 0 } };
+    mind = { g: anat, skull, mat: mindMat, hands, gest: { mode: 'idle', t0: 0, until: 0 } };
+    window.__hands = () => JSON.stringify({
+      mode: mind.gest.mode, sub: mind.gest.sub || null, micro: mind.gest.micro || null,
+      h: hands.map(h => [h.position.x, h.position.y, h.position.z, h.rotation.x, h.rotation.z].map(v => +v.toFixed(3))),
+    });
     window.__mindVis = (body, rest) => { anat.visible = body; brain.children.forEach(ch => { if (ch !== anat) ch.visible = rest; }); return [body, rest]; };
     window.__mind = () => JSON.stringify({
       morph: +mindMat.uniforms.uMorph.value.toFixed(3),
@@ -1965,46 +1976,77 @@ function frame(now) {
   updateHover();
   if (!reduced) {
     brain.rotation.y = t * .00012;
-    /* CORTEX faces the screen: cancel the group spin, hold a three-quarter
-       pose toward the viewer with a slow attentive sway — he watches you */
-    if (mind) mind.g.rotation.y = 1.02 - brain.rotation.y + Math.sin(t * .0005) * .12;
-    /* the hands are the voice's body language — a small state machine of
-       poses, damped toward targets so every transition is fluid */
+    /* CORTEX faces the screen dead-on: cancel the group spin, hold the
+       anterior toward the camera with only a small attentive sway */
+    if (mind) {
+      const talking = mind.gest.mode === 'talk';
+      mind.g.rotation.y = -brain.rotation.y + Math.sin(t * .0005) * .05;
+      if (window.__yawOff != null) mind.skull.rotation.y = window.__yawOff;
+      /* he is never a statue: hover bob, and while speaking a professor's
+         nod + head tilt riding on top of the base forward lean */
+      mind.g.position.y = Math.sin(t * .0016) * 5 + (talking ? Math.sin(t * .004) * 2 : 0);
+      mind.g.rotation.x += ((0.12 + (talking ? Math.sin(t * .0037) * .045 + Math.sin(t * .0011) * .02
+                                             : Math.sin(t * .0009) * .02)) - mind.g.rotation.x) * .08;
+      mind.g.rotation.z += (((talking ? Math.sin(t * .0021) * .03 : Math.sin(t * .0007) * .015)) - mind.g.rotation.z) * .08;
+    }
+    /* the hands are the voice's body language — a gesture LIBRARY, not one
+       loop: while he talks a scheduler cuts between named gestures every
+       1.3–2.5 s; idle gets micro-fidgets; everything damp-lerps so cuts read
+       as intention, not teleport */
     if (mind && mind.hands) {
       const G = mind.gest;
       if (G.mode !== 'idle' && G.until && t > G.until) G.mode = 'idle';
+      if (G.mode === 'talk') {
+        if (!G.sub || t > (G.subUntil || 0)) {
+          let nx; do { nx = TALK_GESTS[(Math.random() * TALK_GESTS.length) | 0]; } while (nx === G.sub);
+          G.sub = nx; G.subT0 = t; G.subUntil = t + 1300 + Math.random() * 1200;
+        }
+      } else if (G.mode === 'idle') {
+        if (t > (G.microNext || 0)) {
+          G.micro = MICROS[(Math.random() * MICROS.length) | 0];
+          G.microT0 = t; G.microUntil = t + 1700; G.microNext = t + 4200 + Math.random() * 3400;
+        }
+      }
       for (const h of mind.hands) {
         const b = h.userData.base, s = h.userData.side;
-        let px = b.px, py = b.py, pz = b.pz, rx = b.rx, ry = b.ry, rz = b.rz, curl = 0;
+        let tg;
         if (G.mode === 'talk') {
-          /* explaining: both hands up, rolling emphasis, out of phase */
-          const w = t * .006;
-          py += .12 + Math.sin(w + s * 1.7) * .07;
-          px += s * Math.sin(w * .7 + s) * .06;
-          rx += Math.sin(w + s) * .22;
-          rz += s * (.2 + Math.sin(w * 1.3 + s * 2) * .14);
-          curl = Math.sin(w * 1.1 + s) * .18;
+          tg = GEST_FN[G.sub](s, t, G);
+          /* shimmer on top of every gesture — the hands never freeze */
+          tg.py = (tg.py || 0) + Math.sin(t * .006 + s * 1.7) * .03;
+          tg.rz = (tg.rz || 0) + Math.sin(t * .005 + s * 2) * .06;
         } else if (G.mode === 'point') {
-          /* presenting a lobe: right hand extends open, left defers */
-          if (s > 0) { px += .30; py += .60; pz += .15; rx += .95; rz -= .5; curl = -.35; }
-          else { py += .06; rz -= .12; }
+          /* presenting a lobe: right hand extends, INDEX out, others folded;
+             left defers with a polite half-open palm */
+          tg = s > 0 ? { px: .30, py: .60, pz: .15, rx: .95, rz: -.5, curls: [-.85, .45, .5, .55] }
+                     : { py: .1, rx: .3, rz: -.15, curl: -.2 };
         } else if (G.mode === 'pull') {
-          /* pulling a card up out of the floor */
+          /* conjuring a card out of the floor: both hands lift, fingers
+             splay wide then settle around the payload */
           const k = Math.min(1, (t - G.t0) / 700);
-          py += k * .55; rx -= k * .55; curl = -.25 * k;
+          tg = { py: k * .55, rx: -k * .55, curl: -.45 * Math.sin(k * Math.PI) - .1 * k };
         } else {
-          /* idle: the faint restlessness of a mind that never stops */
-          py += Math.sin(t * .0011 + s) * .02;
-          rz += Math.sin(t * .0009 + s * 2) * .04;
-          curl = Math.sin(t * .0013 + s) * .05;
+          /* idle restlessness + scheduled micro-fidget */
+          tg = { py: Math.sin(t * .0011 + s) * .02, rz: Math.sin(t * .0009 + s * 2) * .04, curl: Math.sin(t * .0013 + s) * .05 };
+          if (G.micro && t < G.microUntil) {
+            const k = (t - G.microT0) / 1700;
+            if (G.micro === 'drum') tg.curls = [0, 1, 2, 3].map(i => .5 * Math.max(0, Math.sin(t * .012 - i * .9)));
+            else if (G.micro === 'flex') { tg.curl = -.42 * Math.sin(k * Math.PI); tg.rx = .2 * Math.sin(k * Math.PI); }
+            else if (G.micro === 'roll') { tg.rz = (tg.rz || 0) + s * .3 * Math.sin(k * Math.PI * 2); tg.ry = -s * .15 * Math.sin(k * Math.PI); }
+          }
         }
-        h.position.x += (px - h.position.x) * .1;
-        h.position.y += (py - h.position.y) * .1;
-        h.position.z += (pz - h.position.z) * .1;
-        h.rotation.x += (rx - h.rotation.x) * .1;
-        h.rotation.y += (ry - h.rotation.y) * .1;
-        h.rotation.z += (rz - h.rotation.z) * .1;
-        for (const fg of h.userData.fingers) fg.rotation.x += ((fg.userData.baseRX + curl) - fg.rotation.x) * .12;
+        h.position.x += ((b.px + (tg.px || 0)) - h.position.x) * .1;
+        h.position.y += ((b.py + (tg.py || 0)) - h.position.y) * .1;
+        h.position.z += ((b.pz + (tg.pz || 0)) - h.position.z) * .1;
+        h.rotation.x += ((b.rx + (tg.rx || 0)) - h.rotation.x) * .1;
+        h.rotation.y += ((b.ry + (tg.ry || 0)) - h.rotation.y) * .1;
+        h.rotation.z += ((b.rz + (tg.rz || 0)) - h.rotation.z) * .1;
+        /* per-finger: explicit targets when the gesture names them, else the
+           shared curl with a living phase offset so fingers ripple */
+        h.userData.fingers.forEach((fg, i) => {
+          const c = tg.curls ? (tg.curls[i] || 0) : (tg.curl || 0) + Math.sin(t * .009 + i * .8 + s) * .05;
+          fg.rotation.x += ((fg.userData.baseRX + c) - fg.rotation.x) * .14;
+        });
       }
     }
   }
@@ -2388,6 +2430,8 @@ async function neuralSpeak(text, done) {
   voxAudio.onended = done;
   await voxAudio.play();
   neuralState = 'ok';
+  /* gesture window = the real clip length, not the caption estimate */
+  if (mind && mind.gest.mode === 'talk') mind.gest.until = performance.now() + (voxAudio.duration || 8) * 1000 + 400;
 }
 let kokoro = null, kokoroState = 'off', kokoroVoice = 'am_michael';
 const kokoroCache = new Map();
@@ -2415,6 +2459,7 @@ async function kokoroSpeak(text, done) {
   window.__kdebug = () => JSON.stringify({ dur: voxAudio.duration, rs: voxAudio.readyState, err: voxAudio.error && voxAudio.error.code, paused: voxAudio.paused, t: voxAudio.currentTime });
   voxAudio.onended = done;
   await voxAudio.play();
+  if (mind && mind.gest.mode === 'talk') mind.gest.until = performance.now() + (voxAudio.duration || 8) * 1000 + 400;
 }
 window.__voice = () =>
   neuralState !== 'dead'
@@ -2429,6 +2474,30 @@ window.__say = t => cortexSay(t || cortexStatusLine(), 'talk');
 function cortexGesture(mode, dur) {
   if (mind) mind.gest = { mode, t0: performance.now(), until: performance.now() + dur };
 }
+/* ---- gesture library. Each entry maps (side, now, gestState) → pose offsets
+   from the hand's base cradle: px/py/pz, rx/ry/rz, and either one shared
+   `curl` or per-finger `curls` (index→pinky). The talk scheduler in the tick
+   cuts between these while audio plays. */
+const TALK_GESTS = ['beat', 'palmsUp', 'steeple', 'sweep', 'pinch', 'expanse', 'count', 'chop'];
+const MICROS = ['drum', 'flex', 'roll'];
+const GEST_FN = {
+  /* rhythmic downbeats — the workhorse "talking with your hands" */
+  beat(s, t) { const b = Math.abs(Math.sin(t * .008 + (s > 0 ? 0 : 1.1))); return { py: .16 + b * .14, px: s * .05, rx: .35 + b * .25, rz: s * .18, curl: -.12 }; },
+  /* palms rotate open and up — "as you can plainly see" */
+  palmsUp(s, t) { return { py: .28 + Math.sin(t * .003 + s) * .04, px: s * .14, rx: 1.15, ry: -s * .15, rz: s * .1, curl: -.4 }; },
+  /* fingertips meet at the midline — the professor's steeple */
+  steeple(s) { return { px: -s * .44, py: .34, pz: .18, rx: .55, ry: -s * .25, rz: -s * .42, curl: -.05 }; },
+  /* right hand arcs across the audience; left holds court */
+  sweep(s, t, G) { const k = ((t - G.subT0) % 1600) / 1600, a = Math.sin(k * Math.PI); return s > 0 ? { px: .15 + a * .35, py: .42, rx: .8, ry: -a * .5, rz: -.35, curl: -.3 } : { py: .08, rz: -.1, curl: .05 }; },
+  /* thumb-and-index precision pinch — a fine point being made */
+  pinch(s) { return s > 0 ? { py: .5, px: .1, rx: .9, rz: -.3, curls: [.55, .5, -.2, -.25] } : { py: .12, rx: .25, curl: -.05 }; },
+  /* both hands spread wide — the big picture */
+  expanse(s, t, G) { const k = Math.min(1, (t - G.subT0) / 900); return { px: s * .45 * k, py: .34, rx: .7, ry: s * .4 * k, curl: -.45 }; },
+  /* enumerating: fingers extend one by one on the right hand */
+  count(s, t, G) { if (s > 0) { const step = ((t - G.subT0) / 430 | 0) % 5; return { py: .5, px: .12, rx: .95, rz: -.35, curls: [0, 1, 2, 3].map(i => i < step ? -.7 : .3) }; } return { py: .1, rx: .3, curl: 0 }; },
+  /* emphatic karate-chop cadence, hands alternating */
+  chop(s, t) { const on = Math.sin(t * .001) > 0 ? 1 : -1; if (s === on) { const b = Math.abs(Math.sin(t * .0075)); return { py: .3 + b * .12, rx: .2, ry: -s * .3, rz: s * .55, curl: -.02 }; } return { py: .1, rz: s * .1, curl: -.05 }; },
+};
 function cortexSay(text, gest) {
   cortexCap.textContent = text; cortexCap.classList.add('on');
   clearTimeout(capTimer);
