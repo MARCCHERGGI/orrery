@@ -1301,6 +1301,7 @@ function buildWorld() {
       mode: mind.gest.mode, sub: mind.gest.sub || null, micro: mind.gest.micro || null,
       until: Math.round(mind.gest.until || 0), now: Math.round(performance.now()),
       ns: window.__ns ? window.__ns() : null,
+      beam: window.__beam ? window.__beam() : null,
       h: hands.map(h => [h.position.x, h.position.y, h.position.z, h.rotation.x, h.rotation.z].map(v => +v.toFixed(3))),
     });
     window.__mindVis = (body, rest) => { anat.visible = body; brain.children.forEach(ch => { if (ch !== anat) ch.visible = rest; }); return [body, rest]; };
@@ -1353,6 +1354,7 @@ function buildWorld() {
       const rim = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(MW + 16, MH + 16)),
         new THREE.LineBasicMaterial({ color: 0x3fd6ff, transparent: true, opacity: .85 }));
       rim.position.set(0, 258, .5); zone.add(rim);
+      d.rim = rim;   /* the control beam pulses this while CORTEX commands the zone */
     }
 
     /* district = a graduated instrument dial etched on the floor: hairline
@@ -2002,6 +2004,16 @@ function frame(now) {
         if (!G.sub || t > (G.subUntil || 0)) {
           let nx; do { nx = TALK_GESTS[(Math.random() * TALK_GESTS.length) | 0]; } while (nx === G.sub);
           G.sub = nx; G.subT0 = t; G.subUntil = t + 1300 + Math.random() * 1200;
+          G.cNext = 0;
+        }
+        if (G.sub === 'conduct') {
+          /* hop the beam across live zones every ~800 ms while conducting */
+          if (t > (G.cNext || 0)) {
+            const pool = deptList.filter(d => d.rim);
+            if (pool.length) beamAt(pool[(Math.random() * pool.length) | 0]);
+            G.cNext = t + 800;
+          }
+          beam.until = Math.max(beam.until, G.subUntil);
         }
       } else if (G.mode === 'idle') {
         if (t > (G.microNext || 0)) {
@@ -2017,6 +2029,11 @@ function frame(now) {
           /* shimmer on top of every gesture — the hands never freeze */
           tg.py = (tg.py || 0) + Math.sin(t * .006 + s * 1.7) * .03;
           tg.rz = (tg.rz || 0) + Math.sin(t * .005 + s * 2) * .06;
+        } else if (G.mode === 'aim') {
+          /* commanding a specific zone: right hand reaches at the actual
+             monitor, index out, beam live; left defers */
+          if (G.mode === 'aim') beam.until = G.until;
+          tg = s > 0 && beam.on ? reachPose() : { py: .12, rx: .3, rz: -.18, curl: -.15 };
         } else if (G.mode === 'point') {
           /* presenting a lobe: right hand extends, INDEX out, others folded;
              left defers with a polite half-open palm */
@@ -2037,18 +2054,55 @@ function frame(now) {
             else if (G.micro === 'roll') { tg.rz = (tg.rz || 0) + s * .3 * Math.sin(k * Math.PI * 2); tg.ry = -s * .15 * Math.sin(k * Math.PI); }
           }
         }
-        h.position.x += ((b.px + (tg.px || 0)) - h.position.x) * .1;
-        h.position.y += ((b.py + (tg.py || 0)) - h.position.y) * .1;
-        h.position.z += ((b.pz + (tg.pz || 0)) - h.position.z) * .1;
-        h.rotation.x += ((b.rx + (tg.rx || 0)) - h.rotation.x) * .1;
-        h.rotation.y += ((b.ry + (tg.ry || 0)) - h.rotation.y) * .1;
-        h.rotation.z += ((b.rz + (tg.rz || 0)) - h.rotation.z) * .1;
+        /* SERVO SPRINGS, not lerps: critically-under-damped second-order
+           motion (ζ≈0.8) — every cut snaps in and settles with a whisper of
+           overshoot, which is what reads as machinery instead of easing */
+        const dt = Math.min(.045, Math.max(.004, (t - (handPrevT || t)) / 1000));
+        const vv = h.userData.vel || (h.userData.vel = { px: 0, py: 0, pz: 0, rx: 0, ry: 0, rz: 0 });
+        const K = 130, CD = 2 * Math.sqrt(K) * .8;
+        const st = (cur, tgt, key) => { vv[key] += (K * (tgt - cur) - CD * vv[key]) * dt; return cur + vv[key] * dt; };
+        h.position.x = st(h.position.x, b.px + (tg.px || 0), 'px');
+        h.position.y = st(h.position.y, b.py + (tg.py || 0), 'py');
+        h.position.z = st(h.position.z, b.pz + (tg.pz || 0), 'pz');
+        h.rotation.x = st(h.rotation.x, b.rx + (tg.rx || 0), 'rx');
+        h.rotation.y = st(h.rotation.y, b.ry + (tg.ry || 0), 'ry');
+        h.rotation.z = st(h.rotation.z, b.rz + (tg.rz || 0), 'rz');
         /* per-finger: explicit targets when the gesture names them, else the
            shared curl with a living phase offset so fingers ripple */
         h.userData.fingers.forEach((fg, i) => {
           const c = tg.curls ? (tg.curls[i] || 0) : (tg.curl || 0) + Math.sin(t * .009 + i * .8 + s) * .05;
-          fg.rotation.x += ((fg.userData.baseRX + c) - fg.rotation.x) * .14;
+          fg.rotation.x += ((fg.userData.baseRX + c) - fg.rotation.x) * .18;
         });
+      }
+      handPrevT = t;
+      /* ---- beam pass: runs AFTER the hands settle so the filament roots at
+         this frame's true fingertip */
+      if (beam.on && t > beam.until) beam.on = false;
+      if (!beam.on && beam.dept) {
+        if (beam.dept.rim) beam.dept.rim.material.opacity = .85;
+        beam.dept = null;
+      }
+      beam.g.visible = beam.on;
+      if (beam.on) {
+        if (beam.lastRim && beam.lastRim !== beam.dept?.rim) beam.lastRim.material.opacity = .85;
+        beam.lastRim = beam.dept ? beam.dept.rim : null;
+        const rh = mind.hands[0];
+        _bv.set(0, .42, .34); rh.localToWorld(_bv);
+        _bv2.copy(beam.to).sub(_bv);
+        const len = _bv2.length();
+        beam.core.position.copy(_bv).addScaledVector(_bv2, .5);
+        beam.core.scale.set(1, len, 1);
+        beam.core.quaternion.setFromUnitVectors(_bUp, _bv2.normalize());
+        beam.core.material.opacity = .45 + Math.sin(t * .021) * .15;
+        for (let i = 0; i < beam.packs.length; i++) {
+          const p = ((t * .00085) + i / beam.packs.length) % 1;
+          beam.packs[i].position.lerpVectors(_bv, beam.to, p);
+          beam.packs[i].material.opacity = .85 * Math.sin(p * Math.PI);
+        }
+        beam.hit.position.copy(beam.to);
+        beam.hit.scale.setScalar(84 + Math.sin(t * .017) * 22);
+        /* the commanded monitor answers — rim throbs hot while held */
+        if (beam.dept && beam.dept.rim) beam.dept.rim.material.opacity = .95 + Math.sin(t * .024) * .45;
       }
     }
   }
@@ -2221,10 +2275,13 @@ function setLevel(lv, di, gid) {
   hover.i = -2; setHover(-1);   /* re-aim the selection shell at the new focus */
   crumbs(); kick();
   writeHash();
-  /* CORTEX comments on the lobe you just opened — pointing, of course */
+  /* CORTEX comments on the lobe you just opened — and fires the control
+     beam at its actual monitor while he does */
   if (level === 1 && focus && entered && !reel && performance.now() - lastZoneSay > 5000) {
     lastZoneSay = performance.now();
-    cortexSay(cortexZoneLine(focus), 'point');
+    const line = cortexZoneLine(focus);
+    cortexSay(line, 'point');
+    cortexAim(focus, Math.max(2600, line.length * 62));
   }
 }
 /* the view is an address — zone/checkpoint/agent state rides the URL hash so
@@ -2379,7 +2436,7 @@ canvas.addEventListener('pointerup', e => {
    Nerdy register by construction; every number in every line is live fleet
    telemetry, never fiction. Captions mirror the audio for muted machines. */
 const cortexCap = $('cortex-cap');
-let capTimer = 0, statusIdx = 0, lastZoneSay = 0, cortexVoicePick = null, sayGen = 0;
+let capTimer = 0, statusIdx = 0, lastZoneSay = 0, cortexVoicePick = null, sayGen = 0, handPrevT = 0;
 const pickCortexVoice = () => {
   /* rank every installed voice; take the best. Neural/enhanced voices exist
      on every modern OS — the default is never the good one. */
@@ -2419,7 +2476,11 @@ const neuralCache = new Map();     /* text -> object URL */
 async function neuralSpeak(text, done) {
   let url = neuralCache.get(text);
   if (!url) {
-    const r = await fetch('/api/tts?v=' + neuralVoice + '&t=' + encodeURIComponent(text));
+    const q = '/api/tts?v=' + neuralVoice + '&t=' + encodeURIComponent(text);
+    /* LAN previews and mirrors have no /api — the prod proxy answers with
+       open CORS, so fall through to it before declaring the chain dead */
+    let r = await fetch(q).catch(() => null);
+    if (!r || !r.ok) r = await fetch('https://orrery-red-eight.vercel.app' + q);
     if (!r.ok) throw new Error('tts ' + r.status);
     const b = await r.blob();
     if (!/audio|octet/.test(b.type)) throw new Error('not audio: ' + b.type);
@@ -2435,7 +2496,7 @@ async function neuralSpeak(text, done) {
   try { await voxAudio.play(); } catch { return; }
   neuralState = 'ok';
   /* gesture window = the real clip length, not the caption estimate */
-  if (mind && mind.gest.mode === 'talk') mind.gest.until = performance.now() + (voxAudio.duration || 8) * 1000 + 400;
+  if (mind && (mind.gest.mode === 'talk' || mind.gest.mode === 'aim')) mind.gest.until = performance.now() + (voxAudio.duration || 8) * 1000 + 400;
 }
 let kokoro = null, kokoroState = 'off', kokoroVoice = 'am_michael';
 const kokoroCache = new Map();
@@ -2476,15 +2537,71 @@ window.__nvoice = v => { neuralVoice = v; neuralState = 'on'; neuralCache.clear(
 window.__kvoice = v => { kokoroVoice = v; kokoroCache.clear(); return v; };
 window.__say = t => cortexSay(t || cortexStatusLine(), 'talk');
 window.__ns = () => neuralState + '/' + kokoroState + '/g' + sayGen;
+window.__beam = () => beam.on ? (beam.dept ? beam.dept.id : '?') + '@' + beam.to.toArray().map(v => v | 0).join(',') : 'off';
+window.__aim = i => { const d = deptList[i || 0]; if (d) cortexAim(d, 6000); return d && d.id; };
+let gestGen = 0;
 function cortexGesture(mode, dur) {
-  if (mind) mind.gest = { mode, t0: performance.now(), until: performance.now() + dur };
+  if (mind) mind.gest = { mode, t0: performance.now(), until: performance.now() + dur, gen: ++gestGen };
 }
 /* ---- gesture library. Each entry maps (side, now, gestState) → pose offsets
    from the hand's base cradle: px/py/pz, rx/ry/rz, and either one shared
    `curl` or per-finger `curls` (index→pinky). The talk scheduler in the tick
    cuts between these while audio plays. */
-const TALK_GESTS = ['beat', 'palmsUp', 'steeple', 'sweep', 'pinch', 'expanse', 'count', 'chop'];
+const TALK_GESTS = ['beat', 'palmsUp', 'steeple', 'sweep', 'pinch', 'expanse', 'count', 'chop', 'conduct', 'conduct'];
 const MICROS = ['drum', 'flex', 'roll'];
+const cl = (v, a, b) => Math.max(a, Math.min(b, v));
+const _bv = new THREE.Vector3(), _bv2 = new THREE.Vector3(), _bUp = new THREE.Vector3(0, 1, 0);
+const _al = new THREE.Vector3(), _ad = new THREE.Vector3(), _ab = new THREE.Vector3();
+/* ---- the CONTROL BEAM: his reach made visible. A charged filament from the
+   right index fingertip to whatever CORTEX is commanding — energy packets
+   flow outward along it, the target monitor's rim throbs while held. */
+const beam = { on: false, to: new THREE.Vector3(), dept: null, lastRim: null, until: 0 };
+{
+  const bcv = document.createElement('canvas'); bcv.width = bcv.height = 64;
+  const bg = bcv.getContext('2d');
+  const gr = bg.createRadialGradient(32, 32, 2, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(190,230,255,1)'); gr.addColorStop(.4, 'rgba(90,170,255,.45)'); gr.addColorStop(1, 'rgba(40,90,255,0)');
+  bg.fillStyle = gr; bg.fillRect(0, 0, 64, 64);
+  const btex = new THREE.CanvasTexture(bcv);
+  /* NOT world — buildWorld() clears that group on every fleet refresh */
+  beam.g = new THREE.Group(); beam.g.visible = false; scene.add(beam.g);
+  /* the beam is HOLOGRAPHIC — no depth test, drawn on top: a projection he
+     casts over the room, never hidden behind his own tissue or a wall */
+  beam.core = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.2, 6.5, 1, 8, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0xbfe0ff, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.DoubleSide }));
+  beam.core.renderOrder = 998;
+  beam.g.add(beam.core);
+  beam.packs = [];
+  for (let i = 0; i < 6; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: btex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
+    sp.scale.setScalar(24); sp.renderOrder = 999; beam.g.add(sp); beam.packs.push(sp);
+  }
+  beam.hit = new THREE.Sprite(new THREE.SpriteMaterial({ map: btex, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
+  beam.hit.renderOrder = 999;
+  beam.g.add(beam.hit);
+}
+const beamAt = (d) => {   /* lock the beam onto a department's monitor */
+  if (!d || !d.groupObj) return;
+  d.groupObj.localToWorld(beam.to.set(0, 258, 0));
+  /* land the impact a step INTO the room off the monitor face, so the bloom
+     never z-fights the panel it is commanding */
+  beam.to.x += (d.nx || 0) * 30; beam.to.z += (d.nz || 0) * 30;
+  beam.dept = d; beam.on = true;
+};
+function cortexAim(dept, dur) {
+  if (!mind || !dept) return;
+  beamAt(dept);
+  beam.until = performance.now() + dur;
+  mind.gest = { mode: 'aim', t0: performance.now(), until: performance.now() + dur, gen: ++gestGen };
+}
+/* right-hand reach toward the live beam target, in anat-local space */
+const reachPose = () => {
+  mind.g.worldToLocal(_al.copy(beam.to));
+  _ad.copy(_al).sub(_ab.set(.8, -.4, .3)).normalize();
+  return { px: cl(_ad.x * .85, -.45, .62), py: .5 + cl(_ad.y * .45, -.2, .35), pz: .28,
+           rx: .95, ry: cl(-_ad.x * .4, -.5, .5), rz: -.5, curls: [-.85, .5, .55, .6] };
+};
 const GEST_FN = {
   /* rhythmic downbeats — the workhorse "talking with your hands" */
   beat(s, t) { const b = Math.abs(Math.sin(t * .008 + (s > 0 ? 0 : 1.1))); return { py: .16 + b * .14, px: s * .05, rx: .35 + b * .25, rz: s * .18, curl: -.12 }; },
@@ -2502,6 +2619,13 @@ const GEST_FN = {
   count(s, t, G) { if (s > 0) { const step = ((t - G.subT0) / 430 | 0) % 5; return { py: .5, px: .12, rx: .95, rz: -.35, curls: [0, 1, 2, 3].map(i => i < step ? -.7 : .3) }; } return { py: .1, rx: .3, curl: 0 }; },
   /* emphatic karate-chop cadence, hands alternating */
   chop(s, t) { const on = Math.sin(t * .001) > 0 ? 1 : -1; if (s === on) { const b = Math.abs(Math.sin(t * .0075)); return { py: .3 + b * .12, rx: .2, ry: -s * .3, rz: s * .55, curl: -.02 }; } return { py: .1, rz: s * .1, curl: -.05 }; },
+  /* CONDUCTING THE MACHINE: right hand fires the control beam at live zones,
+     hopping targets mid-sentence; left keeps the beat. The room answers. */
+  conduct(s, t, G) {
+    if (s > 0 && beam.on) return reachPose();
+    const b = Math.abs(Math.sin(t * .008));
+    return { py: .14 + b * .1, rx: .3 + b * .2, rz: s * .15, curl: -.1 };
+  },
 };
 function cortexSay(text, gest) {
   cortexCap.textContent = text; cortexCap.classList.add('on');
@@ -2512,11 +2636,14 @@ function cortexSay(text, gest) {
   /* generation token: cancelling a previous line fires ITS onend/onended —
      a stale done() must never stomp the line that replaced it */
   const gen = ++sayGen;
+  const gGen = mind ? mind.gest.gen : -1;   /* the gesture THIS line owns */
   const done = () => {
     if (gen !== sayGen) return;
     clearTimeout(capTimer);
     capTimer = setTimeout(() => cortexCap.classList.remove('on'), 900);
-    if (mind) mind.gest = { mode: 'idle', t0: performance.now(), until: 0 };
+    /* only idle a gesture this line created — never one set after it
+       (an aim fired mid-sentence outlives the sentence that preceded it) */
+    if (mind && mind.gest.gen === gGen) mind.gest = { mode: 'idle', t0: performance.now(), until: 0, gen: ++gestGen };
   };
   if (neuralState !== 'dead') {
     try { speechSynthesis.cancel(); } catch {}
