@@ -2430,7 +2430,9 @@ async function neuralSpeak(text, done) {
   voxAudio = new Audio(url);
   window.__kdebug = () => JSON.stringify({ dur: voxAudio.duration, rs: voxAudio.readyState, err: voxAudio.error && voxAudio.error.code, paused: voxAudio.paused, t: voxAudio.currentTime });
   voxAudio.onended = done;
-  await voxAudio.play();
+  /* an autoplay block is NOT a proxy failure — swallow it (captions carry
+     the line) so the neural chain stays primary for the next real click */
+  try { await voxAudio.play(); } catch { return; }
   neuralState = 'ok';
   /* gesture window = the real clip length, not the caption estimate */
   if (mind && mind.gest.mode === 'talk') mind.gest.until = performance.now() + (voxAudio.duration || 8) * 1000 + 400;
