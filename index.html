@@ -832,11 +832,10 @@ const BEAM_OP = .38;
 const OS_MODE = true;
 function hsl(h, s, l) { const c = new THREE.Color(); c.setHSL(h / 360, s, l); return c; }
 
-/* ========================= JARVIS spirit orb ==========================
-   The canonical JARVIS: the deep-blue plasma sphere from
-   jarvis-landing/components/JarvisSpiritOrb.tsx. Fragment shader is the
-   ORIGINAL, verbatim — only the vertex shader differs (spherical billboard
-   so the orb lives at the CORE inside the room instead of a fullscreen quad). */
+/* ===================== simplex noise (shared) =====================
+   Ashima snoise — the noise CORTEX's tissue shader runs on. (The old
+   JARVIS spirit-orb billboard that used to live at the CORE is gone;
+   CORTEX, the brain, replaced it. git history has the orb shader.) */
 const SNOISE = `
 vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
 vec4 mod289(vec4 x){return x-floor(x*(1./289.))*289.;}
@@ -859,251 +858,6 @@ float snoise(vec3 v){
   p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
   vec4 m=max(.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.);
   m=m*m;return 42.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
-}
-`;
-const JARVIS_FRAG = `
-precision highp float;
-varying vec2 vUv;
-uniform float uNoiseTime;
-uniform float uAmp;
-uniform float uAmpFast;
-uniform float uBandLow;
-uniform float uBandMid;
-uniform float uBandHigh;
-uniform float uWaveSeed;
-uniform float uMomentum;
-uniform float uMorph;
-uniform float uFlag;
-
-mat2 rot2(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
-
-vec3 hashAxis(float s) {
-  float a = fract(sin(s * 12.9898) * 43758.5453);
-  float b = fract(sin(s * 78.233)  * 43758.5453);
-  float th = a * 6.2831853;
-  float ph = acos(2.0 * b - 1.0);
-  return vec3(sin(ph) * cos(th), cos(ph), sin(ph) * sin(th));
-}
-
-vec3 ACESFilm(vec3 x) {
-  return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
-}
-
-float ditherHash(vec2 v) {
-  return fract(sin(dot(v, vec2(12.9898, 78.233))) * 43758.5453);
-}
-
-void main() {
-  vec2 p = vUv;
-  float r = length(p);
-  if (r > 1.058) discard;
-  if (r > 1.005) {
-    float t = (r - 1.005) / 0.053;
-    float halo = exp(-t * 3.6) * (0.42 + uAmp * 0.55);
-    vec3 haloCol = mix(vec3(0.55, 0.80, 1.00), vec3(0.30, 0.55, 0.90), t);
-    float dHalo = (ditherHash(gl_FragCoord.xy + vec2(uNoiseTime, 0.0)) - 0.5) / 255.0;
-    gl_FragColor = vec4((haloCol + dHalo) * halo * uMorph, halo * 0.55 * uMorph);
-    return;
-  }
-  float edgeAA = 1.0 - smoothstep(0.978, 1.005, r);
-
-  float z2 = max(0.0, 1.0 - r * r);
-  float z  = sqrt(z2);
-  vec3 N   = vec3(p.x, p.y, z);
-
-  float wob = uAmp * 0.18;
-  float ry = uNoiseTime * 0.60 + sin(uNoiseTime * 3.3) * wob + uMomentum * 0.12;
-  float rx = uNoiseTime * 0.26 + cos(uNoiseTime * 4.1) * wob * 0.7 + uMomentum * 0.05;
-  vec3 rN = N;
-  rN.xz = rot2(ry) * rN.xz;
-  rN.yz = rot2(rx) * rN.yz;
-
-  float lon = atan(rN.x, rN.z);
-  float lat = asin(clamp(rN.y, -1.0, 1.0));
-
-  vec3 deepCoord = rN * 1.8;
-  float deep1 = snoise(deepCoord + vec3(uNoiseTime * 0.35, 0.0, 0.0));
-  float deep2 = snoise(deepCoord * 2.07 + vec3(0.0, uNoiseTime * 0.42, 0.0)) * 0.55;
-  float deep3 = snoise(deepCoord * 4.30 + vec3(uNoiseTime * 0.50, 0.0, 0.0)) * 0.30;
-  float deepPlasma = clamp((deep1 + deep2 + deep3) * 0.50 + 0.50, 0.0, 1.0);
-  deepPlasma *= 0.7 + uBandLow * 0.9;
-
-  vec3 surfCoord = rN * 3.6;
-  float surf  = snoise(surfCoord + vec3(uNoiseTime * 1.15, 0.0, 0.0));
-  float surf2 = snoise(surfCoord * 2.13 + vec3(0.0, 0.0, uNoiseTime * 1.35)) * 0.55;
-  float surfPlasma = smoothstep(-0.2, 1.0, surf + surf2) * uAmp;
-
-  float lon6  = lon * 6.0;
-  float lon18 = lon * 18.0;
-  float lat5  = lat * 5.0;
-  float lat14 = lat * 14.0;
-  float dxLon6  = fwidth(lon6);
-  float dxLon18 = fwidth(lon18);
-  float dxLat5  = fwidth(lat5);
-  float dxLat14 = fwidth(lat14);
-  float meridMajorCore = 1.0 - smoothstep(dxLon6  * 0.5, dxLon6  * 1.6, abs(sin(lon6)));
-  float meridMinorCore = 1.0 - smoothstep(dxLon18 * 0.5, dxLon18 * 1.6, abs(sin(lon18)));
-  float latMajorCore   = 1.0 - smoothstep(dxLat5  * 0.5, dxLat5  * 1.6, abs(sin(lat5)));
-  float latMinorCore   = 1.0 - smoothstep(dxLat14 * 0.5, dxLat14 * 1.6, abs(sin(lat14)));
-  float meridMajorHalo = smoothstep(0.06, 0.0, abs(sin(lon6)))  * 0.32;
-  float latMajorHalo   = smoothstep(0.06, 0.0, abs(sin(lat5)))  * 0.28;
-  float meridMajor = max(meridMajorCore, meridMajorHalo);
-  float meridMinor = max(meridMinorCore * 0.55, smoothstep(0.04, 0.0, abs(sin(lon18))) * 0.16);
-  float latMajor   = max(latMajorCore,   latMajorHalo);
-  float latMinor   = max(latMinorCore * 0.45, smoothstep(0.04, 0.0, abs(sin(lat14))) * 0.12);
-  float grid = max(meridMajor, max(meridMinor, max(latMajor * 0.85, latMinor)));
-  grid *= pow(z, 0.4);
-
-  float equatorThickness = 0.012 + uBandMid * 0.035;
-  float equatorAA = max(fwidth(lat) * 0.5, 0.0001);
-  float equator = 1.0 - smoothstep(equatorThickness, equatorThickness + equatorAA * 2.0, abs(lat));
-  equator *= pow(z, 0.35);
-
-  float polarMask = smoothstep(0.78, 0.92, abs(rN.y));
-  float polarRings = pow(abs(sin(abs(rN.y) * 38.0)), 60.0) * polarMask;
-
-  float fresnel = pow(1.0 - z, 2.4);
-
-  float shell = smoothstep(0.965, 0.995, r) * (1.0 - smoothstep(0.995, 1.015, r));
-
-  float filament = 0.0;
-  if (uAmp > 0.03) {
-    float fw1 = sin(lon * 3.0 + lat * 2.0 + uNoiseTime * 3.4)
-              * sin(lat * 5.0 - uNoiseTime * 2.1);
-    float fw2 = sin(lon * 7.0 - lat * 4.5 - uNoiseTime * 5.2)
-              * cos(lat * 3.0 + uNoiseTime * 3.8);
-    float fw  = max(smoothstep(0.82, 1.0, fw1), smoothstep(0.88, 1.0, fw2) * 0.75);
-    filament = fw * uAmpFast;
-  }
-
-  vec2 hx = vec2(lon * 4.2, lat * 4.4);
-  hx.x += step(1.0, mod(hx.y, 2.0)) * 0.5;
-  vec2 hxF = fract(hx) - 0.5;
-  float hxD = max(abs(hxF.x), abs(hxF.y) * 1.1547);
-  float hex = smoothstep(0.42, 0.46, hxD) * pow(z, 0.55) * 0.5;
-
-  vec3 microCoord = rN * 22.0;
-  float micro1 = snoise(microCoord + vec3(uNoiseTime * 1.9, 0.0, 0.0));
-  float micro2 = snoise(microCoord * 2.07 + vec3(0.0, uNoiseTime * 2.4, 0.0)) * 0.55;
-  float micro = micro1 + micro2;
-  float microSheen = smoothstep(0.20, 1.10, micro) * uAmp;
-  float microSpark = smoothstep(0.95, 1.40, micro) * uBandHigh;
-
-  vec3 keyDir = normalize(vec3(-0.42, 0.55, 0.72));
-  float keyDot = max(0.0, dot(N, keyDir));
-  float keySpec = pow(keyDot, 36.0) * 0.42;
-  float keyHalo = pow(keyDot, 8.0)  * 0.10;
-
-  float fresnelR = pow(1.0 - z * 1.008, 2.4);
-  float fresnelG = pow(1.0 - z * 1.000, 2.4);
-  float fresnelB = pow(1.0 - z * 0.992, 2.4);
-  vec3  fresnelAb = vec3(fresnelR, fresnelG, fresnelB);
-
-  vec3 waveAxis = hashAxis(uWaveSeed);
-  float axisDot = dot(rN, waveAxis);
-  float sweep   = sin(uNoiseTime * 4.0);
-  float ringPos = abs(axisDot - sweep);
-  float wave1 = 1.0 - smoothstep(0.0, 0.025, ringPos);
-  vec3 waveAxis2 = hashAxis(uWaveSeed + 0.37);
-  float axisDot2 = dot(rN, waveAxis2);
-  float ringPos2 = abs(axisDot2 - cos(uNoiseTime * 3.5));
-  float wave2 = (1.0 - smoothstep(0.0, 0.025, ringPos2)) * 0.7;
-  float speakWave = (wave1 + wave2) * uAmpFast * (0.7 + uBandMid * 0.6);
-  speakWave *= pow(z, 0.3);
-
-  float speckleN = snoise(rN * 14.0 + vec3(uNoiseTime * 6.0, 0.0, 0.0));
-  float speckle = smoothstep(0.55, 0.85, speckleN);
-  speckle *= uBandHigh * pow(z, 0.5);
-
-  float pupilR  = 0.10 + uAmp * 0.07;
-  float irisR   = 0.26 + uAmp * 0.05;
-  float pupil   = 1.0 - smoothstep(pupilR * 0.6, pupilR, r);
-  float iris    = smoothstep(irisR, pupilR, r) * (1.0 - pupil);
-  float irisBlades = pow(abs(sin(atan(p.y, p.x) * 14.0)), 4.0) * iris * 0.4;
-
-  vec3 armN = rN;
-  armN.xz = rot2(-0.4) * armN.xz;
-  float armLon = atan(armN.x, armN.z);
-  float armLat = asin(clamp(armN.y, -1.0, 1.0));
-  float armHexX = armLon * 2.6;
-  float armHexY = armLat * 2.6;
-  armHexX += step(1.0, mod(armHexY, 2.0)) * 0.5;
-  vec2 armF = fract(vec2(armHexX, armHexY)) - 0.5;
-  float armD = max(abs(armF.x), abs(armF.y) * 1.1547);
-  float armature = smoothstep(0.42, 0.47, armD) * pow(z, 1.4) * 0.35;
-
-  vec3 voidCol  = vec3(0.010, 0.025, 0.095);
-  vec3 plasma   = vec3(0.040, 0.155, 0.410);
-  vec3 cyan     = vec3(0.210, 0.520, 0.880);
-  vec3 frost    = vec3(0.430, 0.790, 1.000);
-  vec3 lineCol  = vec3(0.200, 0.500, 0.850);
-  vec3 arcCol   = vec3(0.400, 0.800, 1.000);
-  vec3 warmLow  = vec3(0.320, 0.420, 0.780);
-  vec3 speckC   = vec3(0.480, 0.840, 1.000);
-
-  float breath = 0.55 - uAmp * 0.18 + sin(uNoiseTime * 7.0) * 0.06 * uAmp;
-  vec3 col = mix(voidCol, plasma, pow(z, breath));
-
-  col = mix(col, warmLow, uBandLow * 0.18);
-  col = mix(col, cyan,    deepPlasma * 0.32);
-  col = mix(col, cyan,    surfPlasma * 0.42);
-  col -= vec3(0.020, 0.030, 0.050) * armature;
-  col = mix(col, lineCol, grid       * 0.55);
-  col = mix(col, lineCol, equator    * 0.75);
-  col = mix(col, lineCol, polarRings * 0.45);
-  col -= vec3(0.015, 0.025, 0.040) * hex;
-  col = mix(col, frost * fresnelAb, fresnel * 0.48);
-  col += frost  * shell     * 0.78;
-  col += arcCol * filament  * 0.95;
-  col += arcCol * speakWave * 1.05;
-  col += speckC * speckle   * 0.85;
-  col = mix(col, frost,   microSheen * 0.18 * pow(z, 0.4));
-  col += speckC * microSpark * 0.45 * pow(z, 0.5);
-  col += vec3(0.62, 0.86, 1.00) * (keySpec + keyHalo) * (0.55 + uAmp * 0.35);
-  col *= (1.0 - pupil * 0.85);
-  col *= (1.0 - iris * 0.25);
-  col += vec3(0.20, 0.45, 0.78) * irisBlades;
-
-  float alpha = 0.18
-              + fresnel    * 0.60
-              + deepPlasma * 0.22
-              + grid       * 0.45
-              + equator    * 0.55
-              + polarRings * 0.35
-              + surfPlasma * 0.30
-              + shell      * 0.75
-              + filament   * 0.50
-              + speakWave  * 0.55
-              + speckle    * 0.35
-              + hex        * 0.10
-              + armature   * 0.12
-              + iris       * 0.15
-              + pupil      * 0.35;
-  alpha += microSheen * 0.05;
-  alpha += keySpec    * 0.45;
-  alpha += keyHalo    * 0.20;
-  alpha = clamp(alpha, 0.0, 1.0);
-
-  /* health chroma: the orb warms with the fleet's flagged fraction — a slow
-     ember pulse, never a full recolor. uFlag is 0 when flags are ≤5% of units. */
-  float ember = uFlag * (0.72 + 0.28 * sin(uNoiseTime * 2.6));
-  float lum = dot(col, vec3(0.299, 0.587, 0.114));
-  col = mix(col, vec3(1.0, 0.36, 0.10) * (lum * 2.2), ember * 0.75);
-
-  col   *= uMorph;
-  alpha *= uMorph * edgeAA;
-
-  /* reference-matched chroma: saturate before tonemap so the orb reads as
-     COLOR under bloom, not a white ball (X 3D-OS reference, Marco-directed) */
-  float lum2 = dot(col, vec3(0.299, 0.587, 0.114));
-  col = mix(vec3(lum2), col, 1.42) * 1.12;
-
-  col = ACESFilm(col);
-
-  float d = (ditherHash(gl_FragCoord.xy) - 0.5) / 255.0;
-  col += vec3(d);
-
-  gl_FragColor = vec4(col, alpha);
 }
 `;
 /* ====================== BRAIN surface (3D) ======================
@@ -1314,58 +1068,25 @@ function buildWorld() {
   /* THE CORE — bigger, structured: particle cloud + wireframe heart + orbital rings +
      a light column wiring it to the floor bus. Counters under it are real. */
   {
-    /* JARVIS at the heart of the system — the original spirit-orb shader on a
-       spherical billboard so it reads as the sphere from anywhere in the room */
-    const orbMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uNoiseTime: { value: 0 },
-        uAmp:       { value: 0 },
-        uAmpFast:   { value: 0 },
-        uBandLow:   { value: 0 },
-        uBandMid:   { value: 0 },
-        uBandHigh:  { value: 0 },
-        uWaveSeed:  { value: 7.3 },
-        uMomentum:  { value: 0 },
-        uMorph:     { value: 0 },
-        uFlag:      { value: 0 },
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv * 2.0 - 1.0;
-          vec3 c = (modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-          gl_Position = projectionMatrix * vec4(c + vec3(position.xy, 0.0), 1.0);
-        }
-      `,
-      fragmentShader: SNOISE + JARVIS_FRAG,
-      transparent: true, depthWrite: false, depthTest: true,
-    });
-    const orb = new THREE.Mesh(new THREE.PlaneGeometry(377, 377), orbMat);
-    orb.renderOrder = 3;
-    orb.frustumCulled = false;
-    brain.add(orb);
-    window.__orb = () => JSON.stringify({
-      morph: +orbMat.uniforms.uMorph.value.toFixed(3), amp: +orbMat.uniforms.uAmp.value.toFixed(3),
-      nt: +orbMat.uniforms.uNoiseTime.value.toFixed(2), vis: orb.visible, flag: +orbMat.uniforms.uFlag.value.toFixed(3),
-      world: orb.getWorldPosition(new THREE.Vector3()).toArray().map(v => Math.round(v)),
-    });
-    window.__orbFlag = v => { orbMat.uniforms.uFlag.value = v; return v; };
-    jarvis = { mat: orbMat, noiseTime: 0, lastT: 0, load: Math.min(.35, nodes.filter(n => n.status === 'running').length * .05),
+    /* CORTEX at the heart of the system — the brain-shaped mind that runs the
+       backend. Not JARVIS: the orb is gone; this one has its own character —
+       slower, heavier breathing, its own seed, tissue instead of plasma glass.
+       Its state object keeps the old `jarvis` name only as internal plumbing. */
+    jarvis = { noiseTime: 0, lastT: 0, mom: 0, load: Math.min(.35, nodes.filter(n => n.status === 'running').length * .05),
       flag: Math.min(1, Math.max(0, (nodes.filter(n => n.status === 'flag').length / (nodes.length || 1) - .05) * 2.2)) };
-    orbMat.uniforms.uFlag.value = jarvis.flag;
-    /* orbital rings at F(3)·φ⁰·¹·² = 89 · 144 · 233 — the Fibonacci triple */
-    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(FIB(3), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    /* orbital rings sit OUTSIDE the tissue (brain max radius ~185) */
+    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(200, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring0.rotation.x = Math.PI / 2.1; ring0.rotation.y = -.4; brain.add(ring0);
-    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(FIB(4), 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(FIB(5), 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring1.rotation.x = Math.PI / 2.4; brain.add(ring1);
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(FIB(5), .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(285, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring2.rotation.x = Math.PI / 1.8; ring2.rotation.y = .7; brain.add(ring2);
     const glow = new THREE.PointLight(0x6ea8ff, 2.6, 900); brain.add(glow);
     brain.position.set(0, 300, -640);
-    const lbl = makeLabel('CORE', { size: 60, serif: true }); lbl.position.set(0, 182, 0); brain.add(lbl);
+    const lbl = makeLabel('CORTEX', { size: 60, serif: true }); lbl.position.set(0, 214, 0); brain.add(lbl);
     const c = s => nodes.filter(n => n.status === s).length;
     const stats = makeLabel(`${nodes.length} UNITS · ${c('ok')} OK · ${c('running')} LIVE · ${c('flag')} ALERTS`, { size: 26, scale: .3 });
-    stats.position.set(0, -152, 0); brain.add(stats);
+    stats.position.set(0, -206, 0); brain.add(stats);
     /* taskbar — the OS bottom bar, pinned to the back wall base. The running
        lanes are the open apps; glyphs and counts are data, not copy. */
     const tb = document.createElement('canvas'); tb.width = 1024; tb.height = 56;
@@ -1423,12 +1144,12 @@ function buildWorld() {
     window.__col = () => corePulse ? [...corePulse.a].filter((_, i) => i % 3 === 1).map(v => +v.toFixed(1)) : null;
   }
 
-  /* THE BRAIN — literally a brain, in 3D, wearing the JARVIS skin.
-     Two gyrified hemispheres split by the longitudinal fissure, a
-     cerebellum with fine laminae, a brainstem. Geometry is displaced
-     by ridged value-noise (real folds, real silhouette from any angle),
-     the surface shader carries the orb's detail families. Opaque —
-     tissue can never read as a hole. Same rings/glow/label rig. */
+  /* CORTEX'S BODY — literally a brain, in 3D. Two gyrified hemispheres
+     split by the longitudinal fissure, a cerebellum with fine laminae,
+     a brainstem. Geometry is displaced by ridged value-noise (real
+     folds, real silhouette from any angle); the surface shader carries
+     the old orb's detail families on real tissue. Opaque — tissue can
+     never read as a hole. Lives inside the CORE group built above. */
   try {
     const bnHash = (x, y, z) => { const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return s - Math.floor(s); };
     const bnNoise = (x, y, z) => {
@@ -1491,7 +1212,6 @@ function buildWorld() {
       fragmentShader: SNOISE + BRAIN_SURF,
     });
     mindMat.uniforms.uFlag.value = jarvis.flag;
-    const mindG = new THREE.Group();
     const S = 165;
     const anat = new THREE.Group();
     anat.add(new THREE.Mesh(hemi(1), mindMat));
@@ -1503,8 +1223,8 @@ function buildWorld() {
     anat.add(stem);
     anat.scale.set(S, S, S);
     anat.rotation.x = 0.12;                           // slight forward tilt — reads as anatomy
-    mindG.add(anat);
-    /* soft aura behind the tissue — the halo the billboard used to carry */
+    brain.add(anat);                                  // straight into the CORE group — he IS the core
+    /* soft aura behind the tissue — the halo the old billboard used to carry */
     const gc = document.createElement('canvas'); gc.width = gc.height = 128;
     const gg = gc.getContext('2d');
     const gr = gg.createRadialGradient(64, 64, 8, 64, 64, 64);
@@ -1514,31 +1234,14 @@ function buildWorld() {
     auraM.fog = false;
     const aura = new THREE.Sprite(auraM);
     aura.scale.set(560, 560, 1);
-    mindG.add(aura);
-    const mkRing = (rad, tube, op, colr, rx, ry) => {
-      const rm2 = new THREE.MeshBasicMaterial({ color: colr, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false });
-      rm2.fog = false;
-      const rg = new THREE.Mesh(new THREE.TorusGeometry(rad, tube, 8, 72), rm2);
-      rg.rotation.x = rx; rg.rotation.y = ry; mindG.add(rg);
-    };
-    /* rings sit OUTSIDE the tissue (brain max radius ~185 at this scale) */
-    mkRing(200, .9, .55, 0x57d9ff, Math.PI / 2.1, -.4);
-    mkRing(FIB(5), 1.3, .75, 0x57d9ff, Math.PI / 2.4, 0);
-    mkRing(285, .9, .4, 0xbfa7ff, Math.PI / 1.8, .7);
-    mindG.add(new THREE.PointLight(0x6ea8ff, 2.2, 900));
-    const mlbl = makeLabel('BRAIN', { size: 60, serif: true });
-    mlbl.material.fog = false; mlbl.position.set(0, 196, 0); mindG.add(mlbl);
-    const mstats = makeLabel(`${deptList.length} ZONES · ${nodes.length} UNITS`, { size: 26, scale: .3 });
-    mstats.material.fog = false; mstats.position.set(0, -198, 0); mindG.add(mstats);
-    mindG.position.set(0, 735, -460);
-    world.add(mindG);
-    mind = { g: mindG, mat: mindMat };
-    window.__mindVis = (body, rest) => { anat.visible = body; mindG.children.forEach(ch => { if (ch !== anat) ch.visible = rest; }); return [body, rest]; };
+    brain.add(aura);
+    mind = { g: anat, mat: mindMat };
+    window.__mindVis = (body, rest) => { anat.visible = body; brain.children.forEach(ch => { if (ch !== anat) ch.visible = rest; }); return [body, rest]; };
     window.__mind = () => JSON.stringify({
       morph: +mindMat.uniforms.uMorph.value.toFixed(3),
       nt: +mindMat.uniforms.uNoiseTime.value.toFixed(2),
       flag: +mindMat.uniforms.uFlag.value.toFixed(3),
-      world: mindG.getWorldPosition(new THREE.Vector3()).toArray().map(v => Math.round(v)),
+      world: anat.getWorldPosition(new THREE.Vector3()).toArray().map(v => Math.round(v)),
     });
   } catch (e) { console.warn('brain build failed', e); }
 
@@ -2208,7 +1911,6 @@ function frame(now) {
   updateHover();
   if (!reduced) {
     brain.rotation.y = t * .00012;
-    if (mind) mind.g.rotation.y = -t * .0001;
   }
   for (const pl of planets) {
     const ang = pl.phase + t * pl.speed;
@@ -2219,33 +1921,23 @@ function frame(now) {
     );
     if (!reduced) pl.mesh.rotation.y = t * pl.spin;
   }
-  if (jarvis) {
-    /* idle breathing + real system load — the orb breathes with running lanes */
+  if (jarvis && mind) {
+    /* CORTEX breathes with real system load — slower and heavier than the
+       orb ever did; a mind at work, not a heart on display */
     const jdt = Math.max(0, Math.min(.1, jarvis.lastT ? (t - jarvis.lastT) / 1000 : .016)); jarvis.lastT = t;
-    const breathe = .12 + Math.sin(t * .0012) * .04;
+    const breathe = .12 + Math.sin(t * .0009) * .05;
     const amp = Math.min(.6, .08 + breathe * .5 + jarvis.load);
-    jarvis.noiseTime += jdt * (amp * 2.3 + .07);
-    const u = jarvis.mat.uniforms;
-    u.uNoiseTime.value = jarvis.noiseTime;
-    u.uAmp.value      = amp;
-    u.uAmpFast.value  = amp * .85;
-    u.uBandLow.value  = .25 + breathe;
-    u.uBandMid.value  = .18 + Math.sin(t * .0021) * .08;
-    u.uBandHigh.value = .08 + Math.max(0, Math.sin(t * .0034)) * .1;
-    u.uMomentum.value += jdt * amp * .08;
-    u.uMorph.value    = Math.min(1, Math.max(0, u.uMorph.value + jdt * .5));
-    if (mind) {
-      /* the brain breathes with the same lungs, out of phase */
-      const m = mind.mat.uniforms;
-      m.uNoiseTime.value = jarvis.noiseTime * .87 + 5.2;
-      m.uAmp.value       = amp * .92;
-      m.uAmpFast.value   = amp * .74;
-      m.uBandLow.value   = u.uBandLow.value;
-      m.uBandMid.value   = .18 + Math.sin(t * .0017 + 2.1) * .08;
-      m.uBandHigh.value  = .08 + Math.max(0, Math.sin(t * .0029 + 1)) * .1;
-      m.uMomentum.value  = u.uMomentum.value;
-      m.uMorph.value     = Math.min(1, Math.max(0, m.uMorph.value + jdt * .5));
-    }
+    jarvis.noiseTime += jdt * (amp * 1.9 + .06);
+    jarvis.mom += jdt * amp * .08;
+    const m = mind.mat.uniforms;
+    m.uNoiseTime.value = jarvis.noiseTime;
+    m.uAmp.value       = amp;
+    m.uAmpFast.value   = amp * .8;
+    m.uBandLow.value   = .25 + breathe;
+    m.uBandMid.value   = .18 + Math.sin(t * .0017 + 2.1) * .08;
+    m.uBandHigh.value  = .08 + Math.max(0, Math.sin(t * .0029 + 1)) * .1;
+    m.uMomentum.value  = jarvis.mom;
+    m.uMorph.value     = Math.min(1, Math.max(0, m.uMorph.value + jdt * .5));
   }
   if (!reduced && monInst) {
     const { ri, M4, P, S, QX, gi2, CT } = monInst;
