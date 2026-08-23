@@ -1299,6 +1299,8 @@ function buildWorld() {
     mind = { g: anat, skull, mat: mindMat, hands, gest: { mode: 'idle', t0: 0, until: 0 } };
     window.__hands = () => JSON.stringify({
       mode: mind.gest.mode, sub: mind.gest.sub || null, micro: mind.gest.micro || null,
+      until: Math.round(mind.gest.until || 0), now: Math.round(performance.now()),
+      ns: window.__ns ? window.__ns() : null,
       h: hands.map(h => [h.position.x, h.position.y, h.position.z, h.rotation.x, h.rotation.z].map(v => +v.toFixed(3))),
     });
     window.__mindVis = (body, rest) => { anat.visible = body; brain.children.forEach(ch => { if (ch !== anat) ch.visible = rest; }); return [body, rest]; };
@@ -2471,6 +2473,7 @@ window.__voice = () =>
 window.__nvoice = v => { neuralVoice = v; neuralState = 'on'; neuralCache.clear(); return v; };
 window.__kvoice = v => { kokoroVoice = v; kokoroCache.clear(); return v; };
 window.__say = t => cortexSay(t || cortexStatusLine(), 'talk');
+window.__ns = () => neuralState + '/' + kokoroState + '/g' + sayGen;
 function cortexGesture(mode, dur) {
   if (mind) mind.gest = { mode, t0: performance.now(), until: performance.now() + dur };
 }
