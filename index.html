@@ -2363,11 +2363,33 @@ const pickCortexVoice = () => {
 };
 if ('speechSynthesis' in window) { pickCortexVoice(); speechSynthesis.addEventListener('voiceschanged', pickCortexVoice); }
 
-/* ---- Kokoro-82M: neural TTS running IN the tab. Apache-2.0, keyless, $0.
-   One-time ~90 MB model pull from the Hugging Face CDN (browser-cached after);
-   Web Speech covers the gap while it loads and any machine it fails on.
-   Synthesized lines are cached by text, so repeats are instant. */
-let kokoro = null, kokoroState = 'off', kokoroVoice = 'am_michael', kokoroAudio = null;
+/* ---- Voice chain, best first:
+   1. /api/tts — Edge neural voices proxied through our own Vercel function
+      (Azure-class quality, keyless for the page, edge-cached per line).
+   2. Kokoro-82M running IN the tab (Apache-2.0, ~90 MB one-time pull) —
+      only loaded if the proxy ever fails.
+   3. Web Speech — the floor; also carries the first word while 1 is in flight. */
+let voxAudio = null;               /* shared playback slot for probes */
+let neuralState = 'on', neuralVoice = 'en-US-AndrewMultilingualNeural';
+const neuralCache = new Map();     /* text -> object URL */
+async function neuralSpeak(text, done) {
+  let url = neuralCache.get(text);
+  if (!url) {
+    const r = await fetch('/api/tts?v=' + neuralVoice + '&t=' + encodeURIComponent(text));
+    if (!r.ok) throw new Error('tts ' + r.status);
+    const b = await r.blob();
+    if (!/audio|octet/.test(b.type)) throw new Error('not audio: ' + b.type);
+    url = URL.createObjectURL(b);
+    neuralCache.set(text, url);
+  }
+  if (voxAudio) voxAudio.pause();
+  voxAudio = new Audio(url);
+  window.__kdebug = () => JSON.stringify({ dur: voxAudio.duration, rs: voxAudio.readyState, err: voxAudio.error && voxAudio.error.code, paused: voxAudio.paused, t: voxAudio.currentTime });
+  voxAudio.onended = done;
+  await voxAudio.play();
+  neuralState = 'ok';
+}
+let kokoro = null, kokoroState = 'off', kokoroVoice = 'am_michael';
 const kokoroCache = new Map();
 async function loadKokoro() {
   if (kokoroState !== 'off') return;
@@ -2388,17 +2410,20 @@ async function kokoroSpeak(text, done) {
     url = URL.createObjectURL(wav.toBlob());
     kokoroCache.set(text, url);
   }
-  if (kokoroAudio) kokoroAudio.pause();
-  kokoroAudio = new Audio(url);
-  window.__kdebug = () => JSON.stringify({ dur: kokoroAudio.duration, rs: kokoroAudio.readyState, err: kokoroAudio.error && kokoroAudio.error.code, paused: kokoroAudio.paused, t: kokoroAudio.currentTime });
-  kokoroAudio.onended = done;
-  await kokoroAudio.play();
+  if (voxAudio) voxAudio.pause();
+  voxAudio = new Audio(url);
+  window.__kdebug = () => JSON.stringify({ dur: voxAudio.duration, rs: voxAudio.readyState, err: voxAudio.error && voxAudio.error.code, paused: voxAudio.paused, t: voxAudio.currentTime });
+  voxAudio.onended = done;
+  await voxAudio.play();
 }
 window.__voice = () =>
-  kokoroState === 'ready'
-    ? 'Kokoro ' + kokoroVoice + (kokoroAudio ? ' dur=' + (Math.round(kokoroAudio.duration * 100) / 100) : '')
-    : (kokoroState === 'loading' ? '(Kokoro loading) ' : kokoroState === 'failed' ? '(Kokoro failed) ' : '') +
-      (cortexVoicePick ? cortexVoicePick.name + ' [' + cortexVoicePick.lang + ']' : 'null');
+  neuralState !== 'dead'
+    ? 'EdgeTTS ' + neuralVoice + ' [' + neuralState + ']' + (voxAudio ? ' dur=' + (Math.round(voxAudio.duration * 100) / 100) : '')
+    : kokoroState === 'ready'
+      ? 'Kokoro ' + kokoroVoice + (voxAudio ? ' dur=' + (Math.round(voxAudio.duration * 100) / 100) : '')
+      : (kokoroState === 'loading' ? '(Kokoro loading) ' : kokoroState === 'failed' ? '(Kokoro failed) ' : '') +
+        (cortexVoicePick ? cortexVoicePick.name + ' [' + cortexVoicePick.lang + ']' : 'null');
+window.__nvoice = v => { neuralVoice = v; neuralState = 'on'; neuralCache.clear(); return v; };
 window.__kvoice = v => { kokoroVoice = v; kokoroCache.clear(); return v; };
 window.__say = t => cortexSay(t || cortexStatusLine(), 'talk');
 function cortexGesture(mode, dur) {
@@ -2415,6 +2440,16 @@ function cortexSay(text, gest) {
     capTimer = setTimeout(() => cortexCap.classList.remove('on'), 900);
     if (mind) mind.gest = { mode: 'idle', t0: performance.now(), until: 0 };
   };
+  if (neuralState !== 'dead') {
+    try { speechSynthesis.cancel(); } catch {}
+    neuralSpeak(text, done).catch(() => {
+      neuralState = 'dead';          /* proxy gone — fall back for good */
+      if (kokoroState === 'off') loadKokoro();
+      if (kokoroState === 'ready' && kokoro) kokoroSpeak(text, done).catch(() => webSay(text, done));
+      else webSay(text, done);
+    });
+    return;
+  }
   if (kokoroState === 'off') loadKokoro();
   if (kokoroState === 'ready' && kokoro) {
     try { speechSynthesis.cancel(); } catch {}
@@ -2798,7 +2833,6 @@ function enter() {
   setTimeout(() => intro.remove(), 1000);
   canvas.focus();
   armGyro();   /* inside the tap gesture — iOS permission prompts need that */
-  loadKokoro();   /* start the neural-voice pull now; Web Speech carries the greeting */
   setTimeout(() => {
     if (mind && nodes.length) cortexSay(`Salutations. CORTEX online — ${nodes.length} units under supervision, cognition nominal. Do peruse; every light is empirical.`);
   }, 1600);
