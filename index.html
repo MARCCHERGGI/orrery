@@ -870,6 +870,7 @@ precision highp float;
 varying vec3 vN;
 varying vec3 vOp;
 varying vec2 vUv2;
+varying float vF;
 uniform float uNoiseTime;
 uniform float uAmp;
 uniform float uAmpFast;
@@ -902,9 +903,9 @@ void main() {
   float surf2 = snoise(vOp * 7.6 + vec3(0.0, 0.0, uNoiseTime * 1.35)) * 0.55;
   float surfPlasma = smoothstep(-0.2, 1.0, surf + surf2) * uAmp;
 
-  /* gyri accent — the fold ridges carry light (matches the geometry's ridged noise) */
-  float g1 = 1.0 - abs(snoise(vOp * 2.4 + vec3(4.7)));
-  float gyri = smoothstep(0.70, 0.96, g1);
+  /* gyri accent — ridge crests carry light. vF is the REAL fold value the
+     geometry was displaced by, so light and shadow sit exactly on the folds */
+  float gyri = smoothstep(0.62, 0.86, vF);
 
   /* lat/lon circuitry from the sphere parameterisation */
   float lon6 = vUv2.x * 6.2831853 * 4.0;
@@ -914,13 +915,13 @@ void main() {
   float latl  = 1.0 - smoothstep(dxLat * 0.5, dxLat * 1.8, abs(sin(lat5)));
   float grid = max(merid, latl * 0.8) * pow(z, 0.4);
 
-  float fresnel = pow(1.0 - z, 2.4);
+  float fresnel = pow(1.0 - z, 3.4);
 
   /* key light — same lamp as the orb */
   vec3 keyDir = normalize(vec3(-0.42, 0.55, 0.72));
   float keyDot = max(0.0, dot(N, keyDir));
-  float lambert = 0.35 + keyDot * 0.65;
-  float keySpec = pow(keyDot, 36.0) * 0.42;
+  float lambert = 0.30 + keyDot * 0.55;
+  float keySpec = pow(keyDot, 36.0) * 0.28;
 
   /* micro sparks */
   float micro = snoise(vOp * 14.0 + vec3(uNoiseTime * 1.9, 0.0, 0.0));
@@ -937,11 +938,14 @@ void main() {
 
   vec3 col = mix(voidCol, plasma, 0.35 + z * 0.5) * lambert;
   col = mix(col, warmLow, uBandLow * 0.18);
-  col = mix(col, cyan,    deepPlasma * 0.38);
-  col = mix(col, cyan,    surfPlasma * 0.42);
-  col = mix(col, arcCol,  gyri * 0.45);
-  col = mix(col, lineCol, grid * 0.40);
-  col = mix(col, frost,   fresnel * 0.55);
+  col = mix(col, cyan,    deepPlasma * 0.28);
+  col = mix(col, cyan,    surfPlasma * 0.30);
+  col = mix(col, arcCol,  gyri * 0.50);
+  col = mix(col, lineCol, grid * 0.16);
+  col = mix(col, frost,   fresnel * 0.26);
+  /* crease shadow — sulci sink into darkness; this is what makes the folds READ.
+     Narrow band = crisp fold walls instead of soft blotches. */
+  col *= mix(0.34, 1.0, smoothstep(0.42, 0.64, vF));
   col += speckC * microSpark * 0.5;
   col += vec3(0.62, 0.86, 1.00) * keySpec * (0.55 + uAmp * 0.35);
 
@@ -953,7 +957,7 @@ void main() {
   col *= uMorph;
 
   float lum2 = dot(col, vec3(0.299, 0.587, 0.114));
-  col = mix(vec3(lum2), col, 1.42) * 1.12;
+  col = mix(vec3(lum2), col, 1.42) * 0.84;
   col = ACESFilm(col);
   col += vec3((ditherHash(gl_FragCoord.xy) - 0.5) / 255.0);
 
@@ -961,14 +965,17 @@ void main() {
 }
 `;
 const BRAIN_VERT = `
+attribute float aFold;
 varying vec3 vN;
 varying vec3 vOp;
 varying vec2 vUv2;
+varying float vF;
 uniform float uNoiseTime;
 uniform float uAmp;
 void main() {
   vOp = position;
   vUv2 = uv;
+  vF = aFold;
   vN = normalMatrix * normal;
   /* living pulse — the tissue breathes with the fleet */
   vec3 p = position + normal * (uAmp * 0.018 * sin(uNoiseTime * 3.0 + position.y * 4.0 + position.x * 3.0));
@@ -1074,19 +1081,19 @@ function buildWorld() {
        Its state object keeps the old `jarvis` name only as internal plumbing. */
     jarvis = { noiseTime: 0, lastT: 0, mom: 0, load: Math.min(.35, nodes.filter(n => n.status === 'running').length * .05),
       flag: Math.min(1, Math.max(0, (nodes.filter(n => n.status === 'flag').length / (nodes.length || 1) - .05) * 2.2)) };
-    /* orbital rings sit OUTSIDE the tissue (brain max radius ~185) */
-    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(200, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    /* orbital rings sit OUTSIDE the tissue (brain max radius ~205 at S=185) */
+    const ring0 = new THREE.Mesh(new THREE.TorusGeometry(232, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring0.rotation.x = Math.PI / 2.1; ring0.rotation.y = -.4; brain.add(ring0);
-    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(FIB(5), 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(268, 1.3, 8, 72), new THREE.MeshBasicMaterial({ color: 0x57d9ff, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring1.rotation.x = Math.PI / 2.4; brain.add(ring1);
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(285, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(325, .9, 8, 72), new THREE.MeshBasicMaterial({ color: 0xbfa7ff, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false }));
     ring2.rotation.x = Math.PI / 1.8; ring2.rotation.y = .7; brain.add(ring2);
     const glow = new THREE.PointLight(0x6ea8ff, 2.6, 900); brain.add(glow);
     brain.position.set(0, 300, -640);
-    const lbl = makeLabel('CORTEX', { size: 60, serif: true }); lbl.position.set(0, 214, 0); brain.add(lbl);
+    const lbl = makeLabel('CORTEX', { size: 60, serif: true }); lbl.position.set(0, 236, 0); brain.add(lbl);
     const c = s => nodes.filter(n => n.status === s).length;
     const stats = makeLabel(`${nodes.length} UNITS · ${c('ok')} OK · ${c('running')} LIVE · ${c('flag')} ALERTS`, { size: 26, scale: .3 });
-    stats.position.set(0, -206, 0); brain.add(stats);
+    stats.position.set(0, -228, 0); brain.add(stats);
     /* taskbar — the OS bottom bar, pinned to the back wall base. The running
        lanes are the open apps; glyphs and counts are data, not copy. */
     const tb = document.createElement('canvas'); tb.width = 1024; tb.height = 56;
@@ -1166,19 +1173,25 @@ function buildWorld() {
       for (let o = 0; o < 3; o++) { s += a * (1 - Math.abs(2 * bnNoise(x * f, y * f, z * f) - 1)); a *= .5; f *= 2.03; }
       return s;   // 0..~0.875, ridged — the gyri
     };
+    /* every geometry wearing the tissue shader needs an aFold value — the
+       fragment darkens sulci from it, so it must be the REAL displacement */
+    const foldConst = (g, v) => { g.setAttribute('aFold', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count).fill(v), 1)); return g; };
     /* one hemisphere: gyrified, anisotropic, medial wall flattened, offset off the fissure */
     const hemi = (side) => {
       const g = new THREE.SphereGeometry(1, 72, 52);
       const pos = g.attributes.position;
+      const fold = new Float32Array(pos.count);
       for (let i = 0; i < pos.count; i++) {
         let x = pos.getX(i), y = pos.getY(i), z2 = pos.getZ(i);
         const w = ridge(x * 2.2 + side * 9.1, y * 2.2 + 3.7, z2 * 2.2);
+        fold[i] = w;
         const r = 1 + (w - 0.55) * 0.17;             // fold depth
         x *= r; y *= r; z2 *= r;
         x *= 0.60; y *= 0.80; z2 *= 1.04;            // hemisphere proportions
         if (x * side < 0) x *= 0.30;                 // flatten the medial wall
         pos.setXYZ(i, x + side * 0.34, y, z2);       // 0.08-wide longitudinal fissure
       }
+      g.setAttribute('aFold', new THREE.BufferAttribute(fold, 1));
       g.computeVertexNormals();
       return g;
     };
@@ -1186,12 +1199,15 @@ function buildWorld() {
     const cereb = () => {
       const g = new THREE.SphereGeometry(1, 48, 36);
       const pos = g.attributes.position;
+      const fold = new Float32Array(pos.count);
       for (let i = 0; i < pos.count; i++) {
         let x = pos.getX(i), y = pos.getY(i), z2 = pos.getZ(i);
         const w = ridge(x * 2.5, y * 9.0, z2 * 2.5);
+        fold[i] = w;
         const r = 1 + (w - 0.55) * 0.10;
         pos.setXYZ(i, x * 0.52 * r, y * 0.30 * r - 0.52, z2 * 0.42 * r - 0.58);
       }
+      g.setAttribute('aFold', new THREE.BufferAttribute(fold, 1));
       g.computeVertexNormals();
       return g;
     };
@@ -1212,15 +1228,60 @@ function buildWorld() {
       fragmentShader: SNOISE + BRAIN_SURF,
     });
     mindMat.uniforms.uFlag.value = jarvis.flag;
-    const S = 165;
+    const S = 185;
     const anat = new THREE.Group();
     anat.add(new THREE.Mesh(hemi(1), mindMat));
     anat.add(new THREE.Mesh(hemi(-1), mindMat));
     anat.add(new THREE.Mesh(cereb(), mindMat));
     /* brainstem — short tapered column under the cerebellum */
-    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.16, 0.52, 14, 1, false), mindMat);
+    const stem = new THREE.Mesh(foldConst(new THREE.CylinderGeometry(0.10, 0.16, 0.52, 14, 1, false), 0.62), mindMat);
     stem.position.set(0, -0.72, -0.28); stem.rotation.x = 0.5;
     anat.add(stem);
+    /* THE HANDS — CORTEX holds himself up. Two stylised hands in the same
+       tissue, cradling the brain from below: palm slab, four two-segment
+       curled fingers, a thumb on the inner edge. Built per side so the
+       chirality is real (no mirrored-scale normal tricks). */
+    const mkHand = (s) => {
+      const h = new THREE.Group();
+      const palm = new THREE.Mesh(foldConst(new THREE.SphereGeometry(1, 20, 14), 0.70), mindMat);
+      palm.scale.set(0.17, 0.055, 0.22);
+      h.add(palm);
+      const fingerAt = (fx, fz, rotY, len1, len2, girth) => {
+        const fg = new THREE.Group();
+        fg.position.set(fx, 0, fz);
+        fg.rotation.set(Math.PI / 2 - 0.55, rotY, 0);   // base curl up from the palm plane
+        const s1 = new THREE.Mesh(foldConst(new THREE.CapsuleGeometry(girth, len1, 3, 8), 0.66), mindMat);
+        s1.position.y = len1 / 2 + girth; fg.add(s1);
+        const k = new THREE.Group();                     // knuckle — second phalanx curls further
+        k.position.y = len1 + girth * 1.6;
+        k.rotation.x = -0.85;
+        const s2 = new THREE.Mesh(foldConst(new THREE.CapsuleGeometry(girth * 0.86, len2, 3, 8), 0.66), mindMat);
+        s2.position.y = len2 / 2 + girth * 0.6; k.add(s2);
+        fg.add(k);
+        h.add(fg);
+      };
+      /* four fingers off the palm's front edge, longest in the middle */
+      fingerAt(-0.115, 0.185, 0.10, 0.13, 0.10, 0.032);
+      fingerAt(-0.040, 0.205, 0.03, 0.16, 0.12, 0.034);
+      fingerAt( 0.040, 0.205, -0.03, 0.15, 0.115, 0.033);
+      fingerAt( 0.115, 0.180, -0.12, 0.115, 0.09, 0.030);
+      /* thumb — inner edge, opposing */
+      const th = new THREE.Group();
+      th.position.set(-s * 0.155, 0.01, 0.03);
+      th.rotation.set(Math.PI / 2 - 0.95, -s * 0.85, 0);
+      const t1 = new THREE.Mesh(foldConst(new THREE.CapsuleGeometry(0.036, 0.13, 3, 8), 0.66), mindMat);
+      t1.position.y = 0.10; th.add(t1);
+      h.add(th);
+      /* cradle pose: under the lower-lateral tissue, fingers curling up the
+         side. Oversized on purpose — at room distance true-scale hands
+         vanish; these have to read from the doorway. */
+      h.scale.setScalar(1.5);
+      h.position.set(s * 0.92, -0.97, 0.34);
+      h.rotation.set(-1.05, -s * 0.5, s * 0.42);
+      return h;
+    };
+    anat.add(mkHand(1));
+    anat.add(mkHand(-1));
     anat.scale.set(S, S, S);
     anat.rotation.x = 0.12;                           // slight forward tilt — reads as anatomy
     brain.add(anat);                                  // straight into the CORE group — he IS the core
@@ -1230,10 +1291,10 @@ function buildWorld() {
     const gr = gg.createRadialGradient(64, 64, 8, 64, 64, 64);
     gr.addColorStop(0, 'rgba(110,168,255,.55)'); gr.addColorStop(.5, 'rgba(87,150,255,.16)'); gr.addColorStop(1, 'rgba(87,150,255,0)');
     gg.fillStyle = gr; gg.fillRect(0, 0, 128, 128);
-    const auraM = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .9 });
+    const auraM = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .5 });
     auraM.fog = false;
     const aura = new THREE.Sprite(auraM);
-    aura.scale.set(560, 560, 1);
+    aura.scale.set(620, 620, 1);
     brain.add(aura);
     mind = { g: anat, mat: mindMat };
     window.__mindVis = (body, rest) => { anat.visible = body; brain.children.forEach(ch => { if (ch !== anat) ch.visible = rest; }); return [body, rest]; };
