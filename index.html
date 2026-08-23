@@ -1019,196 +1019,405 @@ let panelData = null, goldData = null;
 })();
 const SERIF = '"Cormorant Garamond", Georgia, serif';
 const SANS = 'Inter, system-ui, sans-serif';
+/* ── pro-render kit ──────────────────────────────────────────────────────
+   Techniques from engines that do this for a living: TradingView's
+   lightweight-charts (2× backing store; grid → wick → body → last-price
+   pass order), Stripe's dashboard language (spline area over a dotted
+   baseline), Instagram's own dark profile chrome, Apple's activity ring.
+   Spec canvases are 1280×792 but every painter draws in 640×396
+   coordinates through this transform — wall text stops shimmering. */
+const PANEL_SCALE = 2;
+function glow(g, color, blur, fn) { g.save(); g.shadowColor = color; g.shadowBlur = blur; fn(); g.restore(); }
+function splinePath(g, pts) {
+  /* monotone cubic (Fritsch–Carlson): smooth but never overshoots the data */
+  const n = pts.length; if (n < 2) return;
+  const dx = [], m = [], t = [];
+  for (let i = 0; i < n - 1; i++) { dx.push(pts[i + 1][0] - pts[i][0]); m.push((pts[i + 1][1] - pts[i][1]) / (dx[i] || 1e-6)); }
+  t[0] = m[0]; for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2; t[n - 1] = m[n - 2];
+  for (let i = 0; i < n - 1; i++) {
+    if (!m[i]) { t[i] = t[i + 1] = 0; continue; }
+    const a = t[i] / m[i], b = t[i + 1] / m[i], s = a * a + b * b;
+    if (s > 9) { const k = 3 / Math.sqrt(s); t[i] = k * a * m[i]; t[i + 1] = k * b * m[i]; }
+  }
+  g.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 0; i < n - 1; i++) {
+    const h = dx[i];
+    g.bezierCurveTo(pts[i][0] + h / 3, pts[i][1] + t[i] * h / 3, pts[i + 1][0] - h / 3, pts[i + 1][1] - t[i + 1] * h / 3, pts[i + 1][0], pts[i + 1][1]);
+  }
+}
+function chip(g, x, y, text, fg, bg) {
+  g.font = `700 11px ${SANS}`;
+  const w = g.measureText(text).width + 16;
+  g.fillStyle = bg; g.beginPath(); g.roundRect(x, y - 13, w, 18, 9); g.fill();
+  g.fillStyle = fg; g.fillText(text, x + 8, y);
+  return w;
+}
 function specChrome(g, hue, title, sub) {
+  g.setTransform(PANEL_SCALE, 0, 0, PANEL_SCALE, 0, 0);
   g.clearRect(0, 0, 640, 396);
-  g.fillStyle = 'rgba(10,12,26,.55)'; g.fillRect(0, 0, 640, 396);
-  g.strokeStyle = `hsla(${hue},60%,62%,.45)`; g.lineWidth = 1; g.strokeRect(6.5, 6.5, 627, 383);
+  const bg = g.createLinearGradient(0, 0, 0, 396);
+  bg.addColorStop(0, 'rgba(14,17,36,.94)'); bg.addColorStop(.55, 'rgba(8,10,24,.9)'); bg.addColorStop(1, 'rgba(12,14,32,.94)');
+  g.fillStyle = bg; g.fillRect(0, 0, 640, 396);
+  const hw = g.createLinearGradient(0, 0, 0, 130);
+  hw.addColorStop(0, `hsla(${hue},70%,60%,.12)`); hw.addColorStop(1, 'hsla(0,0%,0%,0)');
+  g.fillStyle = hw; g.fillRect(0, 0, 640, 130);
+  g.strokeStyle = `hsla(${hue},60%,62%,.4)`; g.lineWidth = 1; g.strokeRect(6.5, 6.5, 627, 383);
+  /* corner ticks — instrument, not poster */
+  g.strokeStyle = `hsla(${hue},70%,70%,.8)`; g.lineWidth = 1.5;
+  [[6.5, 6.5, 1, 1], [633.5, 6.5, -1, 1], [6.5, 389.5, 1, -1], [633.5, 389.5, -1, -1]].forEach(([x, y, sx, sy]) => {
+    g.beginPath(); g.moveTo(x + sx * 14, y); g.lineTo(x, y); g.lineTo(x, y + sy * 14); g.stroke();
+  });
   g.textAlign = 'left'; g.textBaseline = 'alphabetic';
   g.font = `500 30px ${SERIF}`; g.fillStyle = 'rgba(236,234,246,.95)';
   g.fillText(title.split('').join(' '), 26, 46);
+  /* live dot breathing on the shared clock — every panel reads as powered */
+  const th = Date.now() % 2000 / 2000;
+  g.fillStyle = `hsla(${hue},80%,70%,${.35 + .6 * Math.abs(Math.sin(th * Math.PI))})`;
+  g.beginPath(); g.arc(15.5, 15.5, 3, 0, 7); g.fill();
   g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
-  g.textAlign = 'right'; g.fillText(sub || '', 614, 44);
-  g.textAlign = 'left';
+  g.textAlign = 'right'; g.fillText(sub || '', 614, 44); g.textAlign = 'left';
   g.strokeStyle = 'rgba(140,150,220,.25)';
   g.beginPath(); g.moveTo(26, 60); g.lineTo(614, 60); g.stroke();
 }
 const fmtK = v => v == null ? '—' : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(v);
 const detR = i => { const v = Math.sin(i * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
+
+/* the exact web page — captured from instagram.com/marcohergi and shipped
+   as a texture; the painted recreation below is only the loading fallback */
+const IG_SHOT = new Image();
+IG_SHOT.src = 'data/ig-profile.jpg';
+IG_SHOT.onload = () => { try { for (const T of tilePanels) if (T.spec === specIG) { specIG(T); T.tex.needsUpdate = true; } } catch {} };
 function specIG(T) {
   const g = T.g, P = (panelData || {}).ig || {};
-  specChrome(g, T.d.hue, 'INSTAGRAM', P.url || '');
-  /* profile block */
-  g.strokeStyle = '#e08a7c'; g.lineWidth = 3;
-  g.beginPath(); g.arc(78, 140, 40, 0, 7); g.stroke();
-  g.fillStyle = `hsla(${T.d.hue},50%,60%,.25)`; g.beginPath(); g.arc(78, 140, 35, 0, 7); g.fill();
-  g.font = `500 44px ${SERIF}`; g.fillStyle = 'rgba(236,234,246,.95)'; g.textAlign = 'center';
-  g.fillText('M', 78, 156);
-  g.textAlign = 'left';
-  g.font = `700 26px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
-  g.fillText('@' + (P.handle || '—'), 138, 128);
-  g.font = `600 14px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
-  g.fillText(`FOLLOWERS ${fmtK(P.followers)}   ·   POSTS ${fmtK(P.posts)}`, 138, 156);
-  g.fillStyle = '#ffd489';
-  g.fillText(`HOOK GATE ${P.hookGate ?? '—'}% — reels ship above it only`, 138, 180);
-  /* 3×3 recent grid, right side */
-  for (let i = 0; i < 9; i++) {
-    const x = 380 + (i % 3) * 78, y = 210 + ((i / 3) | 0) * 58;
-    g.fillStyle = `hsla(${(T.d.hue + i * 14) % 360},48%,${34 + detR(i) * 22}%,.8)`;
-    g.beginPath(); g.roundRect(x, y, 70, 50, 6); g.fill();
-    if (i % 3 === 0) {
-      g.fillStyle = 'rgba(236,234,246,.85)';
-      g.beginPath(); g.moveTo(x + 30, y + 18); g.lineTo(x + 44, y + 25); g.lineTo(x + 30, y + 32); g.fill();
-    }
+  if (IG_SHOT.complete && IG_SHOT.naturalWidth) {
+    g.setTransform(PANEL_SCALE, 0, 0, PANEL_SCALE, 0, 0);
+    g.clearRect(0, 0, 640, 396);
+    const iw = IG_SHOT.naturalWidth, ih = IG_SHOT.naturalHeight;
+    const s = Math.max(640 / iw, 396 / ih), dw = iw * s, dh = ih * s;
+    g.drawImage(IG_SHOT, (640 - dw) / 2, (396 - dh) / 2, dw, dh);
+    g.strokeStyle = `hsla(${T.d.hue},60%,62%,.55)`; g.lineWidth = 1; g.strokeRect(6.5, 6.5, 627, 383);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    chip(g, 14, 381, `LIVE CAPTURE · ${P.asOf || ''} · ${fmtK(P.followers)} FOLLOWERS`, '#0b0e20', 'rgba(255,212,137,.92)');
+    return;
   }
-  g.font = `600 15px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.9)';
-  g.fillText('REEL 1 OF 3 — staged, awaiting post', 26, 236);
-  g.fillStyle = 'rgba(169,169,196,.9)'; g.font = `500 13px ${SANS}`;
-  g.fillText('lane: IG → affiliate engine (war-plan PRIMARY)', 26, 262);
-  g.fillText('IADOLA gate live · iadola.vercel.app', 26, 284);
-  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
-  g.fillText((panelData || {}).updated ? 'profile data as of ' + panelData.updated : '', 26, 372);
+  /* fallback: dark-mode profile UI drawn to Instagram's own layout */
+  specChrome(g, T.d.hue, 'INSTAGRAM', P.url || '');
+  const ax0 = 74, ay0 = 136, R = 42;
+  g.save();
+  if (g.createConicGradient) {
+    const cg = g.createConicGradient(-1.2, ax0, ay0);
+    cg.addColorStop(0, '#f9ce34'); cg.addColorStop(.35, '#ee2a7b'); cg.addColorStop(.7, '#6228d7'); cg.addColorStop(1, '#f9ce34');
+    g.strokeStyle = cg;
+  } else g.strokeStyle = '#ee2a7b';
+  g.lineWidth = 3.5; g.beginPath(); g.arc(ax0, ay0, R, 0, 7); g.stroke(); g.restore();
+  const av = g.createLinearGradient(ax0 - R, ay0 - R, ax0 + R, ay0 + R);
+  av.addColorStop(0, `hsla(${T.d.hue},55%,64%,.9)`); av.addColorStop(1, `hsla(${(T.d.hue + 50) % 360},55%,42%,.9)`);
+  g.fillStyle = av; g.beginPath(); g.arc(ax0, ay0, R - 6, 0, 7); g.fill();
+  g.font = `500 42px ${SERIF}`; g.fillStyle = 'rgba(16,18,36,.9)'; g.textAlign = 'center'; g.fillText('M', ax0, ay0 + 15); g.textAlign = 'left';
+  g.font = `700 22px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.97)'; g.fillText('@' + (P.handle || '—'), 140, 106);
+  const stat = (x, v, lb) => {
+    g.textAlign = 'center'; g.font = `700 20px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
+    g.fillText(fmtK(v), x, 142); g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
+    g.fillText(lb, x, 158); g.textAlign = 'left';
+  };
+  stat(185, P.posts, 'posts'); stat(300, P.followers, 'followers'); stat(425, P.following, 'following');
+  g.fillStyle = `hsla(${T.d.hue},55%,60%,.85)`; g.beginPath(); g.roundRect(140, 172, 150, 28, 7); g.fill();
+  g.fillStyle = 'rgba(16,18,36,.95)'; g.font = `700 13px ${SANS}`; g.textAlign = 'center'; g.fillText('Following', 215, 191);
+  g.fillStyle = 'rgba(140,150,220,.22)'; g.beginPath(); g.roundRect(300, 172, 150, 28, 7); g.fill();
+  g.fillStyle = 'rgba(236,234,246,.92)'; g.fillText('Message', 375, 191); g.textAlign = 'left';
+  g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(226,226,240,.95)';
+  (P.bio || []).forEach((b, i) => g.fillText(b, 26, 224 + i * 19));
+  g.font = `500 12px ${SANS}`; g.fillStyle = '#8ab4ff'; g.fillText(P.link || '', 26, 224 + (P.bio || []).length * 19);
+  g.fillStyle = '#ffd489'; g.font = `600 12px ${SANS}`;
+  g.fillText(`HOOK GATE ${P.hookGate ?? '—'}% — reels ship above it only`, 300, 224);
+  g.fillStyle = 'rgba(169,169,196,.85)'; g.font = `500 12px ${SANS}`;
+  g.fillText('lane: IG → affiliate (war-plan PRIMARY)', 300, 243);
+  g.strokeStyle = 'rgba(140,150,220,.3)'; g.beginPath(); g.moveTo(26, 276); g.lineTo(614, 276); g.stroke();
+  g.strokeStyle = 'rgba(236,234,246,.9)'; g.lineWidth = 1.4;
+  for (let r2 = 0; r2 < 3; r2++) for (let c2 = 0; c2 < 3; c2++) g.strokeRect(96 + c2 * 7, 284 + r2 * 7, 5, 5);
+  g.beginPath(); g.moveTo(94, 310); g.lineTo(120, 310); g.stroke();
+  for (let i = 0; i < 3; i++) {
+    const x = 26 + i * 200;
+    const tg = g.createLinearGradient(x, 318, x + 190, 388);
+    tg.addColorStop(0, `hsla(${(T.d.hue + i * 18) % 360},48%,${30 + detR(i) * 18}%,.9)`);
+    tg.addColorStop(1, `hsla(${(T.d.hue + 40 + i * 18) % 360},48%,${18 + detR(i + 3) * 14}%,.9)`);
+    g.fillStyle = tg; g.beginPath(); g.roundRect(x, 318, 190, 70, 6); g.fill();
+    g.fillStyle = 'rgba(236,234,246,.9)';
+    g.beginPath(); g.moveTo(x + 168, 328); g.lineTo(x + 178, 333); g.lineTo(x + 168, 338); g.fill();
+  }
 }
+
 function specGold(T) {
   const g = T.g, GD = goldData;
   specChrome(g, T.d.hue, 'GOLD', GD ? GD.src : 'connecting…');
   const px = GD && GD.price != null ? GD.price : null;
-  g.font = `700 52px ${SANS}`; g.fillStyle = '#ffd489';
-  g.fillText(px == null ? '— — —' : '$' + px.toLocaleString('en-US'), 26, 122);
+  glow(g, 'rgba(255,212,137,.5)', 14, () => {
+    g.font = `700 46px ${SANS}`; g.fillStyle = '#ffd489';
+    g.fillText(px == null ? '— — —' : '$' + px.toLocaleString('en-US'), 26, 116);
+  });
   if (GD && GD.chg != null) {
-    const up = GD.chg >= 0;
-    g.font = `700 20px ${SANS}`; g.fillStyle = up ? '#57d9ff' : '#e08a7c';
-    g.fillText(`${up ? '▲' : '▼'} ${Math.abs(GD.chg)} (${Math.abs(GD.chgPct)}%)`, 320, 122);
-    g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)'; g.fillText('vs prior close', 320, 142);
+    const up0 = GD.chg >= 0;
+    chip(g, 306, 102, `${up0 ? '▲' : '▼'} ${Math.abs(GD.chg)}  ${Math.abs(GD.chgPct)}%`, '#0b0e20', up0 ? '#57d9ff' : '#e08a7c');
+    g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)'; g.fillText('vs prior close', 306, 124);
   }
-  /* 1-month close line */
-  const cl2 = GD && GD.closes && GD.closes.length > 2 ? GD.closes : null;
-  const cx0 = 26, cy0 = 168, cw = 588, ch = 160;
-  g.strokeStyle = 'rgba(140,150,220,.18)';
-  for (let i = 0; i <= 4; i++) { const y = cy0 + ch * i / 4; g.beginPath(); g.moveTo(cx0, y); g.lineTo(cx0 + cw, y); g.stroke(); }
-  if (cl2) {
-    const mn = Math.min(...cl2), mx = Math.max(...cl2), sp = mx - mn || 1;
-    g.beginPath();
-    cl2.forEach((v, i) => {
-      const x = cx0 + cw * i / (cl2.length - 1), y = cy0 + ch - (v - mn) / sp * ch;
-      i ? g.lineTo(x, y) : g.moveTo(x, y);
+  /* daily candles — TradingView pass order: grid, volume, wicks, bodies, last price */
+  const K = GD && GD.candles && GD.candles.length > 2 ? GD.candles : null;
+  const cx0 = 26, cy0 = 148, cw = 462, ch = 152, ax = cx0 + cw + 10;
+  if (K) {
+    const hi = Math.max(...K.map(k => k.h)), lo = Math.min(...K.map(k => k.l)), sp = hi - lo || 1;
+    const Y = v => cy0 + ch - (v - lo) / sp * ch;
+    g.font = `500 10px ${SANS}`;
+    for (let i = 0; i <= 4; i++) {
+      const v = lo + sp * i / 4, y = Y(v);
+      g.strokeStyle = 'rgba(140,150,220,.14)'; g.beginPath(); g.moveTo(cx0, y); g.lineTo(cx0 + cw, y); g.stroke();
+      g.fillStyle = 'rgba(169,169,196,.75)'; g.fillText('$' + Math.round(v).toLocaleString(), ax, y + 3);
+    }
+    const bw = Math.max(3, cw / K.length * .62);
+    const V = GD.volumes || [], vm = Math.max(1, ...V);
+    V.forEach((v, i) => {
+      const x = cx0 + cw * (i + .5) / K.length, h2 = v / vm * 26;
+      g.fillStyle = K[i].c >= K[i].o ? 'rgba(87,217,255,.18)' : 'rgba(224,138,124,.18)';
+      g.fillRect(x - bw / 2, cy0 + ch - h2, bw, h2);
     });
-    g.strokeStyle = '#ffd489'; g.lineWidth = 2.5; g.stroke();
+    K.forEach((k, i) => {
+      const x = cx0 + cw * (i + .5) / K.length, upC = k.c >= k.o, col = upC ? '#57d9ff' : '#e08a7c';
+      g.strokeStyle = col; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x, Y(k.h)); g.lineTo(x, Y(k.l)); g.stroke();
+      const y1 = Y(Math.max(k.o, k.c)), y2 = Y(Math.min(k.o, k.c));
+      g.fillStyle = col; g.fillRect(x - bw / 2, y1, bw, Math.max(1.5, y2 - y1));
+    });
+    if (px != null) {
+      const y = Math.min(cy0 + ch, Math.max(cy0, Y(px)));
+      g.setLineDash([4, 4]); g.strokeStyle = 'rgba(255,212,137,.7)';
+      g.beginPath(); g.moveTo(cx0, y); g.lineTo(cx0 + cw, y); g.stroke(); g.setLineDash([]);
+      g.fillStyle = '#ffd489'; g.beginPath(); g.roundRect(ax - 4, y - 9, 92, 18, 4); g.fill();
+      g.fillStyle = '#0b0e20'; g.font = `700 11px ${SANS}`; g.fillText('$' + px.toLocaleString(), ax + 1, y + 4);
+    }
+  } else if (GD && GD.closes && GD.closes.length > 2) {
+    const cl2 = GD.closes, mn = Math.min(...cl2), mx = Math.max(...cl2), sp = mx - mn || 1;
+    const pts = cl2.map((v, i) => [cx0 + cw * i / (cl2.length - 1), cy0 + ch - (v - mn) / sp * ch]);
+    g.beginPath(); splinePath(g, pts);
+    g.strokeStyle = '#ffd489'; g.lineWidth = 2; glow(g, 'rgba(255,212,137,.6)', 8, () => g.stroke());
     g.lineTo(cx0 + cw, cy0 + ch); g.lineTo(cx0, cy0 + ch); g.closePath();
-    g.fillStyle = 'rgba(255,212,137,.10)'; g.fill();
-    const lx = cx0 + cw, ly = cy0 + ch - (cl2[cl2.length - 1] - mn) / sp * ch;
-    g.fillStyle = Date.now() % 1600 < 800 ? '#ffd489' : 'rgba(255,212,137,.4)';
-    g.beginPath(); g.arc(lx - 2, ly, 5, 0, 7); g.fill();
-    g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
-    g.fillText('$' + mx.toLocaleString(), cx0 + 4, cy0 + 14);
-    g.fillText('$' + mn.toLocaleString(), cx0 + 4, cy0 + ch - 6);
+    const ar = g.createLinearGradient(0, cy0, 0, cy0 + ch);
+    ar.addColorStop(0, 'rgba(255,212,137,.22)'); ar.addColorStop(1, 'rgba(255,212,137,0)');
+    g.fillStyle = ar; g.fill();
+  } else {
+    g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.8)'; g.fillText('awaiting quote…', cx0, cy0 + 20);
   }
-  g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
-  g.fillText(GD && GD.hi52 ? `52-WEEK  ${GD.lo52.toLocaleString()} — ${GD.hi52.toLocaleString()}` : 'awaiting quote…', 26, 362);
-  g.fillStyle = 'rgba(140,150,220,.7)'; g.font = `500 12px ${SANS}`;
-  g.textAlign = 'right'; g.fillText('30 days · refreshed every 10 min', 614, 362); g.textAlign = 'left';
+  if (GD && GD.hi52) {
+    const rx = 26, rw = 462, ry = 356;
+    g.strokeStyle = 'rgba(140,150,220,.35)'; g.lineWidth = 3; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx + rw, ry); g.stroke(); g.lineCap = 'butt'; g.lineWidth = 1;
+    const p = Math.min(1, Math.max(0, ((px ?? GD.lo52) - GD.lo52) / (GD.hi52 - GD.lo52 || 1)));
+    glow(g, '#ffd489', 8, () => { g.fillStyle = '#ffd489'; g.beginPath(); g.arc(rx + rw * p, ry, 5, 0, 7); g.fill(); });
+    g.font = `600 11px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
+    g.fillText('52W  $' + GD.lo52.toLocaleString(), rx, ry - 12);
+    g.textAlign = 'right'; g.fillText('$' + GD.hi52.toLocaleString(), rx + rw, ry - 12); g.textAlign = 'left';
+  }
+  g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
+  g.textAlign = 'right'; g.fillText('1 month · daily candles · 10-min refresh', 614, 382); g.textAlign = 'left';
 }
+
 function specRevenue(T) {
   const g = T.g, R = (panelData || {}).revenue || {};
   specChrome(g, T.d.hue, 'REVENUE', R.note || '');
   const kpi = (x, label, v, hot) => {
-    g.font = `700 44px ${SANS}`; g.fillStyle = hot ? '#ffd489' : 'rgba(236,234,246,.95)';
-    g.fillText(v == null ? '—' : '$' + v.toLocaleString(), x, 140);
-    g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
-    g.fillText(label, x, 165);
+    const draw = () => {
+      g.font = `700 38px ${SANS}`; g.fillStyle = hot ? '#ffd489' : 'rgba(236,234,246,.95)';
+      g.fillText(v == null ? '—' : '$' + v.toLocaleString(), x, 126);
+    };
+    hot ? glow(g, 'rgba(255,212,137,.5)', 12, draw) : draw();
+    g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
+    g.fillText(label, x, 148);
   };
-  kpi(26, 'MRR', R.mrr); kpi(230, 'LAST 30 DAYS', R.d30); kpi(434, 'LIFETIME', R.lifetime, true);
-  /* 12-week honesty strip — flat is flat; the wall does not flatter */
+  kpi(26, 'MRR', R.mrr); kpi(210, 'LAST 30 DAYS', R.d30); kpi(410, 'LIFETIME', R.lifetime, true);
+  /* Stripe-style spline area over a dotted baseline — flat is flat, and the
+     wall does not flatter: zeros run along the floor of the chart */
   const s = R.series || [];
-  const bx = 26, by = 220, bw = 588, bh = 90;
-  g.strokeStyle = 'rgba(140,150,220,.18)'; g.strokeRect(bx + .5, by + .5, bw, bh);
+  const bx = 26, by = 186, bw = 462, bh = 128, axr = bx + bw + 10;
   const mx2 = Math.max(1, ...s);
-  s.forEach((v, i) => {
-    const w = bw / s.length - 8;
-    const h = Math.max(2, v / mx2 * (bh - 12));
-    g.fillStyle = v > 0 ? '#ffd489' : 'rgba(140,150,220,.35)';
-    g.fillRect(bx + 6 + i * (bw / s.length), by + bh - 6 - h, w, h);
-  });
-  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
-  g.fillText('LAST 12 WEEKS', bx, by - 10);
-  g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.85)';
-  g.fillText('meter: live Stripe · no self-inflicted signals counted', 26, 356);
+  g.font = `500 10px ${SANS}`;
+  for (let i = 0; i <= 2; i++) {
+    const y = by + bh * i / 2;
+    g.strokeStyle = 'rgba(140,150,220,.14)'; g.setLineDash(i === 2 ? [3, 3] : []);
+    g.beginPath(); g.moveTo(bx, y); g.lineTo(bx + bw, y); g.stroke(); g.setLineDash([]);
+    g.fillStyle = 'rgba(169,169,196,.75)';
+    g.fillText('$' + Math.round(mx2 * (1 - i / 2)).toLocaleString(), axr, y + 3);
+  }
+  if (s.length > 1) {
+    const pts = s.map((v, i) => [bx + bw * i / (s.length - 1), by + bh - v / mx2 * (bh - 8)]);
+    g.beginPath(); splinePath(g, pts);
+    g.strokeStyle = `hsla(${T.d.hue},70%,68%,.95)`; g.lineWidth = 2;
+    glow(g, `hsla(${T.d.hue},70%,60%,.7)`, 8, () => g.stroke());
+    g.lineTo(bx + bw, by + bh); g.lineTo(bx, by + bh); g.closePath();
+    const ar = g.createLinearGradient(0, by, 0, by + bh);
+    ar.addColorStop(0, `hsla(${T.d.hue},70%,60%,.25)`); ar.addColorStop(1, `hsla(${T.d.hue},70%,60%,0)`);
+    g.fillStyle = ar; g.fill();
+    const lp = pts[pts.length - 1];
+    g.fillStyle = Date.now() % 1600 < 800 ? `hsla(${T.d.hue},80%,72%,1)` : `hsla(${T.d.hue},80%,72%,.4)`;
+    g.beginPath(); g.arc(lp[0], lp[1], 4, 0, 7); g.fill();
+  }
+  g.font = `600 11px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)'; g.fillText('LAST 12 WEEKS', bx, by - 8);
+  /* source ledger — only what is verified */
+  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.9)'; g.fillText('SOURCES', 26, 344);
+  g.fillStyle = '#ffd489'; g.beginPath(); g.arc(32, 362, 3, 0, 7); g.fill();
+  g.font = `500 12px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.85)';
+  g.fillText('Stripe · Shift AI — $600 lifetime · $0 in window', 44, 366);
+  g.font = `500 12px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
+  g.textAlign = 'right'; g.fillText('live Stripe · no self-inflicted signals counted', 614, 382); g.textAlign = 'left';
 }
+
 function specMemory(T) {
   const g = T.g, MM = (panelData || {}).memory || {};
   specChrome(g, T.d.hue, 'MEMORY', 'MEMORY.md index');
-  g.font = `700 56px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
-  g.fillText(MM.total ?? '—', 26, 136);
-  g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
-  g.fillText('MEMORIES ON FILE', 26, 160);
-  const rows = [['PROJECT', MM.project], ['REFERENCE', MM.reference], ['FEEDBACK', MM.feedback], ['USER', MM.user]];
-  const bmax = Math.max(1, ...rows.map(r => r[1] || 0));
-  rows.forEach((r2, i) => {
-    const y = 208 + i * 40;
-    g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.9)';
-    g.fillText(r2[0], 26, y + 4);
-    g.fillStyle = `hsla(${T.d.hue},52%,62%,.28)`; g.fillRect(130, y - 10, 220, 18);
-    g.fillStyle = `hsla(${T.d.hue},60%,66%,.95)`; g.fillRect(130, y - 10, (r2[1] || 0) / bmax * 220, 18);
-    g.fillStyle = 'rgba(236,234,246,.95)'; g.fillText(String(r2[1] ?? '—'), 362, y + 4);
+  glow(g, `hsla(${T.d.hue},70%,65%,.5)`, 14, () => {
+    g.font = `700 54px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.97)';
+    g.fillText(MM.total ?? '—', 26, 132);
   });
-  /* recall web — structure only, no titles: a public wall never leaks content */
+  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
+  g.fillText('MEMORIES ON FILE', 26, 154);
+  const TYPES = [['PROJECT', MM.project, `hsla(${T.d.hue},65%,66%,1)`], ['REFERENCE', MM.reference, '#57d9ff'],
+    ['FEEDBACK', MM.feedback, '#ffd489'], ['USER', MM.user, '#e08a7c']];
+  const bmax = Math.max(1, ...TYPES.map(r => r[1] || 0));
+  TYPES.forEach((r2, i) => {
+    const y = 204 + i * 42;
+    g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.9)'; g.fillText(r2[0], 26, y + 4);
+    g.fillStyle = 'rgba(140,150,220,.16)'; g.beginPath(); g.roundRect(116, y - 9, 180, 16, 8); g.fill();
+    const w = Math.max(6, (r2[1] || 0) / bmax * 180);
+    glow(g, r2[2], 7, () => { g.fillStyle = r2[2]; g.beginPath(); g.roundRect(116, y - 9, w, 16, 8); g.fill(); });
+    g.fillStyle = 'rgba(236,234,246,.95)'; g.font = `700 13px ${SANS}`; g.fillText(String(r2[1] ?? '—'), 306, y + 4);
+    g.fillStyle = 'rgba(140,150,220,.75)'; g.font = `500 10px ${SANS}`;
+    g.fillText(MM.total ? Math.round((r2[1] || 0) / MM.total * 100) + '%' : '', 342, y + 4);
+  });
+  /* recall constellation — golden-angle spiral, edges deterministic;
+     structure only, no titles: a public wall never leaks content */
+  const CX = 480, CY = 222, N = 64;
+  g.strokeStyle = `hsla(${T.d.hue},55%,65%,.12)`; g.lineWidth = 1;
+  g.beginPath(); g.arc(CX, CY, 146, 0, 7); g.stroke();
   const nodes2 = [];
-  for (let i = 0; i < 26; i++) nodes2.push({ x: 430 + detR(i) * 180, y: 110 + detR(i + 40) * 240 });
-  g.strokeStyle = `hsla(${T.d.hue},55%,65%,.28)`; g.lineWidth = 1;
+  for (let i = 0; i < N; i++) {
+    const a = i * 2.399963 + detR(i) * .5, r = 14 + 126 * Math.sqrt((i + .5) / N) + detR(i + 9) * 8;
+    nodes2.push([CX + Math.cos(a) * r, CY + Math.sin(a) * r, i]);
+  }
+  g.strokeStyle = `hsla(${T.d.hue},55%,68%,.22)`;
   nodes2.forEach((n, i) => {
-    const j = (i * 7 + 3) % nodes2.length, k = (i * 11 + 5) % nodes2.length;
-    g.beginPath(); g.moveTo(n.x, n.y); g.lineTo(nodes2[j].x, nodes2[j].y); g.stroke();
-    if (i % 2) { g.beginPath(); g.moveTo(n.x, n.y); g.lineTo(nodes2[k].x, nodes2[k].y); g.stroke(); }
+    if (i) { const p = nodes2[i - 1]; g.beginPath(); g.moveTo(n[0], n[1]); g.lineTo(p[0], p[1]); g.stroke(); }
+    if (i % 3 === 0) { const q = nodes2[(i * 7 + 3) % N]; g.beginPath(); g.moveTo(n[0], n[1]); g.lineTo(q[0], q[1]); g.stroke(); }
   });
+  const share = [(MM.project || 0), (MM.reference || 0), (MM.feedback || 0), (MM.user || 0)];
+  const tot = Math.max(1, share.reduce((a, b) => a + b, 0));
+  const colOf = i => {
+    const f = i / N * tot; let acc = 0;
+    for (let k = 0; k < 4; k++) { acc += share[k]; if (f < acc) return TYPES[k][2]; }
+    return TYPES[0][2];
+  };
   nodes2.forEach((n, i) => {
-    g.fillStyle = i % 5 ? 'rgba(212,215,240,.75)' : '#57d9ff';
-    g.beginPath(); g.arc(n.x, n.y, i % 5 ? 2.2 : 3.6, 0, 7); g.fill();
+    const c = colOf(i);
+    if (i % 8 === 0) glow(g, c, 6, () => { g.fillStyle = c; g.beginPath(); g.arc(n[0], n[1], 3.4, 0, 7); g.fill(); });
+    else { g.fillStyle = c.replace(',1)', ',.8)'); g.beginPath(); g.arc(n[0], n[1], 2.1, 0, 7); g.fill(); }
   });
-  g.font = `500 12px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
-  g.fillText('linked recall · [[name]] graph · counts real, titles private', 26, 372);
+  glow(g, `hsla(${T.d.hue},80%,75%,.9)`, 10, () => {
+    g.fillStyle = `hsla(${T.d.hue},80%,78%,1)`; g.beginPath(); g.arc(CX, CY, 4.5, 0, 7); g.fill();
+  });
+  g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
+  g.fillText('linked recall · [[name]] graph · counts real, titles private', 26, 382);
 }
+
 function specStore(T) {
   const g = T.g, S = (panelData || {}).store || {};
   specChrome(g, T.d.hue, 'STORE', S.url || '');
-  g.font = `600 15px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.9)';
-  g.fillText(S.name || '', 26, 92);
-  (S.products || []).forEach((p, i) => {
-    const y = 122 + i * 62;
-    g.fillStyle = `hsla(${T.d.hue},45%,55%,.16)`;
-    g.beginPath(); g.roundRect(26, y, 588, 50, 8); g.fill();
-    g.strokeStyle = `hsla(${T.d.hue},55%,62%,.5)`; g.lineWidth = 1; g.stroke();
-    /* tee glyph */
-    g.strokeStyle = 'rgba(236,234,246,.8)'; g.lineWidth = 2;
-    g.beginPath(); g.moveTo(48, y + 16); g.lineTo(58, y + 10); g.lineTo(66, y + 14); g.lineTo(74, y + 10); g.lineTo(84, y + 16);
-    g.lineTo(78, y + 24); g.lineTo(78, y + 40); g.lineTo(54, y + 40); g.lineTo(54, y + 24); g.closePath(); g.stroke();
-    g.font = `600 17px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
-    g.fillText(p.n, 104, y + 31);
-    g.font = `700 20px ${SANS}`; g.fillStyle = '#ffd489'; g.textAlign = 'right';
-    g.fillText('$' + p.p, 598, y + 33); g.textAlign = 'left';
+  g.font = `600 14px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.92)';
+  g.fillText(S.name || '', 26, 86);
+  (S.products || []).slice(0, 3).forEach((p, i) => {
+    const x = 26 + i * 200, y = 96, w = 186, h = 226;
+    const cg = g.createLinearGradient(x, y, x, y + h);
+    cg.addColorStop(0, 'rgba(30,34,64,.75)'); cg.addColorStop(1, 'rgba(16,18,38,.85)');
+    g.fillStyle = cg; g.beginPath(); g.roundRect(x, y, w, h, 10); g.fill();
+    g.strokeStyle = `hsla(${T.d.hue},55%,62%,.45)`; g.lineWidth = 1; g.stroke();
+    /* tee mockup — filled silhouette with collar + chest mark */
+    const cx = x + w / 2, ty = y + 26;
+    g.fillStyle = '#e9e7f4';
+    g.beginPath();
+    g.moveTo(cx - 44, ty + 14); g.lineTo(cx - 16, ty); g.quadraticCurveTo(cx, ty + 10, cx + 16, ty);
+    g.lineTo(cx + 44, ty + 14); g.lineTo(cx + 34, ty + 40); g.lineTo(cx + 26, ty + 34);
+    g.lineTo(cx + 26, ty + 92); g.lineTo(cx - 26, ty + 92); g.lineTo(cx - 26, ty + 34);
+    g.lineTo(cx - 34, ty + 40); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(20,22,44,.35)'; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(cx - 16, ty); g.quadraticCurveTo(cx, ty + 12, cx + 16, ty); g.stroke();
+    g.fillStyle = `hsla(${(T.d.hue + i * 24) % 360},60%,42%,.95)`;
+    g.beginPath(); g.roundRect(cx - 13, ty + 40, 26, 26, 4); g.fill();
+    g.font = `700 11px ${SANS}`; g.fillStyle = '#e9e7f4'; g.textAlign = 'center';
+    g.fillText((p.n || '').slice(0, 2), cx, ty + 57);
+    /* name, wrapped to the card */
+    const title = (p.n || '').split('·').slice(1).join('·').trim() || p.n || '';
+    g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
+    const words = title.split(' '); let line = '', ln = 0;
+    words.forEach(wd => {
+      const t2 = line ? line + ' ' + wd : wd;
+      if (g.measureText(t2).width > w - 24 && line) { g.fillText(line, cx, y + 148 + ln * 17); line = wd; ln++; }
+      else line = t2;
+    });
+    g.fillText(line, cx, y + 148 + ln * 17);
+    glow(g, 'rgba(255,212,137,.5)', 8, () => {
+      g.fillStyle = 'rgba(255,212,137,.14)'; g.beginPath(); g.roundRect(cx - 34, y + 178, 68, 26, 13); g.fill();
+      g.font = `700 15px ${SANS}`; g.fillStyle = '#ffd489'; g.fillText('$' + p.p, cx, y + 196);
+    });
+    g.textAlign = 'left';
   });
-  g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
+  g.font = `500 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
   g.fillText(S.scan || '', 26, 352);
-  g.fillStyle = 'rgba(140,150,220,.7)'; g.font = `500 12px ${SANS}`;
+  g.fillStyle = 'rgba(140,150,220,.7)'; g.font = `500 11px ${SANS}`;
   g.fillText('print-on-demand · Printful → Stripe checkout', 26, 372);
 }
+
 function specGoals(T) {
   const g = T.g, GO = (panelData || {}).goals || {};
   specChrome(g, T.d.hue, 'GOALS', GO.plan || '');
-  g.font = `700 40px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.95)';
-  g.fillText(`$${(GO.current ?? 0).toLocaleString()} / $${(GO.target ?? 0).toLocaleString()}`, 26, 124);
-  g.font = `600 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
-  g.fillText(`FIRST EXTERNAL DOLLAR RUN — DEADLINE ${GO.deadline || '—'}`, 26, 150);
-  const p = Math.min(1, (GO.current || 0) / (GO.target || 1));
-  g.fillStyle = 'rgba(140,150,220,.25)'; g.fillRect(26, 170, 588, 14);
-  g.fillStyle = '#ffd489'; g.fillRect(26, 170, Math.max(4, 588 * p), 14);
-  (GO.lanes || []).forEach((ln, i) => {
-    const y = 232 + i * 42;
-    g.fillStyle = i === 0 ? '#57d9ff' : 'rgba(169,169,196,.9)';
-    g.font = `700 16px ${SANS}`; g.fillText('▸', 26, y);
-    g.font = `600 16px ${SANS}`; g.fillStyle = i === 0 ? 'rgba(236,234,246,.95)' : 'rgba(212,215,240,.85)';
-    g.fillText(ln, 48, y);
+  /* activity ring — progress is verified external revenue only */
+  const cx = 118, cy = 202, r = 70, p = Math.min(1, (GO.current || 0) / (GO.target || 1));
+  g.lineWidth = 13; g.lineCap = 'round';
+  g.strokeStyle = 'rgba(140,150,220,.16)';
+  g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
+  const a0 = -Math.PI / 2, a1 = a0 + Math.max(.04, p * Math.PI * 2);
+  glow(g, 'rgba(255,212,137,.7)', 12, () => {
+    g.strokeStyle = p > 0 ? '#ffd489' : 'rgba(255,212,137,.35)';
+    g.beginPath(); g.arc(cx, cy, r, a0, a1); g.stroke();
   });
-  g.font = `500 12px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
-  g.fillText('progress = verified external revenue only', 26, 372);
+  g.lineCap = 'butt'; g.lineWidth = 1;
+  g.textAlign = 'center';
+  g.font = `700 32px ${SANS}`; g.fillStyle = 'rgba(236,234,246,.97)';
+  g.fillText('$' + (GO.current ?? 0).toLocaleString(), cx, cy + 2);
+  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
+  g.fillText('of $' + (GO.target ?? 0).toLocaleString(), cx, cy + 24);
+  g.textAlign = 'left';
+  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(212,215,240,.9)';
+  g.fillText('FIRST EXTERNAL DOLLAR RUN', 46, 302);
+  /* countdown — computed, not baked, so it is true every day it renders */
+  const dl = GO.deadlineISO ? new Date(GO.deadlineISO + 'T23:59:59') : null;
+  const days = dl ? Math.max(0, Math.ceil((dl - Date.now()) / 86400000)) : null;
+  glow(g, 'rgba(87,217,255,.6)', 12, () => {
+    g.font = `700 44px ${SANS}`; g.fillStyle = '#57d9ff';
+    g.fillText(days == null ? '—' : 'D-' + days, 300, 150);
+  });
+  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
+  g.fillText('DEADLINE ' + (GO.deadline || '—'), 300, 172);
+  (GO.lanes || []).forEach((ln, i) => {
+    const y = 216 + i * 40;
+    const parts = ln.split('—'); const name = parts[0].trim(); const tag = (parts[1] || '').trim();
+    g.fillStyle = i === 0 ? 'rgba(87,217,255,.14)' : 'rgba(140,150,220,.1)';
+    g.beginPath(); g.roundRect(300, y - 18, 314, 30, 8); g.fill();
+    g.fillStyle = i === 0 ? '#57d9ff' : 'rgba(169,169,196,.9)';
+    g.font = `700 13px ${SANS}`; g.fillText(i === 0 ? '▶' : '▸', 312, y + 3);
+    g.font = `600 13px ${SANS}`; g.fillStyle = i === 0 ? 'rgba(236,234,246,.97)' : 'rgba(212,215,240,.85)';
+    g.fillText(name, 334, y + 3);
+    if (tag) {
+      g.font = `700 10px ${SANS}`; g.fillStyle = i === 0 ? '#57d9ff' : 'rgba(140,150,220,.8)';
+      g.textAlign = 'right'; g.fillText(tag, 604, y + 3); g.textAlign = 'left';
+    }
+  });
+  g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
+  g.fillText('progress = verified external revenue only', 26, 382);
 }
 const SPEC = { revenue: specRevenue, content: specIG, markets: specGold, self: specMemory, hunt: specStore, empire: specGoals };
 
@@ -1643,8 +1852,11 @@ function buildWorld() {
 
     /* the agent tile grid on this zone's wall — every lane, an icon on the OS */
     const tc = document.createElement('canvas');
-    if (OS_MODE) { tc.width = 640; tc.height = 396; } else { tc.width = 512; tc.height = 512; }
-    const ttex = new THREE.CanvasTexture(tc); ttex.anisotropy = 4;
+    /* spec panels carry a 2× backing store — the DPR trick every real chart
+       engine uses; agent-tile grids stay at 1× (their glyphs are chunky) */
+    if (OS_MODE) { const hi2 = SPEC[d.id] ? PANEL_SCALE : 1; tc.width = 640 * hi2; tc.height = 396 * hi2; }
+    else { tc.width = 512; tc.height = 512; }
+    const ttex = new THREE.CanvasTexture(tc); ttex.anisotropy = 8;
     const tmesh = new THREE.Mesh(new THREE.PlaneGeometry(OS_MODE ? MW - 26 : FIB(5), OS_MODE ? MH - 16 : FIB(5)),
       new THREE.MeshBasicMaterial({ map: ttex, transparent: true, depthWrite: false }));
     if (OS_MODE) { tmesh.position.set(0, 258, 0); }

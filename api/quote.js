@@ -9,15 +9,24 @@ export default async function handler(req, res) {
     const j = await r.json();
     const res0 = j.chart.result[0];
     const meta = res0.meta;
-    const closes = (res0.indicators.quote[0].close || []).filter(v => v != null).map(v => Math.round(v * 10) / 10);
+    const q = res0.indicators.quote[0];
+    const r1 = v => Math.round(v * 10) / 10;
+    /* full OHLC + volume so the wall can draw real candlesticks */
+    const candles = [], volumes = [];
+    (q.close || []).forEach((c, i) => {
+      if (c == null || q.open[i] == null || q.high[i] == null || q.low[i] == null) return;
+      candles.push({ o: r1(q.open[i]), h: r1(q.high[i]), l: r1(q.low[i]), c: r1(c) });
+      volumes.push(q.volume[i] || 0);
+    });
+    const closes = candles.map(k => k.c);
     const price = meta.regularMarketPrice;
     const prev = closes.length > 1 ? closes[closes.length - 2] : price;
     const out = {
-      price: Math.round(price * 10) / 10,
-      chg: Math.round((price - prev) * 10) / 10,
+      price: r1(price),
+      chg: r1(price - prev),
       chgPct: Math.round((price - prev) / prev * 1000) / 10,
       hi52: meta.fiftyTwoWeekHigh, lo52: meta.fiftyTwoWeekLow,
-      closes, src: 'COMEX GC=F', t: Date.now(),
+      closes, candles, volumes, src: 'COMEX GC=F', t: Date.now(),
     };
     res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
     res.setHeader('Access-Control-Allow-Origin', '*');

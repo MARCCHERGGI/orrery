@@ -1,6 +1,12 @@
 {
   "updated": "2026-08-23",
-  "ig": { "handle": "marcohergi", "url": "instagram.com/marcohergi", "followers": null, "posts": null, "hookGate": 62 },
+  "ig": {
+    "handle": "marcohergi", "url": "instagram.com/marcohergi",
+    "followers": 13900, "following": 815, "posts": null,
+    "bio": ["Started with nothing", "Documenting the Journey"],
+    "link": "marcohergi.vercel.app",
+    "hookGate": 62, "asOf": "2026-08-23"
+  },
   "revenue": { "mrr": 0, "d30": 0, "lifetime": 600, "series": [0,0,0,0,0,0,0,0,0,0,0,0], "note": "Stripe · Shift AI" },
   "store": {
     "name": "WEAR THE LINE", "url": "wear-the-line.vercel.app",
@@ -13,7 +19,7 @@
   },
   "memory": { "total": 245, "project": 163, "reference": 37, "feedback": 35, "user": 4 },
   "goals": {
-    "target": 1000, "current": 0, "deadline": "SEP 06", "plan": "WAR PLAN v3",
+    "target": 1000, "current": 0, "deadline": "SEP 06", "deadlineISO": "2026-09-06", "plan": "WAR PLAN v3",
     "lanes": ["IG → affiliate engine — PRIMARY", "Merch — wear the line", "TikTok Shop — 2nd account"]
   },
   "links": [
