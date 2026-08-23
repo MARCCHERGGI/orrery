@@ -895,19 +895,6 @@ float ditherHash(vec2 v) {
 
 void main() {
   vec2 p = vUv;
-#ifdef BRAIN
-  /* cortex silhouette: wider than tall, lobed outline, flattened stem base —
-     the same organism as the orb, different anatomy */
-  p.x /= 1.16;
-  p.y = (p.y - 0.04) / 0.90;
-  float bR = max(length(p), 1e-4);
-  float bAng = atan(p.y, p.x);
-  float bLobe = 1.0
-    + 0.042 * sin(bAng * 9.0 + 1.7)
-    + 0.022 * sin(bAng * 15.0 + 0.4)
-    - 0.14 * smoothstep(0.45, 0.95, -p.y / bR);
-  p /= bLobe;
-#endif
   float r = length(p);
   if (r > 1.058) discard;
   if (r > 1.005) {
@@ -1033,10 +1020,6 @@ void main() {
   float pupil   = 1.0 - smoothstep(pupilR * 0.6, pupilR, r);
   float iris    = smoothstep(irisR, pupilR, r) * (1.0 - pupil);
   float irisBlades = pow(abs(sin(atan(p.y, p.x) * 14.0)), 4.0) * iris * 0.4;
-#ifdef BRAIN
-  /* a cortex has no eye — the pupil reads as a hole punched in the folds */
-  pupil = 0.0; iris = 0.0; irisBlades = 0.0;
-#endif
 
   vec3 armN = rN;
   armN.xz = rot2(-0.4) * armN.xz;
@@ -1048,21 +1031,6 @@ void main() {
   vec2 armF = fract(vec2(armHexX, armHexY)) - 0.5;
   float armD = max(abs(armF.x), abs(armF.y) * 1.1547);
   float armature = smoothstep(0.42, 0.47, armD) * pow(z, 1.4) * 0.35;
-
-#ifdef BRAIN
-  /* gyri — winding cortical folds, two octaves of ridged noise, slowly alive */
-  float gy1 = 1.0 - abs(snoise(rN * 3.2 + vec3(0.0, uNoiseTime * 0.06, 4.7)));
-  float gy2 = 1.0 - abs(snoise(rN * 6.6 + vec3(uNoiseTime * 0.05, 0.0, 9.1)));
-  float gyri = smoothstep(0.78, 0.96, gy1) * 0.85 + smoothstep(0.83, 0.97, gy2) * 0.55;
-  gyri *= pow(z, 0.45);
-  /* longitudinal fissure — the seam between hemispheres. A groove, not a void:
-     it fades before the outline and only dims, never crushes to black. */
-  float fissure = (1.0 - smoothstep(0.012, 0.075, abs(p.x))) * smoothstep(-0.30, 0.25, p.y)
-                * (1.0 - smoothstep(0.82, 0.97, r));
-#else
-  float gyri = 0.0;
-  float fissure = 0.0;
-#endif
 
   vec3 voidCol  = vec3(0.010, 0.025, 0.095);
   vec3 plasma   = vec3(0.040, 0.155, 0.410);
@@ -1083,11 +1051,6 @@ void main() {
   col = mix(col, lineCol, grid       * 0.55);
   col = mix(col, lineCol, equator    * 0.75);
   col = mix(col, lineCol, polarRings * 0.45);
-#ifdef BRAIN
-  col = mix(col, cyan, 0.16);  /* cortical tissue never goes void-dark */
-#endif
-  col = mix(col, arcCol, gyri * 0.42);
-  col *= 1.0 - fissure * 0.30;
   col -= vec3(0.015, 0.025, 0.040) * hex;
   col = mix(col, frost * fresnelAb, fresnel * 0.48);
   col += frost  * shell     * 0.78;
@@ -1116,11 +1079,6 @@ void main() {
               + armature   * 0.12
               + iris       * 0.15
               + pupil      * 0.35;
-#ifdef BRAIN
-  /* the cortex is a solid mass — floor the body alpha so quiet plasma
-     patches never read as holes through to the sky */
-  alpha += 0.14 + gyri * 0.38 + fissure * 0.05;
-#endif
   alpha += microSheen * 0.05;
   alpha += keySpec    * 0.45;
   alpha += keyHalo    * 0.20;
@@ -1146,6 +1104,121 @@ void main() {
   col += vec3(d);
 
   gl_FragColor = vec4(col, alpha);
+}
+`;
+/* ====================== BRAIN surface (3D) ======================
+   The JARVIS skin worn by literal brain GEOMETRY: same palette, same
+   detail families (deep plasma, surface plasma, lat/lon circuitry,
+   fresnel frost, key light, ember flag, ACES+saturation) evaluated on
+   a real 3D surface instead of a billboard sphere. Opaque — tissue. */
+const BRAIN_SURF = `
+precision highp float;
+varying vec3 vN;
+varying vec3 vOp;
+varying vec2 vUv2;
+uniform float uNoiseTime;
+uniform float uAmp;
+uniform float uAmpFast;
+uniform float uBandLow;
+uniform float uBandMid;
+uniform float uBandHigh;
+uniform float uFlag;
+uniform float uMorph;
+
+vec3 ACESFilm(vec3 x) {
+  return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+}
+float ditherHash(vec2 v) {
+  return fract(sin(dot(v, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void main() {
+  vec3 N = normalize(vN);
+  float z = clamp(N.z, 0.0, 1.0);
+
+  /* deep plasma — energy inside the tissue */
+  vec3 pc = vOp * 1.9;
+  float deep1 = snoise(pc + vec3(uNoiseTime * 0.35, 0.0, 0.0));
+  float deep2 = snoise(pc * 2.07 + vec3(0.0, uNoiseTime * 0.42, 0.0)) * 0.55;
+  float deepPlasma = clamp((deep1 + deep2) * 0.50 + 0.50, 0.0, 1.0);
+  deepPlasma *= 0.7 + uBandLow * 0.9;
+
+  /* surface plasma — shimmer riding the folds */
+  float surf  = snoise(vOp * 3.6 + vec3(uNoiseTime * 1.15, 0.0, 0.0));
+  float surf2 = snoise(vOp * 7.6 + vec3(0.0, 0.0, uNoiseTime * 1.35)) * 0.55;
+  float surfPlasma = smoothstep(-0.2, 1.0, surf + surf2) * uAmp;
+
+  /* gyri accent — the fold ridges carry light (matches the geometry's ridged noise) */
+  float g1 = 1.0 - abs(snoise(vOp * 2.4 + vec3(4.7)));
+  float gyri = smoothstep(0.70, 0.96, g1);
+
+  /* lat/lon circuitry from the sphere parameterisation */
+  float lon6 = vUv2.x * 6.2831853 * 4.0;
+  float lat5 = (vUv2.y - 0.5) * 3.14159 * 6.0;
+  float dxLon = fwidth(lon6), dxLat = fwidth(lat5);
+  float merid = 1.0 - smoothstep(dxLon * 0.5, dxLon * 1.8, abs(sin(lon6)));
+  float latl  = 1.0 - smoothstep(dxLat * 0.5, dxLat * 1.8, abs(sin(lat5)));
+  float grid = max(merid, latl * 0.8) * pow(z, 0.4);
+
+  float fresnel = pow(1.0 - z, 2.4);
+
+  /* key light — same lamp as the orb */
+  vec3 keyDir = normalize(vec3(-0.42, 0.55, 0.72));
+  float keyDot = max(0.0, dot(N, keyDir));
+  float lambert = 0.35 + keyDot * 0.65;
+  float keySpec = pow(keyDot, 36.0) * 0.42;
+
+  /* micro sparks */
+  float micro = snoise(vOp * 14.0 + vec3(uNoiseTime * 1.9, 0.0, 0.0));
+  float microSpark = smoothstep(0.85, 1.30, micro) * uBandHigh;
+
+  vec3 voidCol  = vec3(0.010, 0.025, 0.095);
+  vec3 plasma   = vec3(0.040, 0.155, 0.410);
+  vec3 cyan     = vec3(0.210, 0.520, 0.880);
+  vec3 frost    = vec3(0.430, 0.790, 1.000);
+  vec3 lineCol  = vec3(0.200, 0.500, 0.850);
+  vec3 arcCol   = vec3(0.400, 0.800, 1.000);
+  vec3 warmLow  = vec3(0.320, 0.420, 0.780);
+  vec3 speckC   = vec3(0.480, 0.840, 1.000);
+
+  vec3 col = mix(voidCol, plasma, 0.35 + z * 0.5) * lambert;
+  col = mix(col, warmLow, uBandLow * 0.18);
+  col = mix(col, cyan,    deepPlasma * 0.38);
+  col = mix(col, cyan,    surfPlasma * 0.42);
+  col = mix(col, arcCol,  gyri * 0.45);
+  col = mix(col, lineCol, grid * 0.40);
+  col = mix(col, frost,   fresnel * 0.55);
+  col += speckC * microSpark * 0.5;
+  col += vec3(0.62, 0.86, 1.00) * keySpec * (0.55 + uAmp * 0.35);
+
+  /* ember — the tissue warms with the fleet's flagged fraction */
+  float ember = uFlag * (0.72 + 0.28 * sin(uNoiseTime * 2.6));
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  col = mix(col, vec3(1.0, 0.36, 0.10) * (lum * 2.2), ember * 0.75);
+
+  col *= uMorph;
+
+  float lum2 = dot(col, vec3(0.299, 0.587, 0.114));
+  col = mix(vec3(lum2), col, 1.42) * 1.12;
+  col = ACESFilm(col);
+  col += vec3((ditherHash(gl_FragCoord.xy) - 0.5) / 255.0);
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+const BRAIN_VERT = `
+varying vec3 vN;
+varying vec3 vOp;
+varying vec2 vUv2;
+uniform float uNoiseTime;
+uniform float uAmp;
+void main() {
+  vOp = position;
+  vUv2 = uv;
+  vN = normalMatrix * normal;
+  /* living pulse — the tissue breathes with the fleet */
+  vec3 p = position + normal * (uAmp * 0.018 * sin(uNoiseTime * 3.0 + position.y * 4.0 + position.x * 3.0));
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }
 `;
 let jarvis = null, mind = null;
@@ -1350,11 +1423,57 @@ function buildWorld() {
     window.__col = () => corePulse ? [...corePulse.a].filter((_, i) => i % 3 === 1).map(v => +v.toFixed(1)) : null;
   }
 
-  /* THE BRAIN — a second mind riding above the atrium on the CORE axis:
-     literally the JARVIS material (same uniforms, rings, glow, label rig)
-     compiled with the cortex variant of the shader — lobed silhouette,
-     gyri folds, longitudinal fissure. */
-  {
+  /* THE BRAIN — literally a brain, in 3D, wearing the JARVIS skin.
+     Two gyrified hemispheres split by the longitudinal fissure, a
+     cerebellum with fine laminae, a brainstem. Geometry is displaced
+     by ridged value-noise (real folds, real silhouette from any angle),
+     the surface shader carries the orb's detail families. Opaque —
+     tissue can never read as a hole. Same rings/glow/label rig. */
+  try {
+    const bnHash = (x, y, z) => { const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return s - Math.floor(s); };
+    const bnNoise = (x, y, z) => {
+      const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+      const q = t => t * t * (3 - 2 * t);
+      const u = q(x - xi), v = q(y - yi), w = q(z - zi);
+      const c = (a, b, d) => bnHash(xi + a, yi + b, zi + d);
+      const l = (A, B, t) => A + (B - A) * t;
+      return l(l(l(c(0, 0, 0), c(1, 0, 0), u), l(c(0, 1, 0), c(1, 1, 0), u), v),
+               l(l(c(0, 0, 1), c(1, 0, 1), u), l(c(0, 1, 1), c(1, 1, 1), u), v), w);
+    };
+    const ridge = (x, y, z) => {
+      let s = 0, a = .5, f = 1;
+      for (let o = 0; o < 3; o++) { s += a * (1 - Math.abs(2 * bnNoise(x * f, y * f, z * f) - 1)); a *= .5; f *= 2.03; }
+      return s;   // 0..~0.875, ridged — the gyri
+    };
+    /* one hemisphere: gyrified, anisotropic, medial wall flattened, offset off the fissure */
+    const hemi = (side) => {
+      const g = new THREE.SphereGeometry(1, 72, 52);
+      const pos = g.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i), y = pos.getY(i), z2 = pos.getZ(i);
+        const w = ridge(x * 2.2 + side * 9.1, y * 2.2 + 3.7, z2 * 2.2);
+        const r = 1 + (w - 0.55) * 0.17;             // fold depth
+        x *= r; y *= r; z2 *= r;
+        x *= 0.60; y *= 0.80; z2 *= 1.04;            // hemisphere proportions
+        if (x * side < 0) x *= 0.30;                 // flatten the medial wall
+        pos.setXYZ(i, x + side * 0.34, y, z2);       // 0.08-wide longitudinal fissure
+      }
+      g.computeVertexNormals();
+      return g;
+    };
+    /* cerebellum: finer, laminar ridges (stretched noise), tucked low at the back */
+    const cereb = () => {
+      const g = new THREE.SphereGeometry(1, 48, 36);
+      const pos = g.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i), y = pos.getY(i), z2 = pos.getZ(i);
+        const w = ridge(x * 2.5, y * 9.0, z2 * 2.5);
+        const r = 1 + (w - 0.55) * 0.10;
+        pos.setXYZ(i, x * 0.52 * r, y * 0.30 * r - 0.52, z2 * 0.42 * r - 0.58);
+      }
+      g.computeVertexNormals();
+      return g;
+    };
     const mindMat = new THREE.ShaderMaterial({
       uniforms: {
         uNoiseTime: { value: 0 },
@@ -1368,48 +1487,60 @@ function buildWorld() {
         uMorph:     { value: 0 },
         uFlag:      { value: 0 },
       },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv * 2.0 - 1.0;
-          vec3 c = (modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-          gl_Position = projectionMatrix * vec4(c + vec3(position.xy, 0.0), 1.0);
-        }
-      `,
-      fragmentShader: '#define BRAIN\n' + SNOISE + JARVIS_FRAG,
-      transparent: true, depthWrite: false, depthTest: true,
+      vertexShader: BRAIN_VERT,
+      fragmentShader: SNOISE + BRAIN_SURF,
     });
     mindMat.uniforms.uFlag.value = jarvis.flag;
     const mindG = new THREE.Group();
-    const bmesh = new THREE.Mesh(new THREE.PlaneGeometry(377, 377), mindMat);
-    bmesh.renderOrder = 3;
-    bmesh.frustumCulled = false;
-    mindG.add(bmesh);
+    const S = 165;
+    const anat = new THREE.Group();
+    anat.add(new THREE.Mesh(hemi(1), mindMat));
+    anat.add(new THREE.Mesh(hemi(-1), mindMat));
+    anat.add(new THREE.Mesh(cereb(), mindMat));
+    /* brainstem — short tapered column under the cerebellum */
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.16, 0.52, 14, 1, false), mindMat);
+    stem.position.set(0, -0.72, -0.28); stem.rotation.x = 0.5;
+    anat.add(stem);
+    anat.scale.set(S, S, S);
+    anat.rotation.x = 0.12;                           // slight forward tilt — reads as anatomy
+    mindG.add(anat);
+    /* soft aura behind the tissue — the halo the billboard used to carry */
+    const gc = document.createElement('canvas'); gc.width = gc.height = 128;
+    const gg = gc.getContext('2d');
+    const gr = gg.createRadialGradient(64, 64, 8, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(110,168,255,.55)'); gr.addColorStop(.5, 'rgba(87,150,255,.16)'); gr.addColorStop(1, 'rgba(87,150,255,0)');
+    gg.fillStyle = gr; gg.fillRect(0, 0, 128, 128);
+    const auraM = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .9 });
+    auraM.fog = false;
+    const aura = new THREE.Sprite(auraM);
+    aura.scale.set(560, 560, 1);
+    mindG.add(aura);
     const mkRing = (rad, tube, op, colr, rx, ry) => {
       const rm2 = new THREE.MeshBasicMaterial({ color: colr, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false });
       rm2.fog = false;
       const rg = new THREE.Mesh(new THREE.TorusGeometry(rad, tube, 8, 72), rm2);
       rg.rotation.x = rx; rg.rotation.y = ry; mindG.add(rg);
     };
-    mkRing(FIB(3), .9, .55, 0x57d9ff, Math.PI / 2.1, -.4);
-    mkRing(FIB(4), 1.3, .75, 0x57d9ff, Math.PI / 2.4, 0);
-    mkRing(FIB(5), .9, .4, 0xbfa7ff, Math.PI / 1.8, .7);
+    /* rings sit OUTSIDE the tissue (brain max radius ~185 at this scale) */
+    mkRing(200, .9, .55, 0x57d9ff, Math.PI / 2.1, -.4);
+    mkRing(FIB(5), 1.3, .75, 0x57d9ff, Math.PI / 2.4, 0);
+    mkRing(285, .9, .4, 0xbfa7ff, Math.PI / 1.8, .7);
     mindG.add(new THREE.PointLight(0x6ea8ff, 2.2, 900));
     const mlbl = makeLabel('BRAIN', { size: 60, serif: true });
-    mlbl.material.fog = false; mlbl.position.set(0, 182, 0); mindG.add(mlbl);
+    mlbl.material.fog = false; mlbl.position.set(0, 196, 0); mindG.add(mlbl);
     const mstats = makeLabel(`${deptList.length} ZONES · ${nodes.length} UNITS`, { size: 26, scale: .3 });
-    mstats.material.fog = false; mstats.position.set(0, -152, 0); mindG.add(mstats);
+    mstats.material.fog = false; mstats.position.set(0, -198, 0); mindG.add(mstats);
     mindG.position.set(0, 735, -460);
     world.add(mindG);
     mind = { g: mindG, mat: mindMat };
-    window.__mindVis = (body, rest) => { bmesh.visible = body; mindG.children.forEach(ch => { if (ch !== bmesh) ch.visible = rest; }); return [body, rest]; };
+    window.__mindVis = (body, rest) => { anat.visible = body; mindG.children.forEach(ch => { if (ch !== anat) ch.visible = rest; }); return [body, rest]; };
     window.__mind = () => JSON.stringify({
       morph: +mindMat.uniforms.uMorph.value.toFixed(3),
       nt: +mindMat.uniforms.uNoiseTime.value.toFixed(2),
       flag: +mindMat.uniforms.uFlag.value.toFixed(3),
       world: mindG.getWorldPosition(new THREE.Vector3()).toArray().map(v => Math.round(v)),
     });
-  }
+  } catch (e) { console.warn('brain build failed', e); }
 
   /* zones live along the walls — 3 left, 2 back, 3 right, like rooms in the reference */
   const D = deptList;
