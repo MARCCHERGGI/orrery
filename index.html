@@ -1824,23 +1824,33 @@ function buildWorld() {
     { x: 455, z: 480, r: -1.05 }, { x: 505, z: -30, r: -.95 }, { x: 455, z: -520, r: -.8 },
   ];
   const MW = FIB(6), MH = FIB(5);   /* 377 × 233 — the golden-ratio display */
+  /* FOUR MONITORS ONLY (Marco 2026-08-25: "remove the first two left and
+     first two right panels") — the front four slots go dark so the brain owns
+     the room. The four data-rich screens keep the surviving slots: revenue +
+     IG flank him on the back pair, gold far-left, goals far-right. Depts
+     without a slot keep their zone data but render no monitor. */
+  const MON_SLOT = OS_MODE ? { markets: 2, revenue: 3, content: 4, empire: 7 } : null;
   D.forEach((d, i) => {
-    const s = SLOTS[i % SLOTS.length];
-    const mn = MONA[i % MONA.length];
+    const si = MON_SLOT ? MON_SLOT[d.id] : i;
+    d.hasMon = !MON_SLOT || si != null;
+    const s = SLOTS[(si ?? i) % SLOTS.length];
+    const mn = MONA[(si ?? i) % MONA.length];
     if (OS_MODE) { d.cx = mn.x; d.cz = mn.z; d.nx = s.nx; d.nz = s.nz; }
     else { d.cx = s.x; d.cz = s.z; d.nx = s.nx; d.nz = s.nz; }
     const zone = new THREE.Group(); zone.position.set(d.cx, 0, d.cz); world.add(zone); d.groupObj = zone;
     if (OS_MODE) {
       zone.rotation.y = mn.r;
       d.rot = mn.r;   /* the tour flies head-on along this normal */
-      /* the monitor body: dark bezel behind, hot rim around the frame */
-      const bez = new THREE.Mesh(new THREE.PlaneGeometry(MW + 16, MH + 16),
-        new THREE.MeshBasicMaterial({ color: 0x04050e, side: THREE.DoubleSide }));
-      bez.position.set(0, 258, -1.5); zone.add(bez);
-      const rim = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(MW + 16, MH + 16)),
-        new THREE.LineBasicMaterial({ color: 0x3fd6ff, transparent: true, opacity: .85 }));
-      rim.position.set(0, 258, .5); zone.add(rim);
-      d.rim = rim;   /* the control beam pulses this while CORTEX commands the zone */
+      if (d.hasMon) {
+        /* the monitor body: dark bezel behind, hot rim around the frame */
+        const bez = new THREE.Mesh(new THREE.PlaneGeometry(MW + 16, MH + 16),
+          new THREE.MeshBasicMaterial({ color: 0x04050e, side: THREE.DoubleSide }));
+        bez.position.set(0, 258, -1.5); zone.add(bez);
+        const rim = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(MW + 16, MH + 16)),
+          new THREE.LineBasicMaterial({ color: 0x3fd6ff, transparent: true, opacity: .85 }));
+        rim.position.set(0, 258, .5); zone.add(rim);
+        d.rim = rim;   /* the control beam pulses this while CORTEX commands the zone */
+      }
     }
 
     /* district = a graduated instrument dial etched on the floor: hairline
@@ -1879,7 +1889,7 @@ function buildWorld() {
     const zl = makePlate(d.label, { size: 78, serif: true, sub: d.tagline || '', hue: d.hue, scale: .5 });
     /* pushed flush to the wall plane, rotated to face into the room —
        or, in OS mode, floating just above its monitor's bezel */
-    if (OS_MODE) { zl.position.set(0, 258 + MH / 2 + 42, 2); }
+    if (OS_MODE) { zl.position.set(0, 258 + MH / 2 + 42, 2); zl.visible = !!d.hasMon; }
     else if (s.nx === 1) { zl.position.set(-ROOM.hw - d.cx + 3, 330, 0); zl.rotation.y = Math.PI / 2; }
     else if (s.nx === -1) { zl.position.set(ROOM.hw - d.cx - 3, 330, 0); zl.rotation.y = -Math.PI / 2; }
     else { zl.position.set(0, 330, -ROOM.depth - d.cz + 3); }
@@ -1921,7 +1931,7 @@ function buildWorld() {
     const ttex = new THREE.CanvasTexture(tc); ttex.anisotropy = 8;
     const tmesh = new THREE.Mesh(new THREE.PlaneGeometry(OS_MODE ? MW - 26 : FIB(5), OS_MODE ? MH - 16 : FIB(5)),
       new THREE.MeshBasicMaterial({ map: ttex, transparent: true, depthWrite: false }));
-    if (OS_MODE) { tmesh.position.set(0, 258, 0); }
+    if (OS_MODE) { tmesh.position.set(0, 258, 0); tmesh.visible = !!d.hasMon; }
     else if (s.nx === 1) { tmesh.position.set(-ROOM.hw - d.cx + 5, 140, 0); tmesh.rotation.y = Math.PI / 2; }
     else if (s.nx === -1) { tmesh.position.set(ROOM.hw - d.cx - 5, 140, 0); tmesh.rotation.y = -Math.PI / 2; }
     else { tmesh.position.set((d.cx > 0 ? FIB(5) : -FIB(5)) - d.cx, 140, -ROOM.depth - d.cz + 5); }
@@ -2508,8 +2518,22 @@ const _pc = new THREE.Vector3(), _pp = new THREE.Vector3();
 /* speech dolly — while CORTEX talks the camera always closes in on him,
    then drifts back out when the line ends. Suppressed in reel/tour and
    while he is AIMING (that shot belongs to the beam and its monitor). */
-const talkCam = { k: 0 };
+const talkCam = { k: 0, shot: 'push', t0: 0 };
 const _tw = new THREE.Vector3(), _tp2 = new THREE.Vector3(), _qt = new THREE.Quaternion();
+/* each line draws a different cinema shot — the camera never repeats itself:
+   push-in, lateral arcs, a low hero rise, a close side profile */
+const SHOTS = ['push', 'arcL', 'arcR', 'low', 'profile'];
+function shotEye(elapsed, out) {
+  const e = Math.min(1, elapsed / 9000);
+  switch (talkCam.shot) {
+    case 'arcL': { const a = -.62 + e * .5; out.set(_tw.x + Math.sin(a) * 540, _tw.y + 26, _tw.z + Math.cos(a) * 540); break; }
+    case 'arcR': { const a = .62 - e * .5; out.set(_tw.x + Math.sin(a) * 540, _tw.y + 26, _tw.z + Math.cos(a) * 540); break; }
+    case 'low': out.set(_tw.x * .2, _tw.y - 150 + e * 90, _tw.z + 470); break;
+    case 'profile': { const sd = talkCam.side || 1; out.set(_tw.x + sd * (430 - e * 60), _tw.y + 12, _tw.z + 230); break; }
+    default: out.set(_tw.x * .35, _tw.y + 30, _tw.z + 620 - e * 170);   /* push */
+  }
+  return out;
+}
 function applyCamera(t, dx, dy) {
   const pk = reel ? 0 : (level === 0 ? 1 : .45);   /* tour = deterministic flight, no hand sway */
   _pc.set(camBase.x + par.sx * 85 * pk + dx, camBase.y - par.sy * 48 * pk + dy, camBase.z);
@@ -2519,8 +2543,10 @@ function applyCamera(t, dx, dy) {
   const goal = level === 0 && !reel && !tour ? 1 : 0;   /* portal stands down while the tour flies */
   PORTAL.mix += (goal - PORTAL.mix) * .07;
   if (PORTAL.mix < .001) PORTAL.mix = 0;
-  const talkTgt = (mind && mind.gest.mode === 'talk' && !reel && !tour) ? 1 : 0;
-  talkCam.k += (talkTgt - talkCam.k) * (talkTgt ? .035 : .05);   /* slow push in, slightly quicker release */
+  /* he is ALWAYS close (Marco): a resting bias keeps the brain large even in
+     silence; a spoken line takes the shot all the way in */
+  const talkTgt = (mind && !reel && !tour) ? (mind.gest.mode === 'talk' ? 1 : (level === 0 ? .34 : 0)) : 0;
+  talkCam.k += (talkTgt - talkCam.k) * (talkTgt === 1 ? .035 : .05);
   const tk = talkCam.k * talkCam.k * (3 - 2 * talkCam.k);
   if (PORTAL.mix > 0) {
     /* the eye — big lateral travel is what opens the depth; the frustum below
@@ -2545,7 +2571,7 @@ function applyCamera(t, dx, dy) {
   }
   if (tk > .003 && mind) {
     mind.g.getWorldPosition(_tw);
-    _tp2.set(_tw.x * .35, _tw.y + 30, _tw.z + 560);   /* eye slot just off-axis, in front of his face */
+    shotEye(t - talkCam.t0, _tp2);
     _m4.lookAt(_tp2, _tw, camera.up); _qt.setFromRotationMatrix(_m4);
     _pc.lerp(_tp2, tk * .88); _qc.slerp(_qt, tk * .92);
   }
@@ -2789,6 +2815,7 @@ function frame(now) {
         if (beam.dept.rim) beam.dept.rim.material.opacity = .85;
         beam.dept = null;
       }
+      summonTick();   /* the summoned monitor glides while the beam holds it */
       beam.g.visible = beam.on;
       if (beam.on) {
         if (beam.lastRim && beam.lastRim !== beam.dept?.rim) beam.lastRim.material.opacity = .85;
@@ -2983,7 +3010,8 @@ function setLevel(lv, di, gid) {
   level = lv; deptIdx = di === undefined ? deptIdx : di; groupId = gid || null;
   const focus = level >= 1 ? deptList[deptIdx] : null;
   if (level === 0) {
-    flyTo(0, 260, 810, 0, 170, -350);
+    /* home shot leans at HIM, not the room's midpoint — the brain owns it */
+    flyTo(0, 275, 700, 0, 255, -560);
     setDeptnav('A L L', 'the whole system');
   } else if (level === 1) {
     const d = focus;
@@ -3350,12 +3378,37 @@ const beamAt = (d) => {   /* lock the beam onto a department's monitor */
   beam.to.x += (d.nx || 0) * 30; beam.to.z += (d.nz || 0) * 30;
   beam.dept = d; beam.on = true;
 };
+/* SUMMON — he pulls the monitor he's discussing THROUGH the room to himself,
+   holds it beside the tissue while he speaks, then sends it home */
+let summon = null;
 function cortexAim(dept, dur) {
   if (!mind || !dept) return;
   beamAt(dept);
   beam.until = performance.now() + dur;
   mind.gest = { mode: 'aim', t0: performance.now(), until: performance.now() + dur, gen: ++gestGen };
+  if (dept.hasMon && dept.groupObj) summon = { d: dept, until: performance.now() + dur + 900, k: summon && summon.d === dept ? summon.k : 0, home: summon && summon.d === dept ? summon.home : null };
 }
+function summonTick() {
+  if (!summon) return;
+  const zg = summon.d.groupObj;
+  if (!zg || !zg.parent) { summon = null; return; }   /* fleet rebuild replaced the zones */
+  if (!summon.home) summon.home = { x: zg.position.x, z: zg.position.z, ry: zg.rotation.y };
+  const on = performance.now() < summon.until;
+  summon.k += ((on ? 1 : 0) - summon.k) * .06;
+  const k = summon.k * summon.k * (3 - 2 * summon.k);
+  const sd = Math.sign(summon.home.x || 1);
+  /* presentation mark: mid-room beside the brain, turned to face the viewer */
+  zg.position.x = summon.home.x + (sd * 185 - summon.home.x) * k;
+  zg.position.z = summon.home.z + (-235 - summon.home.z) * k;
+  zg.position.y = 26 * k;
+  zg.rotation.y = summon.home.ry + (sd * .3 - summon.home.ry) * k;
+  if (!on && summon.k < .012) {
+    zg.position.set(summon.home.x, 0, summon.home.z);
+    zg.rotation.y = summon.home.ry;
+    summon = null;
+  }
+}
+window.__summon = () => summon ? summon.d.id + ' k=' + summon.k.toFixed(2) : 'off';
 /* right-hand reach toward the live beam target, in anat-local space */
 const reachPose = () => {
   mind.g.worldToLocal(_al.copy(beam.to));
@@ -3416,6 +3469,9 @@ function cortexSay(text, gest) {
   const dur = Math.max(2600, text.length * 62);
   cortexGesture(gest || 'talk', dur);
   if (mind) { mind.gest.plan = gesturePlan(text, dur); mind.gest.planT0 = performance.now(); mind.gest.planDur = dur; }
+  /* a fresh cinema shot per line — never the same angle twice running */
+  { let nx; do { nx = SHOTS[(Math.random() * SHOTS.length) | 0]; } while (nx === talkCam.shot);
+    talkCam.shot = nx; talkCam.t0 = performance.now(); talkCam.side = Math.random() < .5 ? 1 : -1; }
   capTimer = setTimeout(() => cortexCap.classList.remove('on'), dur + 600);
   /* generation token: cancelling a previous line fires ITS onend/onended —
      a stale done() must never stomp the line that replaced it */
