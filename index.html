@@ -2587,6 +2587,23 @@ function frame(now) {
        1.3–2.5 s; idle gets micro-fidgets; everything damp-lerps so cuts read
        as intention, not teleport */
     if (mind && mind.hands) {
+      /* TISSUE GUARD — measured once from the real cortex mesh: an ellipsoid
+         (margin for the palm) that gestures may touch but never enter. Big
+         sweeps clamp to the surface and glide instead of clipping through. */
+      if (!mind.tissue) {
+        let big = null, nv = 0;
+        mind.skull.traverse(o => {
+          const a = o.isMesh && o.geometry && o.geometry.attributes.position;
+          if (a && a.count > nv) { nv = a.count; big = o; }
+        });
+        if (big) {
+          if (!big.geometry.boundingBox) big.geometry.computeBoundingBox();
+          const bb = big.geometry.boundingBox, M = .26;
+          const hh = Math.max((bb.max.x - bb.min.x), (bb.max.z - bb.min.z)) / 2;   /* yaw-safe horizontal axis */
+          mind.tissue = { cy: (bb.max.y + bb.min.y) / 2, ax: hh + M, ay: (bb.max.y - bb.min.y) / 2 + M, az: hh + M };
+          window.__tissue = () => JSON.stringify(mind.tissue);
+        }
+      }
       const G = mind.gest;
       if (G.mode !== 'idle' && G.until && t > G.until) G.mode = 'idle';
       if (G.mode === 'talk') {
@@ -2653,6 +2670,20 @@ function frame(now) {
         h.position.x = st(h.position.x, b.px + (tg.px || 0), 'px');
         h.position.y = st(h.position.y, b.py + (tg.py || 0), 'py');
         h.position.z = st(h.position.z, b.pz + (tg.pz || 0), 'pz');
+        /* never inside the brain: project a penetrating palm back to the
+           tissue surface and bleed its inward momentum so it settles there */
+        const T = mind.tissue;
+        if (T) {
+          const ex = h.position.x / T.ax, ey = (h.position.y - T.cy) / T.ay, ez = h.position.z / T.az;
+          const d2 = ex * ex + ey * ey + ez * ez;
+          if (d2 < 1 && d2 > 1e-6) {
+            const f = 1 / Math.sqrt(d2);
+            h.position.x = ex * f * T.ax;
+            h.position.y = T.cy + ey * f * T.ay;
+            h.position.z = ez * f * T.az;
+            vv.px *= .35; vv.py *= .35; vv.pz *= .35;
+          }
+        }
         h.rotation.x = st(h.rotation.x, b.rx + (tg.rx || 0), 'rx');
         h.rotation.y = st(h.rotation.y, b.ry + (tg.ry || 0), 'ry');
         h.rotation.z = st(h.rotation.z, b.rz + (tg.rz || 0), 'rz');
