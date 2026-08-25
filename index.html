@@ -2601,7 +2601,15 @@ function frame(now) {
           const bb = big.geometry.boundingBox, M = .26;
           const hh = Math.max((bb.max.x - bb.min.x), (bb.max.z - bb.min.z)) / 2;   /* yaw-safe horizontal axis */
           mind.tissue = { cy: (bb.max.y + bb.min.y) / 2, ax: hh + M, ay: (bb.max.y - bb.min.y) / 2 + M, az: hh + M };
-          window.__tissue = () => JSON.stringify(mind.tissue);
+          /* probe: ellipsoid + each hand's normalized distance (d<1 = inside tissue) */
+          window.__tissue = () => {
+            const T2 = mind.tissue;
+            const ds = mind.hands.map(hh2 => {
+              const ex = hh2.position.x / T2.ax, ey = (hh2.position.y - T2.cy) / T2.ay, ez = hh2.position.z / T2.az;
+              return +Math.sqrt(ex * ex + ey * ey + ez * ez).toFixed(3);
+            });
+            return JSON.stringify({ ...T2, d: ds });
+          };
         }
       }
       const G = mind.gest;
