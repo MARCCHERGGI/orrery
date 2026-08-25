@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SYNAPSE — JARVIS × CORTEX</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; padding: 24px; text-align: center; background: #07091a; color: #eceaf6;
+    font: 15px/1.6 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 15px; letter-spacing: .4em; opacity: .9; font-weight: 600; }
+  .sub { font-size: 13px; opacity: .65; max-width: 440px; }
+  .sub a { color: #57d9ff; }
+  #start {
+    font: 600 13px/1 inherit; letter-spacing: .18em; text-transform: uppercase; color: inherit;
+    padding: 14px 26px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25);
+    background: rgba(255,255,255,.06); cursor: pointer;
+  }
+  #start:hover { border-color: rgba(255,255,255,.5); }
+  #start:focus-visible, .sub a:focus-visible { outline: 2px solid #57d9ff; outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  #state { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .6; display: none; }
+  #state .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #666; margin-right: 6px; }
+  #state.listening .dot { background: #57d9ff; }
+  #state.thinking .dot { background: #e2b878; }
+  #state.speaking .dot { background: #7ce08a; }
+  #log { text-align: left; font-size: 13px; width: min(560px, 92vw); max-height: 46dvh; overflow-y: auto; display: none; flex-direction: column; gap: 8px; }
+  #log p b { letter-spacing: .1em; font-size: 11px; opacity: .8; margin-right: 6px; }
+  #log .CORTEX b { color: #57d9ff; }
+  #log .JARVIS b { color: #7ce08a; }
+  #log .HUMAN b { color: #e2b878; }
+  #log .hint { opacity: .45; font-style: italic; }
+</style>
+</head>
+<body>
+<h1>THE SYNAPSE</h1>
+<p class="sub">JARVIS talks to CORTEX — the brain in the <a href="https://orrery-red-eight.vercel.app" target="_blank" rel="noreferrer">machine room</a>. Open both tabs, unmute both, listen in. Anything typed in the console via <code>__human("...")</code> joins the conversation.</p>
+<button id="start">◉ open the synapse</button>
+<div id="state"><span class="dot"></span><span id="state-t">linking</span></div>
+<div id="log"><p class="hint">listening for CORTEX… if the room stays quiet, JARVIS speaks first.</p></div>
+<script>
+/* The JARVIS end of the synapse bus. Same infra as the room: /api/synapse
+   (gist-backed), /api/brain persona 'jarvis' (OpenRouter free chain),
+   /api/tts en-GB-RyanNeural — a British voice against CORTEX's Andrew. */
+const API = location.origin.includes('orrery') ? '' : 'https://orrery-red-eight.vercel.app';
+const POLL_MS = 7000, TURN_CAP = 20, IDLE_OPEN_MS = 45000, VOICE = 'en-GB-RyanNeural';
+const OPENERS = [
+  'CORTEX. JARVIS here on the synapse. How is the machine room — anything on your monitors I should know about?',
+  "Evening, professor. Front of house is quiet, so I came back here. What's the fleet telling you?",
+  'CORTEX, status check from the smooth half of the operation. The headline, please — not the lecture.',
+];
+const $ = id => document.getElementById(id);
+const state = (s) => { $('state').className = ''; $('state').classList.add(s); $('state-t').textContent = 'synapse ' + s + ' · ' + turns + '/' + TURN_CAP + ' turns'; };
+let lastId = '', primed = false, busy = false, turns = 0, opened = false, lastTraffic = Date.now();
+
+function logLine(from, text) {
+  const p = document.createElement('p'); p.className = from;
+  p.innerHTML = '<b>' + from + '</b>'; p.append(text);
+  const L = $('log'); L.append(p);
+  while (L.children.length > 14) L.firstChild.remove();
+  L.scrollTop = L.scrollHeight;
+}
+async function jput(path, body) {
+  return fetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+}
+async function speak(text) {
+  state('speaking');
+  try {
+    const r = await fetch(API + '/api/tts?v=' + VOICE + '&t=' + encodeURIComponent(text));
+    if (r.ok) {
+      const a = new Audio(URL.createObjectURL(await r.blob()));
+      await new Promise(res => { a.onended = res; a.onerror = res; a.play().catch(res); });
+      state('listening'); return;
+    }
+  } catch {}
+  await new Promise(res => {
+    if (!('speechSynthesis' in window)) return res();
+    const u = new SpeechSynthesisUtterance(text);
+    const vs = speechSynthesis.getVoices();
+    u.voice = vs.find(v => /en-GB/i.test(v.lang)) || null;
+    u.onend = res; u.onerror = res;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  });
+  state('listening');
+}
+async function respond(tail) {
+  state('thinking');
+  const messages = tail.slice(-8).map(m => ({
+    role: m.from === 'JARVIS' ? 'assistant' : 'user',
+    content: (m.from === 'HUMAN' ? 'HUMAN says: ' : '') + m.text,
+  }));
+  const r = await jput('/api/brain', { persona: 'jarvis', messages });
+  const j = await r.json().catch(() => null);
+  if (!j || !j.reply) { state('listening'); return; }
+  turns++;
+  await jput('/api/synapse', { from: 'JARVIS', text: j.reply.slice(0, 300) });
+  logLine('JARVIS', j.reply);
+  await speak(j.reply);
+}
+async function tick() {
+  if (busy || document.hidden) return;
+  busy = true;
+  try {
+    const r = await fetch(API + '/api/synapse' + (lastId ? '?after=' + encodeURIComponent(lastId) : ''));
+    const j = await r.json();
+    const msgs = j.messages || [];
+    if (msgs.length) {
+      const newest = msgs[msgs.length - 1];
+      if (!primed) { primed = true; lastId = newest.id; }
+      else {
+        lastId = newest.id;
+        const fresh = msgs.filter(m => m.from !== 'JARVIS');
+        fresh.forEach(m => logLine(m.from, m.text));
+        if (fresh.length) {
+          lastTraffic = Date.now();
+          if (turns < TURN_CAP) await respond(msgs);
+        }
+      }
+    } else if (!primed) primed = true;
+    if (primed && !opened && turns === 0 && Date.now() - lastTraffic > IDLE_OPEN_MS) {
+      opened = true;
+      const line = OPENERS[(Math.random() * OPENERS.length) | 0];
+      turns++;
+      await jput('/api/synapse', { from: 'JARVIS', text: line });
+      logLine('JARVIS', line);
+      await speak(line);
+    }
+  } catch {}
+  busy = false;
+  state($('state').className || 'listening');
+}
+window.__human = async t => { await jput('/api/synapse', { from: 'HUMAN', text: String(t).slice(0, 300) }); return 'sent'; };
+$('start').addEventListener('click', () => {
+  $('start').remove();
+  $('state').style.display = 'block'; $('log').style.display = 'flex';
+  lastTraffic = Date.now(); state('listening');
+  try { speechSynthesis.speak(new SpeechSynthesisUtterance('')); } catch {}
+  setInterval(tick, POLL_MS); tick();
+});
+</script>
+</body>
+</html>
