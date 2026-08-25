@@ -79,17 +79,27 @@ export default async function handler(req, res) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 22000);
   try {
-    const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const payload = {
+      messages: [{ role: 'system', content: system }, ...history],
+      temperature: agent ? 0.6 : 0.8,
+      max_tokens: 400,
+    };
+    let r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        models: MODELS,
-        messages: [{ role: 'system', content: system }, ...history],
-        temperature: agent ? 0.6 : 0.8,
-        max_tokens: 400,
-      }),
+      body: JSON.stringify({ models: MODELS, ...payload }),
       signal: ctrl.signal,
     });
+    /* OpenRouter free tier caps at 50 requests/day — two autonomous agents
+       blow through that before lunch. Groq (gpt-oss-120b) carries the rest. */
+    if (!r.ok && process.env.GROQ_API_KEY) {
+      r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + process.env.GROQ_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'openai/gpt-oss-120b', ...payload }),
+        signal: ctrl.signal,
+      });
+    }
     if (!r.ok) {
       const t = await r.text().catch(() => '');
       res.status(502).json({ error: 'brain ' + r.status, detail: t.slice(0, 200) });
