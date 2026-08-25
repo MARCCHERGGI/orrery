@@ -2448,6 +2448,11 @@ function animateAgents(t) {
    (eye outside the opening, asymmetric frustum pinned to the portal rectangle) */
 const _m4 = new THREE.Matrix4(), _qc = new THREE.Quaternion(), _qp = new THREE.Quaternion();
 const _pc = new THREE.Vector3(), _pp = new THREE.Vector3();
+/* speech dolly — while CORTEX talks the camera always closes in on him,
+   then drifts back out when the line ends. Suppressed in reel/tour and
+   while he is AIMING (that shot belongs to the beam and its monitor). */
+const talkCam = { k: 0 };
+const _tw = new THREE.Vector3(), _tp2 = new THREE.Vector3(), _qt = new THREE.Quaternion();
 function applyCamera(t, dx, dy) {
   const pk = reel ? 0 : (level === 0 ? 1 : .45);   /* tour = deterministic flight, no hand sway */
   _pc.set(camBase.x + par.sx * 85 * pk + dx, camBase.y - par.sy * 48 * pk + dy, camBase.z);
@@ -2457,6 +2462,9 @@ function applyCamera(t, dx, dy) {
   const goal = level === 0 && !reel && !tour ? 1 : 0;   /* portal stands down while the tour flies */
   PORTAL.mix += (goal - PORTAL.mix) * .07;
   if (PORTAL.mix < .001) PORTAL.mix = 0;
+  const talkTgt = (mind && mind.gest.mode === 'talk' && !reel && !tour) ? 1 : 0;
+  talkCam.k += (talkTgt - talkCam.k) * (talkTgt ? .035 : .05);   /* slow push in, slightly quicker release */
+  const tk = talkCam.k * talkCam.k * (3 - 2 * talkCam.k);
   if (PORTAL.mix > 0) {
     /* the eye — big lateral travel is what opens the depth; the frustum below
        keeps the portal rectangle exactly on the screen edges no matter where it is.
@@ -2472,9 +2480,17 @@ function applyCamera(t, dx, dy) {
     const d = PORTAL.dist;
     const pl = (-PORTAL.w / 2 - ex) * near / d, pr = (PORTAL.w / 2 - ex) * near / d;
     const pt = (PORTAL.cy + PORTAL.h / 2 - ey) * near / d, pb = (PORTAL.cy - PORTAL.h / 2 - ey) * near / d;
-    const k = PORTAL.mix * PORTAL.mix * (3 - 2 * PORTAL.mix);
+    /* the off-axis skew stands down as the dolly takes over — a close-up
+       through the portal frustum smears; the push-in wants a straight lens */
+    const k = PORTAL.mix * PORTAL.mix * (3 - 2 * PORTAL.mix) * (1 - tk);
     l += (pl - l) * k; r += (pr - r) * k; tp += (pt - tp) * k; bt += (pb - bt) * k;
     _pc.lerp(_pp, k); _qc.slerp(_qp, k);
+  }
+  if (tk > .003 && mind) {
+    mind.g.getWorldPosition(_tw);
+    _tp2.set(_tw.x * .35, _tw.y + 30, _tw.z + 560);   /* eye slot just off-axis, in front of his face */
+    _m4.lookAt(_tp2, _tw, camera.up); _qt.setFromRotationMatrix(_m4);
+    _pc.lerp(_tp2, tk * .88); _qc.slerp(_qt, tk * .92);
   }
   camera.position.copy(_pc); camera.quaternion.copy(_qc);
   camera.projectionMatrix.makePerspective(l, r, tp, bt, near, 4000);
@@ -2512,6 +2528,59 @@ function frame(now) {
       mind.g.rotation.x += ((0.12 + (talking ? Math.sin(t * .0037) * .07 + Math.sin(t * .0011) * .03
                                              : Math.sin(t * .0009) * .02)) - mind.g.rotation.x) * .08;
       mind.g.rotation.z += (((talking ? Math.sin(t * .0021) * .03 : Math.sin(t * .0007) * .015)) - mind.g.rotation.z) * .08;
+      /* NEURONS — cells inside the tissue, drawn holographically through the
+         opaque cortex (depthTest off, under the beam's renderOrder). Idle they
+         smoulder; while he speaks they vibrate and fire hot. Lazy-built per
+         mind instance so fleet-refresh rebuilds regrow them automatically. */
+      if (!mind.neurons) {
+        const N = 300;
+        const base = new Float32Array(N * 3), ph = new Float32Array(N);
+        for (let i = 0; i < N; i++) {
+          const u = (i + .5) / N, th = i * 2.399963;          /* golden-angle shell */
+          const y = 1 - 2 * u, r = Math.sqrt(Math.max(0, 1 - y * y));
+          const rad = .3 + .62 * (((i * 2654435761) % 997) / 997);   /* deterministic depth */
+          base[i * 3] = Math.cos(th) * r * .58 * rad;
+          base[i * 3 + 1] = y * .44 * rad + .22;              /* hug the cortex, stay off the stem */
+          base[i * 3 + 2] = Math.sin(th) * r * .68 * rad;
+          ph[i] = (i % 89) / 89 * 6.2832;
+        }
+        const ng = new THREE.BufferGeometry();
+        ng.setAttribute('position', new THREE.BufferAttribute(base.slice(), 3));
+        ng.setAttribute('color', new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+        /* soft radial sprite — bare Points draw as SQUARES (verified on prod
+           screenshot: pixel dust, not cells) */
+        const ncv = document.createElement('canvas'); ncv.width = ncv.height = 32;
+        const nc2 = ncv.getContext('2d');
+        const ngr = nc2.createRadialGradient(16, 16, 1, 16, 16, 16);
+        ngr.addColorStop(0, 'rgba(255,255,255,1)'); ngr.addColorStop(.45, 'rgba(255,255,255,.35)'); ngr.addColorStop(1, 'rgba(255,255,255,0)');
+        nc2.fillStyle = ngr; nc2.fillRect(0, 0, 32, 32);
+        const pts = new THREE.Points(ng, new THREE.PointsMaterial({
+          size: 6, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: .2,
+          map: new THREE.CanvasTexture(ncv),
+          blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false }));
+        pts.renderOrder = 996;
+        mind.skull.add(pts);
+        mind.neurons = { pts, base, ph, n: N, heat: 0 };
+        window.__neurons = () => JSON.stringify({ n: N, heat: +mind.neurons.heat.toFixed(2), op: +pts.material.opacity.toFixed(2) });
+      }
+      {
+        const nr = mind.neurons;
+        nr.heat += ((mind.gest.mode === 'talk' || mind.gest.mode === 'aim' ? 1 : 0) - nr.heat) * .06;
+        const amp = .006 + nr.heat * .024, spd = .004 + nr.heat * .006;
+        const p = nr.pts.geometry.attributes.position.array, c = nr.pts.geometry.attributes.color.array;
+        for (let i = 0; i < nr.n; i++) {
+          const i3 = i * 3, phz = nr.ph[i];
+          p[i3] = nr.base[i3] + Math.sin(t * spd + phz) * amp;
+          p[i3 + 1] = nr.base[i3 + 1] + Math.sin(t * spd * 1.13 + phz * 1.7) * amp;
+          p[i3 + 2] = nr.base[i3 + 2] + Math.cos(t * spd * .87 + phz) * amp;
+          const fire = Math.max(0, Math.sin(t * (.002 + nr.heat * .009) + phz * 3));
+          const f = fire * fire * fire * (.25 + nr.heat * .75);
+          c[i3] = .10 + .55 * f; c[i3 + 1] = .30 + .62 * f; c[i3 + 2] = .55 + .45 * f;
+        }
+        nr.pts.geometry.attributes.position.needsUpdate = true;
+        nr.pts.geometry.attributes.color.needsUpdate = true;
+        nr.pts.material.opacity = .16 + nr.heat * .62;
+      }
     }
     /* the hands are the voice's body language — a gesture LIBRARY, not one
        loop: while he talks a scheduler cuts between named gestures every
