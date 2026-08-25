@@ -118,15 +118,15 @@
   header .counts button.cbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   header .right { margin-left: auto; display: flex; align-items: center; gap: 14px; pointer-events: auto; }
   header .age { font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
-  header #rec, header #face, header #find, header #full {
+  header #rec, header #face, header #find, header #full, header #mic, header #auto {
     font: 600 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase;
     color: var(--ink-dim); background: rgba(27,31,56,.9); border: 1px solid var(--line);
     border-radius: 999px; padding: 8px 14px; cursor: pointer; transition: color var(--t-quick), border-color var(--t-quick);
   }
-  header #rec:hover, header #face:hover, header #find:hover, header #full:hover { color: var(--ink); border-color: rgba(236,234,246,.3); }
-  header #rec:focus-visible, header #face:focus-visible, header #find:focus-visible, header #full:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  header #rec:hover, header #face:hover, header #find:hover, header #full:hover, header #mic:hover, header #auto:hover { color: var(--ink); border-color: rgba(236,234,246,.3); }
+  header #rec:focus-visible, header #face:focus-visible, header #find:focus-visible, header #full:focus-visible, header #mic:focus-visible, header #auto:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   header #find { font-size: 14px; padding: 6px 12px; }
-  header #face.on { color: var(--accent); border-color: rgba(87,217,255,.5); }
+  header #face.on, header #mic.on, header #auto.on { color: var(--accent); border-color: rgba(87,217,255,.5); }
   @media (max-width: 820px) {   /* phones AND portrait tablets — 768 was word-wrapping the age readout */
     header { flex-wrap: wrap; }
     /* the age readout is the site's own honesty signal (ambers when stale) —
@@ -290,6 +290,8 @@ window.__fleetP = fetch('https://raw.githubusercontent.com/MARCCHERGGI/orrery/ma
   <span class="right">
     <span class="age" id="age"></span>
     <button id="find" title="Find an agent — press /" aria-label="Find an agent">⌕</button>
+    <button id="mic" title="Speak with CORTEX — he listens, thinks, answers aloud">🎙 talk</button>
+    <button id="auto" title="Autonomy — CORTEX runs his own observe→plan→act loop">∞ auto</button>
     <button id="face" title="Head tracking — the room follows your head through the webcam">☺ face</button>
     <button id="full" title="Fullscreen — press F">⛶ full</button>
     <button id="rec" title="Cinematic tour — press R">● tour</button>
@@ -3695,6 +3697,163 @@ setInterval(() => {
     .then(d => { if (d && d.meta && d.meta.exported && d.meta.exported !== fleet.meta.exported) boot(d); })
     .catch(() => {});
 }, 233000);
+
+/* ================= MIND LINK — ears, synapse, autonomy =================
+   Three additions that make CORTEX an agent rather than a narrator:
+   EARS    — 🎙 talk: Web Speech STT → /api/brain → spoken answer.
+   SYNAPSE — a shared bus with JARVIS (jarvis-talk /bridge); each speaks
+             his own lines in his own voice, so two open tabs hold an
+             audible conversation between two deployed apps.
+   AUTONOMY — ∞ auto: a Devin-style loop. Observe the live room, ask the
+             brain for ONE next action as strict JSON, execute it, keep a
+             step ledger, feed recent steps back so it self-corrects. */
+const MINDAPI = 'https://orrery-red-eight.vercel.app';
+async function mindApi(path, opts) {
+  let r = await fetch(path, opts).catch(() => null);
+  if (!r || (!r.ok && (r.status === 404 || r.status === 405))) r = await fetch(MINDAPI + path, opts);
+  return r;
+}
+const postJson = body => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+function liveCtx() {
+  const c = s => nodes.filter(n => n.status === s).length;
+  const flagged = nodes.filter(n => n.status === 'flag').slice(0, 3).map(n => n.label).join(', ');
+  const gold = goldData && goldData.price ? `gold $${goldData.price}${goldData.chgPct != null ? ' (' + goldData.chgPct + '%)' : ''}` : '';
+  return `fleet: ${nodes.length} units in ${deptList.length} zones (${deptList.map(d => d.id).join(', ')}); `
+    + `${c('ok')} ok, ${c('running')} running, ${c('flag')} flagged${flagged ? ' (' + flagged + ')' : ''}; ${gold}`;
+}
+
+/* ---- EARS ---- */
+const convo = { hist: [], busy: false };
+async function brainTalk(text) {
+  if (convo.busy) return;
+  convo.busy = true;
+  micBtn.textContent = '… thinking';
+  try {
+    convo.hist.push({ role: 'user', content: text });
+    const r = await mindApi('/api/brain', postJson({ persona: 'cortex', messages: convo.hist.slice(-8), ctx: liveCtx() }));
+    const j = await r.json();
+    if (j.reply) { convo.hist.push({ role: 'assistant', content: j.reply }); cortexSay(j.reply, 'talk'); }
+    else cortexSay('My reasoning cortex is momentarily unreachable. Do try again.', 'talk');
+  } catch { cortexSay('My reasoning cortex is momentarily unreachable. Do try again.', 'talk'); }
+  convo.busy = false;
+  micBtn.textContent = '🎙 talk'; micBtn.classList.remove('on');
+}
+const micBtn = $('mic');
+const SRCls = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recOn = false;
+if (!SRCls) micBtn.title = 'Speech recognition not available in this browser — Chrome and Edge have it';
+micBtn.addEventListener('click', () => {
+  if (!SRCls || convo.busy) return;
+  if (recOn) { try { rec.stop(); } catch {} return; }
+  try { speechSynthesis.cancel(); } catch {}
+  if (voxAudio) voxAudio.pause();          /* he must not hear himself */
+  rec = new SRCls();
+  rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false;
+  let finalText = '';
+  rec.onresult = e => {
+    let t = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript;
+    cortexCap.textContent = '“' + t + '”'; cortexCap.classList.add('on');
+    if (e.results[e.results.length - 1].isFinal) finalText = t;
+  };
+  rec.onend = () => {
+    recOn = false;
+    if (finalText.trim()) brainTalk(finalText.trim());
+    else { micBtn.textContent = '🎙 talk'; micBtn.classList.remove('on'); }
+  };
+  rec.onerror = rec.onend;
+  recOn = true; micBtn.textContent = '● listening'; micBtn.classList.add('on');
+  rec.start();
+});
+
+/* ---- SYNAPSE ---- */
+const syn = { lastId: '', primed: false, turns: 0, busy: false, cap: 20 };
+async function synReply(tail) {
+  /* the JARVIS side of the exchange arrives as user turns; ours as assistant */
+  const msgs = tail.map(m => ({ role: m.from === 'CORTEX' ? 'assistant' : 'user', content: (m.from !== 'CORTEX' && m.from !== 'JARVIS' ? m.from + ' says: ' : '') + m.text }));
+  const r = await mindApi('/api/brain', postJson({ persona: 'cortex', messages: msgs.slice(-8), ctx: liveCtx() }));
+  const j = await r.json();
+  return j.reply || null;
+}
+async function synPoll() {
+  if (document.hidden || !entered || syn.busy) return;
+  try {
+    const r = await mindApi('/api/synapse' + (syn.lastId ? '?after=' + encodeURIComponent(syn.lastId) : ''));
+    const j = await r.json();
+    const msgs = j.messages || [];
+    if (!msgs.length) return;
+    const newest = msgs[msgs.length - 1];
+    if (!syn.primed) { syn.lastId = newest.id; syn.primed = true; return; }  /* never replay history aloud */
+    syn.lastId = newest.id;
+    if (newest.from === 'CORTEX' || syn.turns >= syn.cap) return;
+    syn.busy = true;
+    const reply = await synReply(msgs.slice(-8));
+    if (reply) {
+      cortexSay(reply, 'talk');
+      syn.turns++;
+      await mindApi('/api/synapse', postJson({ from: 'CORTEX', text: reply.slice(0, 300) }));
+    }
+  } catch {} finally { syn.busy = false; }
+}
+setInterval(synPoll, 8000);
+window.__synSay = async t => { await mindApi('/api/synapse', postJson({ from: 'HUMAN', text: String(t).slice(0, 300) })); return 'sent'; };
+window.__syn = () => JSON.stringify({ lastId: syn.lastId, turns: syn.turns });
+
+/* ---- AUTONOMY (the Devin loop) ---- */
+const agent = {
+  on: new URLSearchParams(location.search).has('auto'),
+  goal: 'Supervise the machine room. Watch the live monitors, surface real changes and anomalies aloud, point at what you discuss, and occasionally confer with JARVIS over the synapse.',
+  ledger: [], busy: false, zoneTimer: 0,
+};
+try { agent.ledger = JSON.parse(localStorage.getItem('cortex-ledger') || '[]'); } catch {}
+function ledgerPush(entry) {
+  agent.ledger = [...agent.ledger, { t: Date.now(), ...entry }].slice(-60);
+  try { localStorage.setItem('cortex-ledger', JSON.stringify(agent.ledger)); } catch {}
+}
+function agentObs() {
+  const recent = agent.ledger.slice(-4).map(e => `${e.action}${e.dept ? ':' + e.dept : ''} ("${(e.thought || '').slice(0, 60)}")`).join(' | ') || 'none yet';
+  return `GOAL: ${agent.goal}\nOBSERVATION: ${liveCtx()}; data ${fmtAge(fleet.meta && fleet.meta.exported) || 'age unknown'}.\nYOUR RECENT ACTIONS (do not repeat): ${recent}`;
+}
+async function agentTick() {
+  if (!agent.on || agent.busy || document.hidden || !entered || reel || recOn || convo.busy) return;
+  agent.busy = true;
+  try {
+    const r = await mindApi('/api/brain', postJson({ persona: 'cortex', mode: 'agent', messages: [{ role: 'user', content: agentObs() }] }));
+    const j = await r.json();
+    const plan = (j && j.plan) || { thought: 'no plan', say: '', action: { type: 'idle' } };
+    const a = plan.action || { type: 'idle' };
+    const d = a.dept && depts[a.dept];
+    if (a.type === 'aim' && d) cortexAim(d, 7000);
+    else if (a.type === 'open' && d) {
+      const di = deptList.findIndex(x => x.id === d.id);
+      if (di >= 0 && level === 0) {
+        setLevel(1, di);
+        clearTimeout(agent.zoneTimer);
+        agent.zoneTimer = setTimeout(() => { if (agent.on && level === 1) setLevel(0); }, 14000);
+      }
+    }
+    else if (a.type === 'message_jarvis' && a.text) await mindApi('/api/synapse', postJson({ from: 'CORTEX', text: String(a.text).slice(0, 300) }));
+    if (plan.say) cortexSay(plan.say, a.type === 'aim' ? 'aim' : 'talk');
+    ledgerPush({ thought: plan.thought, action: a.type, dept: a.dept || '', said: !!plan.say });
+  } catch (e) {
+    ledgerPush({ thought: 'tick failed: ' + (e.message || e), action: 'error' });
+  }
+  agent.busy = false;
+}
+setInterval(agentTick, 50000);
+const autoBtn = $('auto');
+function setAuto(on, silent) {
+  agent.on = on;
+  autoBtn.classList.toggle('on', on);
+  if (!silent) cortexSay(on
+    ? 'Autonomy engaged. I shall observe, hypothesise, and act — and log every step, naturally.'
+    : 'Autonomy suspended. I remain, as ever, observant.', 'talk');
+  if (on) setTimeout(agentTick, 4000);
+}
+autoBtn.addEventListener('click', () => setAuto(!agent.on));
+if (agent.on) { autoBtn.classList.add('on'); setTimeout(agentTick, 8000); }
+window.__agent = () => JSON.stringify({ on: agent.on, steps: agent.ledger.length, last: agent.ledger.slice(-2) });
+window.__ledger = n => JSON.stringify(agent.ledger.slice(-(n || 10)), null, 1);
 </script>
 </body>
 </html>
