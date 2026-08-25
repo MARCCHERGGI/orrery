@@ -1719,6 +1719,58 @@ function buildWorld() {
     };
     anat.add(mkHand(1));
     anat.add(mkHand(-1));
+    /* SKINNED HANDS v2 — the WebXR generic-hand rigs (immersive-web input
+       profiles, Apache-2.0): real skinned human hands, wrist + 3-phalanx
+       chains per finger. The procedural capsule hands stay as the loading
+       fallback AND as the value carriers — the gesture library keeps writing
+       to the same finger controllers, applyRig() retargets them onto bones. */
+    {
+      const HAND_CDN = s2 => 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0/dist/profiles/generic-hand/' + (s2 > 0 ? 'right' : 'left') + '.glb';
+      const TUNE = window.__handTune = { rx: -1.35, ry: 0, rz: 0, s: 4.2, flex: 1, base: .12, op: .96 };
+      const handMat = new THREE.MeshStandardMaterial({
+        color: 0x8fb8e8, emissive: 0x1d4a80, emissiveIntensity: .85,
+        transparent: true, opacity: TUNE.op, roughness: .38, metalness: .15 });
+      const FING = ['index-finger', 'middle-finger', 'ring-finger', 'pinky-finger'];
+      hands.forEach(h => {
+        const s2 = h.userData.side;
+        new GLTFLoader().load(HAND_CDN(s2), gl => {
+          const bones = {};
+          gl.scene.traverse(o => {
+            if (o.isBone) bones[o.name] = o;
+            o.frustumCulled = false;
+            if (o.isSkinnedMesh) o.material = handMat;
+          });
+          const rest = {}; for (const k in bones) rest[k] = bones[k].rotation.x;
+          const wrap = new THREE.Group();
+          wrap.add(gl.scene);
+          h.children.forEach(c => { c.visible = false; });   /* capsules become pure controllers */
+          h.add(wrap);
+          const fit = () => {
+            wrap.scale.setScalar(TUNE.s);
+            wrap.rotation.set(TUNE.rx, s2 > 0 ? TUNE.ry : -TUNE.ry, s2 > 0 ? TUNE.rz : -TUNE.rz);
+          };
+          fit();
+          h.userData.applyRig = () => {
+            if (window.__handTuneDirty) fit();
+            h.userData.fingers.forEach((fg, i) => {
+              const curl = (fg.rotation.x - fg.userData.baseRX + TUNE.base) * TUNE.flex;
+              const fam = FING[i];
+              /* only the proximal joint may extend past rest — real fingers
+                 don't bend backwards at the outer knuckles */
+              const set = (jn, m, lo) => { const nm = fam + '-' + jn, b = bones[nm]; if (b) b.rotation.x = rest[nm] + Math.max(curl, lo) * m; };
+              set('phalanx-proximal', .95, -1);
+              set('phalanx-intermediate', .8 + Math.max(0, curl) * .35, -.2);
+              set('phalanx-distal', .55, -.12);
+            });
+            const mc = (h.userData.fingers.reduce((a, fg) => a + fg.rotation.x - fg.userData.baseRX, 0) / 4 + TUNE.base) * TUNE.flex;
+            [['thumb-phalanx-proximal', .5], ['thumb-phalanx-distal', .6]].forEach(([nm, m]) => {
+              const b = bones[nm]; if (b) b.rotation.x = rest[nm] + mc * m;
+            });
+          };
+        }, undefined, () => {});   /* CDN down → capsules stay visible, nothing breaks */
+      });
+      window.__handFix = o => { Object.assign(TUNE, o); window.__handTuneDirty = true; handMat.opacity = TUNE.op; return JSON.stringify(TUNE); };
+    }
     anat.scale.set(S, S, S);
     anat.rotation.x = 0.12;                           // slight forward tilt — reads as anatomy
     brain.add(anat);                                  // straight into the CORE group — he IS the core
@@ -2520,12 +2572,13 @@ function frame(now) {
        anterior toward the camera with only a small attentive sway */
     if (mind) {
       const talking = mind.gest.mode === 'talk';
+      const va2 = readVoiceAmp();                       /* one live RMS read per frame */
       mind.g.rotation.y = -brain.rotation.y + Math.sin(t * .0005) * .05;
       if (window.__yawOff != null) mind.skull.rotation.y = window.__yawOff;
       /* he is never a statue: hover bob, and while speaking a professor's
-         nod + head tilt riding on top of the base forward lean */
-      mind.g.position.y = Math.sin(t * .0016) * 5 + (talking ? Math.sin(t * .004) * 2 : 0);
-      mind.g.rotation.x += ((0.12 + (talking ? Math.sin(t * .0037) * .07 + Math.sin(t * .0011) * .03
+         nod + head tilt riding the actual voice level */
+      mind.g.position.y = Math.sin(t * .0016) * 5 + (talking ? Math.sin(t * .004) * (1 + va2 * 3) : 0);
+      mind.g.rotation.x += ((0.12 + (talking ? (Math.sin(t * .0037) * .07 + Math.sin(t * .0011) * .03) * (.5 + va2)
                                              : Math.sin(t * .0009) * .02)) - mind.g.rotation.x) * .08;
       mind.g.rotation.z += (((talking ? Math.sin(t * .0021) * .03 : Math.sin(t * .0007) * .015)) - mind.g.rotation.z) * .08;
       /* NEURONS — cells inside the tissue, drawn holographically through the
@@ -2566,7 +2619,8 @@ function frame(now) {
       {
         const nr = mind.neurons;
         nr.heat += ((mind.gest.mode === 'talk' || mind.gest.mode === 'aim' ? 1 : 0) - nr.heat) * .06;
-        const amp = .006 + nr.heat * .024, spd = .004 + nr.heat * .006;
+        /* firing rides the waveform — a shout lights the cortex, a pause dims it */
+        const amp = .006 + nr.heat * (.012 + voiceAmp * .022), spd = .004 + nr.heat * .006;
         const p = nr.pts.geometry.attributes.position.array, c = nr.pts.geometry.attributes.color.array;
         for (let i = 0; i < nr.n; i++) {
           const i3 = i * 3, phz = nr.ph[i];
@@ -2600,7 +2654,14 @@ function frame(now) {
           if (!big.geometry.boundingBox) big.geometry.computeBoundingBox();
           const bb = big.geometry.boundingBox, M = .26;
           const hh = Math.max((bb.max.x - bb.min.x), (bb.max.z - bb.min.z)) / 2;   /* yaw-safe horizontal axis */
-          mind.tissue = { cy: (bb.max.y + bb.min.y) / 2, ax: hh + M, ay: (bb.max.y - bb.min.y) / 2 + M, az: hh + M };
+          const T0 = { cy: (bb.max.y + bb.min.y) / 2, ax: hh + M, ay: (bb.max.y - bb.min.y) / 2 + M, az: hh + M };
+          /* the measured box overshoots the visible tissue — autoscale so the
+             CRADLE rest pose sits outside with 12% headroom (first cut pinned
+             the resting palms to the surface: probe read d=[1,1] constantly) */
+          const b0 = mind.hands[0].userData.base;
+          const d0 = Math.sqrt((b0.px / T0.ax) ** 2 + ((b0.py - T0.cy) / T0.ay) ** 2 + (b0.pz / T0.az) ** 2);
+          if (d0 < 1.12) { const f = d0 / 1.12; T0.ax *= f; T0.ay *= f; T0.az *= f; }
+          mind.tissue = T0;
           /* probe: ellipsoid + each hand's normalized distance (d<1 = inside tissue) */
           window.__tissue = () => {
             const T2 = mind.tissue;
@@ -2616,7 +2677,14 @@ function frame(now) {
       if (G.mode !== 'idle' && G.until && t > G.until) G.mode = 'idle';
       if (G.mode === 'talk') {
         if (!G.sub || t > (G.subUntil || 0)) {
-          let nx; do { nx = TALK_GESTS[(Math.random() * TALK_GESTS.length) | 0]; } while (nx === G.sub);
+          /* the PLAN first: if the clause being spoken right now asked for a
+             gesture, use it — random cuts only fill the gaps between them */
+          let nx = null;
+          if (G.plan && G.planT0) {
+            const el = t - G.planT0;
+            for (const pe of G.plan) if (!pe.used && pe.at <= el + 250) { pe.used = true; nx = pe.sub; }
+          }
+          if (!nx || nx === G.sub) { do { nx = TALK_GESTS[(Math.random() * TALK_GESTS.length) | 0]; } while (nx === G.sub); }
           G.sub = nx; G.subT0 = t; G.subUntil = t + 900 + Math.random() * 800;   /* fast cuts — he talks with his whole body */
           G.cNext = 0;
         }
@@ -2643,6 +2711,10 @@ function frame(now) {
           /* shimmer on top of every gesture — the hands never freeze */
           tg.py = (tg.py || 0) + Math.sin(t * .008 + s * 1.7) * .06;
           tg.rz = (tg.rz || 0) + Math.sin(t * .007 + s * 2) * .11;
+          /* the voice drives the travel: loud syllables push the hands, the
+             pauses between sentences let them settle */
+          const va = .55 + voiceAmp * .85;
+          if (tg.px) tg.px *= va; if (tg.py) tg.py *= va; if (tg.pz) tg.pz *= va;
         } else if (G.mode === 'aim') {
           /* commanding a specific zone: right hand reaches at the actual
              monitor, index out, beam live; left defers */
@@ -2701,7 +2773,9 @@ function frame(now) {
           const c = tg.curls ? (tg.curls[i] || 0) : (tg.curl || 0) + Math.sin(t * .009 + i * .8 + s) * .05;
           fg.rotation.x += ((fg.userData.baseRX + c) - fg.rotation.x) * .18;
         });
+        if (h.userData.applyRig) h.userData.applyRig();   /* retarget controllers onto the skinned rig */
       }
+      window.__handTuneDirty = false;
       handPrevT = t;
       /* ---- beam pass: runs AFTER the hands settle so the filament roots at
          this frame's true fingertip */
@@ -3116,6 +3190,32 @@ if ('speechSynthesis' in window) { pickCortexVoice(); speechSynthesis.addEventLi
       only loaded if the proxy ever fails.
    3. Web Speech — the floor; also carries the first word while 1 is in flight. */
 let voxAudio = null;               /* shared playback slot for probes */
+/* VOICE TAP — an analyser on the actual clip, so the body rides the audio:
+   gesture travel, head nod and neuron firing all scale with the live RMS of
+   what he is saying, not a random clock. */
+let vTapCtx = null, vTapAna = null, vTapData = null, voiceAmp = 0;
+function tapAudio(a) {
+  try {
+    vTapCtx = vTapCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (vTapCtx.state === 'suspended') vTapCtx.resume();
+    const src = vTapCtx.createMediaElementSource(a);
+    vTapAna = vTapCtx.createAnalyser(); vTapAna.fftSize = 256;
+    vTapData = new Uint8Array(vTapAna.fftSize);
+    src.connect(vTapAna); vTapAna.connect(vTapCtx.destination);
+  } catch {}
+}
+function readVoiceAmp() {
+  let a = 0;
+  if (vTapAna && voxAudio && !voxAudio.paused && !voxAudio.ended) {
+    vTapAna.getByteTimeDomainData(vTapData);
+    let s = 0;
+    for (let i = 0; i < vTapData.length; i += 2) { const d = vTapData[i] - 128; s += d * d; }
+    a = Math.min(1, Math.sqrt(s / (vTapData.length / 2)) / 34);
+  } else if ('speechSynthesis' in window && speechSynthesis.speaking) a = .5;
+  voiceAmp += (a - voiceAmp) * .35;
+  return voiceAmp;
+}
+window.__vamp = () => +voiceAmp.toFixed(3);
 let neuralState = 'on', neuralVoice = 'en-US-AndrewMultilingualNeural';
 const neuralCache = new Map();     /* text -> object URL */
 async function neuralSpeak(text, done) {
@@ -3134,6 +3234,7 @@ async function neuralSpeak(text, done) {
   }
   if (voxAudio) voxAudio.pause();
   voxAudio = new Audio(url);
+  tapAudio(voxAudio);
   window.__kdebug = () => JSON.stringify({ dur: voxAudio.duration, rs: voxAudio.readyState, err: voxAudio.error && voxAudio.error.code, paused: voxAudio.paused, t: voxAudio.currentTime });
   voxAudio.onended = done;
   /* an autoplay block is NOT a proxy failure — swallow it (captions carry
@@ -3141,7 +3242,16 @@ async function neuralSpeak(text, done) {
   try { await voxAudio.play(); } catch { return; }
   neuralState = 'ok';
   /* gesture window = the real clip length, not the caption estimate */
-  if (mind && (mind.gest.mode === 'talk' || mind.gest.mode === 'aim')) mind.gest.until = performance.now() + (voxAudio.duration || 8) * 1000 + 400;
+  if (mind && (mind.gest.mode === 'talk' || mind.gest.mode === 'aim')) {
+    mind.gest.until = performance.now() + (voxAudio.duration || 8) * 1000 + 400;
+    /* re-time the word-gesture plan onto the real clip so keyword gestures
+       land on their clause, not on the caption estimate */
+    if (mind.gest.plan && mind.gest.planDur && voxAudio.duration) {
+      const f = (voxAudio.duration * 1000) / mind.gest.planDur;
+      mind.gest.plan.forEach(pe => { pe.at *= f; });
+      mind.gest.planDur = voxAudio.duration * 1000;
+    }
+  }
 }
 let kokoro = null, kokoroState = 'off', kokoroVoice = 'am_michael';
 const kokoroCache = new Map();
@@ -3166,6 +3276,7 @@ async function kokoroSpeak(text, done) {
   }
   if (voxAudio) voxAudio.pause();
   voxAudio = new Audio(url);
+  tapAudio(voxAudio);
   window.__kdebug = () => JSON.stringify({ dur: voxAudio.duration, rs: voxAudio.readyState, err: voxAudio.error && voxAudio.error.code, paused: voxAudio.paused, t: voxAudio.currentTime });
   voxAudio.onended = done;
   await voxAudio.play();
@@ -3274,11 +3385,32 @@ const GEST_FN = {
     return { py: .14 + b * .1, rx: .3 + b * .2, rz: s * .15, curl: -.1 };
   },
 };
+/* the words choose the hands: each clause is scanned for what it IS —
+   an enumeration, a doubt, a warning, a sweep of the whole room — and the
+   matching gesture is scheduled at that clause's moment in the clip */
+function gesturePlan(text, dur) {
+  const total = Math.max(1, text.split(/\s+/).length);
+  const plan = []; let off = 0;
+  for (const sg of text.split(/(?<=[.,;:!?—])\s+/)) {
+    const w = sg.split(/\s+/).length, s = sg.toLowerCase();
+    let g = null;
+    if (/\b\d|percent|count|first|second|third/.test(s)) g = 'count';
+    else if (/\?|perhaps|shall|might|suppose|wonder/.test(s)) g = 'palmsUp';
+    else if (/point|aim|monitor|zone|screen|lobe|wall|there\b/.test(s)) g = 'sweep';
+    else if (/\ball\b|entire|whole|every|fleet|system|units|lattice/.test(s)) g = 'expanse';
+    else if (/flag|anomal|concern|alert|critical|error|fail|warn/.test(s)) g = 'chop';
+    else if (/\bi\b|\bmy\b|\bme\b|myself|naturally|indeed|elegan/.test(s)) g = 'steeple';
+    if (g) plan.push({ at: off, sub: g, used: false });
+    off += dur * (w / total);
+  }
+  return plan;
+}
 function cortexSay(text, gest) {
   cortexCap.textContent = text; cortexCap.classList.add('on');
   clearTimeout(capTimer);
   const dur = Math.max(2600, text.length * 62);
   cortexGesture(gest || 'talk', dur);
+  if (mind) { mind.gest.plan = gesturePlan(text, dur); mind.gest.planT0 = performance.now(); mind.gest.planDur = dur; }
   capTimer = setTimeout(() => cortexCap.classList.remove('on'), dur + 600);
   /* generation token: cancelling a previous line fires ITS onend/onended —
      a stale done() must never stomp the line that replaced it */
