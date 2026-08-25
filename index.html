@@ -1727,9 +1727,11 @@ function buildWorld() {
     {
       const HAND_CDN = s2 => 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0/dist/profiles/generic-hand/' + (s2 > 0 ? 'right' : 'left') + '.glb';
       const TUNE = window.__handTune = { rx: -1.35, ry: 0, rz: 0, s: 4.2, flex: 1, base: .12, op: .96 };
+      /* WHITE GLOVES (Marco, 2026-08-25): opaque fabric white, not hologram
+         glass — a butler-mime read against the blue tissue */
       const handMat = new THREE.MeshStandardMaterial({
-        color: 0x8fb8e8, emissive: 0x1d4a80, emissiveIntensity: .85,
-        transparent: true, opacity: TUNE.op, roughness: .38, metalness: .15 });
+        color: 0xf2f2f6, emissive: 0x9aa4c0, emissiveIntensity: .22,
+        roughness: .6, metalness: .02 });
       const FING = ['index-finger', 'middle-finger', 'ring-finger', 'pinky-finger'];
       hands.forEach(h => {
         const s2 = h.userData.side;
