@@ -102,7 +102,9 @@ async function respond(tail) {
   await speak(j.reply);
 }
 async function tick() {
-  if (busy || document.hidden) return;
+  /* NO document.hidden guard — this tab lives BEHIND the machine room and
+     must keep talking from the background (timers just clamp to ~1s there) */
+  if (busy) return;
   busy = true;
   try {
     const r = await fetch(API + '/api/synapse' + (lastId ? '?after=' + encodeURIComponent(lastId) : ''));
