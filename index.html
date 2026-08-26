@@ -1054,28 +1054,30 @@ function chip(g, x, y, text, fg, bg) {
   g.fillStyle = fg; g.fillText(text, x + 8, y);
   return w;
 }
-function specChrome(g, hue, title, sub) {
+function specChrome(g, hue, title, sub, acc) {
+  /* COLOR REGRADE (Marco 2026-08-25 "colors are not good"): the per-dept hue
+     wash made every screen a different violet soup. Now: one near-black
+     ground shared by all panels, ONE accent color per panel, neutral chrome. */
+  const A = acc || `hsla(${hue},70%,66%,1)`;
   g.setTransform(PANEL_SCALE, 0, 0, PANEL_SCALE, 0, 0);
   g.clearRect(0, 0, 640, 396);
   const bg = g.createLinearGradient(0, 0, 0, 396);
-  bg.addColorStop(0, 'rgba(14,17,36,.94)'); bg.addColorStop(.55, 'rgba(8,10,24,.9)'); bg.addColorStop(1, 'rgba(12,14,32,.94)');
+  bg.addColorStop(0, 'rgba(10,11,22,.96)'); bg.addColorStop(.55, 'rgba(6,7,15,.94)'); bg.addColorStop(1, 'rgba(9,10,20,.96)');
   g.fillStyle = bg; g.fillRect(0, 0, 640, 396);
-  const hw = g.createLinearGradient(0, 0, 0, 130);
-  hw.addColorStop(0, `hsla(${hue},70%,60%,.12)`); hw.addColorStop(1, 'hsla(0,0%,0%,0)');
-  g.fillStyle = hw; g.fillRect(0, 0, 640, 130);
-  g.strokeStyle = `hsla(${hue},60%,62%,.4)`; g.lineWidth = 1; g.strokeRect(6.5, 6.5, 627, 383);
+  g.strokeStyle = 'rgba(150,158,196,.25)'; g.lineWidth = 1; g.strokeRect(6.5, 6.5, 627, 383);
   /* corner ticks — instrument, not poster */
-  g.strokeStyle = `hsla(${hue},70%,70%,.8)`; g.lineWidth = 1.5;
+  g.strokeStyle = A; g.globalAlpha = .85; g.lineWidth = 1.5;
   [[6.5, 6.5, 1, 1], [633.5, 6.5, -1, 1], [6.5, 389.5, 1, -1], [633.5, 389.5, -1, -1]].forEach(([x, y, sx, sy]) => {
     g.beginPath(); g.moveTo(x + sx * 14, y); g.lineTo(x, y); g.lineTo(x, y + sy * 14); g.stroke();
   });
+  g.globalAlpha = 1;
   g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-  g.font = `500 30px ${SERIF}`; g.fillStyle = 'rgba(236,234,246,.95)';
+  g.font = `500 30px ${SERIF}`; g.fillStyle = 'rgba(240,239,248,.96)';
   g.fillText(title.split('').join(' '), 26, 46);
   /* live dot breathing on the shared clock — every panel reads as powered */
   const th = Date.now() % 2000 / 2000;
-  g.fillStyle = `hsla(${hue},80%,70%,${.35 + .6 * Math.abs(Math.sin(th * Math.PI))})`;
-  g.beginPath(); g.arc(15.5, 15.5, 3, 0, 7); g.fill();
+  g.fillStyle = A; g.globalAlpha = .35 + .6 * Math.abs(Math.sin(th * Math.PI));
+  g.beginPath(); g.arc(15.5, 15.5, 3, 0, 7); g.fill(); g.globalAlpha = 1;
   g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
   g.textAlign = 'right'; g.fillText(sub || '', 614, 44); g.textAlign = 'left';
   g.strokeStyle = 'rgba(140,150,220,.25)';
@@ -1273,6 +1275,129 @@ function specRevenue(T) {
   g.textAlign = 'right'; g.fillText('live Stripe · no self-inflicted signals counted', 614, 382); g.textAlign = 'left';
 }
 
+/* FINANCE — gold desk + Stripe truth on one screen (Marco 2026-08-25) */
+function specFinance(T) {
+  const g = T.g, GD = goldData, R = (panelData || {}).revenue || {};
+  specChrome(g, T.d.hue, 'FINANCE', GD ? GD.src : 'connecting…', '#ffd489');
+  const px = GD && GD.price != null ? GD.price : null;
+  glow(g, 'rgba(255,212,137,.5)', 12, () => {
+    g.font = `700 40px ${SANS}`; g.fillStyle = '#ffd489';
+    g.fillText(px == null ? '— — —' : '$' + px.toLocaleString('en-US'), 26, 110);
+  });
+  g.font = `600 11px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)'; g.fillText('GOLD · COMEX GC=F', 26, 128);
+  if (GD && GD.chg != null) {
+    const up0 = GD.chg >= 0;
+    chip(g, 250, 96, `${up0 ? '▲' : '▼'} ${Math.abs(GD.chg)}  ${Math.abs(GD.chgPct)}%`, '#0b0e20', up0 ? '#57d9ff' : '#e08a7c');
+  }
+  /* Stripe KPIs on the same header row — money truth, never flattered */
+  const kpi = (x, label, v, hot) => {
+    g.font = `700 30px ${SANS}`; g.fillStyle = hot ? '#ffd489' : 'rgba(236,234,246,.95)';
+    g.fillText(v == null ? '—' : '$' + v.toLocaleString(), x, 106);
+    g.font = `600 11px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)'; g.fillText(label, x, 128);
+  };
+  kpi(400, 'STRIPE 30D', R.d30); kpi(516, 'LIFETIME', R.lifetime, true);
+  /* candles — same TradingView pass order as the old gold desk, compact */
+  const K = GD && GD.candles && GD.candles.length > 2 ? GD.candles : null;
+  const cx0 = 26, cy0 = 152, cw = 462, ch = 168, ax = cx0 + cw + 10;
+  if (K) {
+    const hi = Math.max(...K.map(k => k.h)), lo = Math.min(...K.map(k => k.l)), sp = hi - lo || 1;
+    const Y = v => cy0 + ch - (v - lo) / sp * ch;
+    g.font = `500 10px ${SANS}`;
+    for (let i = 0; i <= 4; i++) {
+      const v = lo + sp * i / 4, y = Y(v);
+      g.strokeStyle = 'rgba(140,150,220,.14)'; g.beginPath(); g.moveTo(cx0, y); g.lineTo(cx0 + cw, y); g.stroke();
+      g.fillStyle = 'rgba(169,169,196,.75)'; g.fillText('$' + Math.round(v).toLocaleString(), ax, y + 3);
+    }
+    const bw = Math.max(3, cw / K.length * .62);
+    const V = GD.volumes || [], vm = Math.max(1, ...V);
+    V.forEach((v, i) => {
+      const x = cx0 + cw * (i + .5) / K.length, h2 = v / vm * 26;
+      g.fillStyle = K[i].c >= K[i].o ? 'rgba(87,217,255,.18)' : 'rgba(224,138,124,.18)';
+      g.fillRect(x - bw / 2, cy0 + ch - h2, bw, h2);
+    });
+    K.forEach((k, i) => {
+      const x = cx0 + cw * (i + .5) / K.length, upC = k.c >= k.o, col = upC ? '#57d9ff' : '#e08a7c';
+      g.strokeStyle = col; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x, Y(k.h)); g.lineTo(x, Y(k.l)); g.stroke();
+      const y1 = Y(Math.max(k.o, k.c)), y2 = Y(Math.min(k.o, k.c));
+      g.fillStyle = col; g.fillRect(x - bw / 2, y1, bw, Math.max(1.5, y2 - y1));
+    });
+    if (px != null) {
+      const y = Math.min(cy0 + ch, Math.max(cy0, Y(px)));
+      g.setLineDash([4, 4]); g.strokeStyle = 'rgba(255,212,137,.7)';
+      g.beginPath(); g.moveTo(cx0, y); g.lineTo(cx0 + cw, y); g.stroke(); g.setLineDash([]);
+      g.fillStyle = '#ffd489'; g.beginPath(); g.roundRect(ax - 4, y - 9, 92, 18, 4); g.fill();
+      g.fillStyle = '#0b0e20'; g.font = `700 11px ${SANS}`; g.fillText('$' + px.toLocaleString(), ax + 1, y + 4);
+    }
+  } else {
+    g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.8)'; g.fillText('awaiting quote…', cx0, cy0 + 20);
+  }
+  if (GD && GD.hi52) {
+    const rx = 26, rw = 462, ry = 352;
+    g.strokeStyle = 'rgba(140,150,220,.35)'; g.lineWidth = 3; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx + rw, ry); g.stroke(); g.lineCap = 'butt'; g.lineWidth = 1;
+    const p = Math.min(1, Math.max(0, ((px ?? GD.lo52) - GD.lo52) / (GD.hi52 - GD.lo52 || 1)));
+    glow(g, '#ffd489', 8, () => { g.fillStyle = '#ffd489'; g.beginPath(); g.arc(rx + rw * p, ry, 5, 0, 7); g.fill(); });
+    g.font = `600 11px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.9)';
+    g.fillText('52W  $' + GD.lo52.toLocaleString(), rx, ry - 12);
+    g.textAlign = 'right'; g.fillText('$' + GD.hi52.toLocaleString(), rx + rw, ry - 12); g.textAlign = 'left';
+  }
+  g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
+  g.textAlign = 'right'; g.fillText('gold 10-min refresh · Stripe live, no self-inflicted signals', 614, 382); g.textAlign = 'left';
+}
+
+/* TOOLS — what this machine can actually reach: API rails, skills, MCP */
+function specTools(T) {
+  const g = T.g, TL = (panelData || {}).tools || {};
+  specChrome(g, T.d.hue, 'TOOLS', (TL.asOf ? 'measured ' + TL.asOf : ''), '#57d9ff');
+  const head = (x, y, t) => { g.font = `600 13px ${SANS}`; g.fillStyle = '#57d9ff'; g.fillText(t, x, y); };
+  /* col 1 — API rails with live/hold dots */
+  head(26, 92, 'APIs · ' + ((panelData || {}).links || []).filter(l => l.s === 'live').length + ' LIVE');
+  ((panelData || {}).links || []).slice(0, 12).forEach((l, i) => {
+    const y = 116 + i * 22;
+    g.fillStyle = l.s === 'live' ? '#57d9ff' : 'rgba(224,138,124,.9)';
+    g.beginPath(); g.arc(32, y - 4, 3, 0, 7); g.fill();
+    g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(226,226,242,.92)'; g.fillText(l.n, 44, y);
+    g.font = `500 10px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)'; g.fillText(l.s, 150, y);
+  });
+  g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.85)';
+  g.fillText((TL.vaulted ?? '—') + ' keys in the vault', 26, 382);
+  /* col 2 — skills */
+  head(218, 92, 'SKILLS · ' + (TL.skills ?? '—'));
+  (TL.skillNames || []).slice(0, 12).forEach((n, i) => {
+    const y = 116 + i * 22;
+    g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(226,226,242,.92)'; g.fillText('/' + n, 218, y);
+  });
+  /* col 3 — MCP servers */
+  head(420, 92, 'MCP · ' + ((TL.mcp || []).length || '—'));
+  (TL.mcp || []).slice(0, 13).forEach((n, i) => {
+    const y = 116 + i * 21;
+    g.fillStyle = 'rgba(87,217,255,.55)'; g.fillRect(420, y - 10, 3, 12);
+    g.font = `500 13px ${SANS}`; g.fillStyle = 'rgba(226,226,242,.92)'; g.fillText(n, 432, y);
+  });
+}
+
+/* MODELS — the current top ten, names he actually cares about */
+function specModels(T) {
+  const g = T.g, MD = (panelData || {}).models || {};
+  specChrome(g, T.d.hue, 'MODELS', MD.src || '', '#c9a6ff');
+  g.font = `600 12px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.95)';
+  g.fillText('TOP 10 · FRONTIER LEADERBOARD', 26, 92);
+  (MD.top || []).slice(0, 10).forEach((m, i) => {
+    const col = i % 2, y = 130 + (i - col) / 2 * 52, x = 26 + col * 300;
+    const hot = i < 3;
+    g.font = `700 20px ${SANS}`; g.fillStyle = hot ? '#c9a6ff' : 'rgba(140,150,220,.85)';
+    const rank = String(i + 1).padStart(2, '0');
+    hot ? glow(g, 'rgba(201,166,255,.6)', 9, () => g.fillText(rank, x, y)) : g.fillText(rank, x, y);
+    g.font = `600 17px ${SANS}`; g.fillStyle = 'rgba(240,239,248,.96)';
+    g.fillText(m[0], x + 42, y);
+    g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(169,169,196,.8)';
+    g.fillText(m[1], x + 42, y + 18);
+  });
+  g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
+  g.textAlign = 'right'; g.fillText((MD.asOf || '') + ' · arena rankings shift weekly', 614, 382); g.textAlign = 'left';
+}
+
 function specMemory(T) {
   const g = T.g, MM = (panelData || {}).memory || {};
   specChrome(g, T.d.hue, 'MEMORY', 'MEMORY.md index');
@@ -1424,7 +1549,9 @@ function specGoals(T) {
   g.font = `500 11px ${SANS}`; g.fillStyle = 'rgba(140,150,220,.7)';
   g.fillText('progress = verified external revenue only', 26, 382);
 }
-const SPEC = { revenue: specRevenue, content: specIG, markets: specGold, self: specMemory, hunt: specStore, empire: specGoals };
+/* Panel recut (Marco 2026-08-25): FINANCE / TOOLS / INSTAGRAM / MODELS.
+   specGold+specRevenue merged into specFinance; specGoals off-screen. */
+const SPEC = { markets: specFinance, revenue: specTools, content: specIG, empire: specModels, self: specMemory, hunt: specStore };
 
 function buildWorld() {
   world.clear(); brain.clear(); hubMeshes = []; zoneDiscs = []; beams = []; pulseMeshes = null; agentData = []; terms = []; junRings = []; tilePanels = []; ledgerPlates = []; monRings = []; monInst = null; corePulse = null; dust = null; runCol = null; netPulse = null; hover.i = -1;
@@ -1808,7 +1935,7 @@ function buildWorld() {
   bg2.fillStyle = bgr; bg2.fillRect(0, 0, 4, 128);
   const bleedTex = new THREE.CanvasTexture(bc);
   /* universal system-role keywords — readable anywhere in the world */
-  const ROLE = { revenue: 'OUTPUT', content: 'MEDIA', hunt: 'SEARCH', senses: 'INPUT', self: 'REPAIR', empire: 'GOALS', bridge: 'LINK', markets: 'SIGNALS' };
+  const ROLE = { revenue: 'ARSENAL', content: 'MEDIA', hunt: 'SEARCH', senses: 'INPUT', self: 'REPAIR', empire: 'FRONTIER', bridge: 'LINK', markets: 'CAPITAL' };
   const SLOTS = [
     { x: -450, z: -470, nx: 1, nz: 0 }, { x: -450, z: -40, nx: 1, nz: 0 }, { x: -450, z: 390, nx: 1, nz: 0 },
     { x: -255, z: -650, nx: 0, nz: 1 }, { x: 255, z: -650, nx: 0, nz: 1 },
@@ -1830,8 +1957,17 @@ function buildWorld() {
      IG flank him on the back pair, gold far-left, goals far-right. Depts
      without a slot keep their zone data but render no monitor. */
   const MON_SLOT = OS_MODE ? { markets: 2, revenue: 3, content: 4, empire: 7 } : null;
+  /* what each surviving monitor now shows (recut 2026-08-25) — the nameplate
+     must say what the screen says, not the dept's old fleet name */
+  const MON_TITLE = {
+    markets: { label: 'FINANCE', tagline: 'gold desk + stripe truth' },
+    revenue: { label: 'TOOLS', tagline: 'apis · skills · mcp' },
+    content: { label: 'INSTAGRAM', tagline: 'what the world sees' },
+    empire:  { label: 'MODELS', tagline: 'the frontier board' },
+  };
   D.forEach((d, i) => {
     const si = MON_SLOT ? MON_SLOT[d.id] : i;
+    if (OS_MODE && MON_TITLE[d.id]) { d.label = MON_TITLE[d.id].label; d.tagline = MON_TITLE[d.id].tagline; }
     d.hasMon = !MON_SLOT || si != null;
     const s = SLOTS[(si ?? i) % SLOTS.length];
     const mn = MONA[(si ?? i) % MONA.length];

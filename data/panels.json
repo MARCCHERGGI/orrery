@@ -22,6 +22,28 @@
     "target": 1000, "current": 0, "deadline": "SEP 06", "deadlineISO": "2026-09-06", "plan": "WAR PLAN v3",
     "lanes": ["IG → affiliate engine — PRIMARY", "Merch — wear the line", "TikTok Shop — 2nd account"]
   },
+  "tools": {
+    "asOf": "2026-08-25",
+    "skills": 37,
+    "skillNames": ["safe-deploy", "evolve", "dream", "council", "hermes", "enhance", "learn", "outcomes", "pulse", "ship", "traffic", "fact-check"],
+    "mcp": ["stripe", "marco-tools", "tavily", "linear", "posthog", "cloudflare", "browser-relay", "pika", "higgsfield", "robinhood", "apify", "meta", "meta-ads"],
+    "vaulted": 51
+  },
+  "models": {
+    "src": "LMArena · Aug 2026", "asOf": "2026-08-25",
+    "top": [
+      ["Claude Fable 5", "Anthropic"],
+      ["GPT-5.6 Sol", "OpenAI"],
+      ["Claude Opus 4.7", "Anthropic"],
+      ["Gemini 3 Pro", "Google"],
+      ["Grok 4", "xAI"],
+      ["GLM-5.2", "Z.AI"],
+      ["DeepSeek R1", "DeepSeek"],
+      ["Qwen 3.6", "Alibaba"],
+      ["Nemotron 3 Ultra", "NVIDIA"],
+      ["MiniMax M3", "MiniMax"]
+    ]
+  },
   "links": [
     { "n": "Stripe", "s": "live" }, { "n": "Vercel", "s": "live" }, { "n": "GitHub", "s": "live" },
     { "n": "Kit", "s": "live" }, { "n": "Printful", "s": "live" }, { "n": "Whop", "s": "live" },
