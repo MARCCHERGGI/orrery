@@ -352,6 +352,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
@@ -417,6 +418,67 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), .6, .5, .74);
 composer.addPass(bloom);
+
+/* ── CINEMA GRADE (2026-08-25, "colors are not good") ─────────────────────
+   The scene wasn't wrong in hue — it was UNGRADED: clipped whites (hands,
+   fixtures, beam cones) against flat navy. This pass runs after bloom,
+   before OutputPass (so before ACES+sRGB): white balance → soft highlight
+   knee (kills clipping) → luma split-tone (shadows/highlights get separate
+   tints) → saturation. Presets below; live-switch __grade('name'),
+   URL ?grade=name, 'off' = bypass for A/B. */
+const GRADE_PRESETS = {
+  /* teal-orange cinema: cool deeps, warm amber light. The brain stays cyan
+     (saturated mids keep hue); every white light source turns warm. */
+  ember:   { gain: [1.06, 0.99, 0.90], roll: .62, sha: [0.90, 0.97, 1.10], hig: [1.13, 1.00, 0.82], sat: 1.10, lift: .006 },
+  /* graphite noir: color pulled back to embers, panels supply the color */
+  noir:    { gain: [1.02, 1.00, 0.97], roll: .58, sha: [0.96, 0.98, 1.03], hig: [1.05, 1.00, 0.93], sat: 0.62, lift: .004 },
+  /* ops-room green-cyan: cold phosphor terminal */
+  verdant: { gain: [0.92, 1.05, 1.00], roll: .58, sha: [0.90, 1.02, 1.00], hig: [0.95, 1.08, 0.98], sat: 1.05, lift: .005 },
+  /* keep today's hues, just fix the exposure: rolloff + gentle warm light */
+  clean:   { gain: [1.02, 1.00, 0.97], roll: .55, sha: [1.00, 1.00, 1.00], hig: [1.05, 1.00, 0.93], sat: 1.04, lift: .004 },
+  off:     { gain: [1, 1, 1], roll: 0, sha: [1, 1, 1], hig: [1, 1, 1], sat: 1, lift: 0 },
+};
+const gradePass = new ShaderPass({
+  uniforms: {
+    tDiffuse: { value: null },
+    uGain: { value: new THREE.Vector3(1, 1, 1) },
+    uRoll: { value: 0 },
+    uSha: { value: new THREE.Vector3(1, 1, 1) },
+    uHig: { value: new THREE.Vector3(1, 1, 1) },
+    uSat: { value: 1 },
+    uLift: { value: 0 },
+  },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform vec3 uGain, uSha, uHig;
+    uniform float uRoll, uSat, uLift;
+    varying vec2 vUv;
+    const vec3 W = vec3(0.2126, 0.7152, 0.0722);
+    void main(){
+      vec3 c = texture2D(tDiffuse, vUv).rgb;
+      c *= uGain;
+      float l = dot(c, W);
+      if (uRoll > 0.0 && l > 0.0) c *= (l / (1.0 + uRoll * l)) / l;  /* soft knee — nothing clips */
+      float t = smoothstep(0.04, 0.62, dot(c, W));
+      c *= mix(uSha, uHig, t);                                       /* split-tone by luma */
+      float g = dot(c, W);
+      c = mix(vec3(g), c, uSat);
+      c += uLift * (1.0 - g);
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+});
+composer.addPass(gradePass);
+window.__grade = (name) => {
+  const p = GRADE_PRESETS[name]; if (!p) return Object.keys(GRADE_PRESETS).join(' ');
+  const u = gradePass.uniforms;
+  u.uGain.value.fromArray(p.gain); u.uRoll.value = p.roll;
+  u.uSha.value.fromArray(p.sha); u.uHig.value.fromArray(p.hig);
+  u.uSat.value = p.sat; u.uLift.value = p.lift;
+  return name;
+};
+window.__grade(new URLSearchParams(location.search).get('grade') || 'ember');
+
 composer.addPass(new OutputPass());
 
 /* the diorama rig — the camera lives INSIDE the room; mouse parallax sells the depth */
@@ -1862,9 +1924,11 @@ function buildWorld() {
       /* COMPLETELY white (Marco, twice): emissive-dominant so the blue room
          light cannot tint them; the small lit component keeps knuckle shading
          so they still read as hands rather than paper cutouts */
+      /* .82 emissive + bloom clipped the gloves into shapeless glare blobs —
+         .30 keeps them white but lets knuckle shading survive the grade */
       const handMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff, emissive: 0xffffff, emissiveIntensity: .82,
-        roughness: .55, metalness: 0 });
+        color: 0xffffff, emissive: 0xffffff, emissiveIntensity: .30,
+        roughness: .62, metalness: 0 });
       const FING = ['index-finger', 'middle-finger', 'ring-finger', 'pinky-finger'];
       hands.forEach(h => {
         const s2 = h.userData.side;
