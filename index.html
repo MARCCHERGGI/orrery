@@ -396,8 +396,10 @@ renderer.toneMappingExposure = 1.12;
    a hidden per-frame scene render the look never needed */
 renderer.shadowMap.enabled = false;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x14172b);
-scene.fog = new THREE.Fog(0x14172b, 1300, 3200);
+/* NEUTRAL SHELL (Marco 2026-08-25 "everything is discolored") — the room is
+   graphite; only the data and the brain carry color. */
+scene.background = new THREE.Color(0x0e0f14);
+scene.fog = new THREE.Fog(0x0e0f14, 1300, 3200);
 const camera = new THREE.PerspectiveCamera(60, 1, 1, 4000);
 camera.position.set(0, 260, 1500);
 
@@ -504,7 +506,7 @@ function flyTo(px, py, pz, tx, ty, tz) { camGoal.pos.set(px, py, pz); camGoal.tg
 /* image-based lighting — materials get real specular response */
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .06).texture;
 scene.environmentIntensity = .16;
-scene.add(new THREE.AmbientLight(0x8a8fc0, .3));
+scene.add(new THREE.AmbientLight(0xb4b6c2, .3));
 const key = new THREE.DirectionalLight(0xf0eeff, 1.05); key.position.set(120, 900, 240); scene.add(key);
 key.castShadow = true;
 /* a directional light's default shadow camera is a ±5-unit box — in a ±620 room
@@ -517,7 +519,7 @@ key.shadow.bias = -0.0005;
 key.shadow.mapSize.set(2048, 2048);
 Object.assign(key.shadow.camera, { left: -760, right: 760, top: 980, bottom: -980, near: 1, far: 2200 });
 key.shadow.bias = -.0004;
-const rim = new THREE.DirectionalLight(0x57d9ff, .3); rim.position.set(-400, 300, -500); scene.add(rim);
+const rim = new THREE.DirectionalLight(0x8f97a8, .22); rim.position.set(-400, 300, -500); scene.add(rim);
 
 /* ═══════════════ THE SYSTEM — one equation governs every dimension ═══════════════
    φ = (1+√5)/2. Base module M = 21. Every radius, height, spacing, orbit and
@@ -537,12 +539,12 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   const gridTex = (dots) => {
     const c = document.createElement('canvas'); c.width = c.height = 512;
     const g = c.getContext('2d');
-    g.fillStyle = '#171a31'; g.fillRect(0, 0, 512, 512);
+    g.fillStyle = '#16171c'; g.fillRect(0, 0, 512, 512);
     if (dots) {
-      g.fillStyle = 'rgba(150,158,225,.13)';
+      g.fillStyle = 'rgba(164,168,182,.13)';
       for (let y = 24; y < 512; y += 48) for (let x = 24; x < 512; x += 48) { g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill(); }
     } else {
-      g.strokeStyle = 'rgba(140,150,220,.15)'; g.lineWidth = 1;
+      g.strokeStyle = 'rgba(158,162,176,.15)'; g.lineWidth = 1;
       for (let i = 0; i <= 16; i++) {
         g.beginPath(); g.moveTo(i * 32, 0); g.lineTo(i * 32, 512); g.stroke();
         g.beginPath(); g.moveTo(0, i * 32); g.lineTo(512, i * 32); g.stroke();
@@ -558,21 +560,21 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
      luminous screen. Aurora glows drawn once, lit by nothing, glowing on its own. */
   const auroraC = document.createElement('canvas'); auroraC.width = 1024; auroraC.height = 512;
   const ag = auroraC.getContext('2d');
-  ag.fillStyle = '#12142c'; ag.fillRect(0, 0, 1024, 512);
+  ag.fillStyle = '#101116'; ag.fillRect(0, 0, 1024, 512);
   const aglow = (x, y, r, col) => {
     const gr = ag.createRadialGradient(x, y, 0, x, y, r);
     gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
     ag.fillStyle = gr; ag.fillRect(0, 0, 1024, 512);
   };
-  aglow(300, 400, 540, 'rgba(96,68,205,.5)');
-  aglow(790, 290, 580, 'rgba(38,140,185,.42)');
-  aglow(540, 90, 430, 'rgba(196,66,150,.26)');
+  aglow(300, 400, 540, 'rgba(92,90,124,.28)');
+  aglow(790, 290, 580, 'rgba(78,98,116,.22)');
+  aglow(540, 90, 430, 'rgba(112,96,110,.13)');
   ag.fillStyle = 'rgba(215,220,255,.09)';
   for (let y = 16; y < 512; y += 32) for (let x = 16; x < 1024; x += 32) { ag.beginPath(); ag.arc(x, y, 1.4, 0, 7); ag.fill(); }
   const backT = new THREE.CanvasTexture(auroraC); backT.colorSpace = THREE.SRGBColorSpace;
   /* DoubleSide everywhere: with the off-axis portal, edge rays can graze past a
      surface's front face — a culled backface reads as a hole torn in the room */
-  const mat = (t) => new THREE.MeshStandardMaterial({ map: t, color: 0x8286ad, roughness: .82, metalness: .2, side: THREE.DoubleSide });
+  const mat = (t) => new THREE.MeshStandardMaterial({ map: t, color: 0x93959e, roughness: .82, metalness: .2, side: THREE.DoubleSide });
 
   /* mirror floor — the reference's signature: the room visibly continues
      UNDERNEATH itself. A true planar reflection renders the walls, orb and
@@ -582,11 +584,11 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
     clipBias: .003,
     textureWidth: 512,
     textureHeight: 512,
-    color: 0xb8bde0,
+    color: 0xb9bcc6,
   });
   mirror.rotation.x = -Math.PI / 2; mirror.position.y = -.2; mirror.name = 'floor-mirror'; scene.add(mirror);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.hw * 2, ROOM.depth * 2),
-    new THREE.MeshStandardMaterial({ map: floorT, color: 0x8e93c2, roughness: .36, metalness: .5, side: THREE.DoubleSide, transparent: true, opacity: .38, depthWrite: true }));
+    new THREE.MeshStandardMaterial({ map: floorT, color: 0x94969f, roughness: .36, metalness: .5, side: THREE.DoubleSide, transparent: true, opacity: .38, depthWrite: true }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
   /* dot matrix — the reference floor: rows of small emitters receding to the
      horizon, doubled by the mirror beneath. One draw, F(1)-spaced φ-grid. */
@@ -597,12 +599,12 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   const dmg = new THREE.BufferGeometry();
   dmg.setAttribute('position', new THREE.Float32BufferAttribute(dm, 3));
   scene.add(new THREE.Points(dmg, new THREE.PointsMaterial({
-    color: 0x9fb4e8, size: 1.9, transparent: true, opacity: .5,
+    color: 0xb5b9c4, size: 1.9, transparent: true, opacity: .4,
     blending: THREE.AdditiveBlending, depthWrite: false })));
   /* the roof is a RIM, not a lid — the center opens to sky. The atrium opening
      spans |x|<400, -600<z<400; everything above it is visible from inside. */
   const ceilT = gridTex(true); ceilT.repeat.set(8, 11);
-  const ceilM = new THREE.MeshStandardMaterial({ map: ceilT, color: 0x50557e, roughness: .9, metalness: .15, side: THREE.DoubleSide });
+  const ceilM = new THREE.MeshStandardMaterial({ map: ceilT, color: 0x55575f, roughness: .9, metalness: .15, side: THREE.DoubleSide });
   const rim = (w, h, x, z) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), ceilM);
     m.rotation.x = Math.PI / 2; m.position.set(x, ROOM.h, z); scene.add(m);
@@ -624,11 +626,11 @@ const ROOM = { hw: 620, depth: 850, h: 520 };   // walls at x=±hw, back at z=-d
   const wpc = document.createElement('canvas'); wpc.width = 1024; wpc.height = 432;
   {
     const g = wpc.getContext('2d');
-    g.fillStyle = '#04061a'; g.fillRect(0, 0, 1024, 432);
+    g.fillStyle = '#08090d'; g.fillRect(0, 0, 1024, 432);
     g.globalCompositeOperation = 'lighter';
     /* one-family aurora: cyan→indigo only — the rainbow read as noise (Marco) */
     [[249, 500], [237, 445], [226, 390], [215, 335], [204, 280], [193, 225]].forEach(([h, r]) => {
-      g.strokeStyle = `hsla(${h}, 40%, 40%, .15)`;
+      g.strokeStyle = `hsla(${h}, 12%, 44%, .1)`;
       g.lineWidth = 62; g.filter = 'blur(24px)';
       g.beginPath(); g.arc(512, 620, r, Math.PI * 1.12, Math.PI * 1.88); g.stroke();
     });
