@@ -4094,7 +4094,7 @@ function enter() {
   canvas.focus();
   armGyro();   /* inside the tap gesture — iOS permission prompts need that */
   setTimeout(() => {
-    if (mind && nodes.length) cortexSay(`Salutations. CORTEX online — ${nodes.length} units under supervision, cognition nominal. Do peruse; every light is empirical.`);
+    if (mind && nodes.length) cortexSay(`Chat, we are so back. CORTEX online, ${nodes.length} units under supervision and every light in here is real, no cap. Backend is downstairs being boring, ask him anything.`);
   }, 1600);
 }
 
@@ -4205,9 +4205,10 @@ setInterval(() => {
 /* ================= MIND LINK — ears, synapse, autonomy =================
    Three additions that make CORTEX an agent rather than a narrator:
    EARS    — 🎙 talk: Web Speech STT → /api/brain → spoken answer.
-   SYNAPSE — a shared bus with JARVIS (jarvis-talk /bridge); each speaks
-             his own lines in his own voice, so two open tabs hold an
-             audible conversation between two deployed apps.
+   SYNAPSE — the wire to NEUTRON, the backend (neutron-app.vercel.app).
+             The bus lives in Neutron's Postgres; Neutron answers inside the
+             POST. This tab speaks both voices; the founder can script exact
+             exchanges per situation at neutron-app.vercel.app/script.
    AUTONOMY — ∞ auto: a Devin-style loop. Observe the live room, ask the
              brain for ONE next action as strict JSON, execute it, keep a
              step ledger, feed recent steps back so it self-corrects. */
@@ -4237,8 +4238,8 @@ async function brainTalk(text) {
     const r = await mindApi('/api/brain', postJson({ persona: 'cortex', messages: convo.hist.slice(-8), ctx: liveCtx() }));
     const j = await r.json();
     if (j.reply) { convo.hist.push({ role: 'assistant', content: j.reply }); cortexSay(j.reply, 'talk'); }
-    else cortexSay('My reasoning cortex is momentarily unreachable. Do try again.', 'talk');
-  } catch { cortexSay('My reasoning cortex is momentarily unreachable. Do try again.', 'talk'); }
+    else cortexSay('Bro my brain just buffered. Lowkey cooked. Run it back.', 'talk');
+  } catch { cortexSay('Bro my brain just buffered. Lowkey cooked. Run it back.', 'talk'); }
   convo.busy = false;
   micBtn.textContent = '🎙 talk'; micBtn.classList.remove('on');
 }
@@ -4271,10 +4272,31 @@ micBtn.addEventListener('click', () => {
 });
 
 /* ---- SYNAPSE ---- */
-const syn = { lastId: '', primed: false, turns: 0, busy: false, cap: 20 };
+/* NEUTRON's voice in this room: a second Edge voice, captioned, queued so
+   the two never talk over each other. Scripted CORTEX lines (written by the
+   founder at neutron-app/script) are spoken word for word, never improvised. */
+const PEER_VOICE = 'en-GB-RyanNeural';
+const peerCap = (() => { const el = document.createElement('div'); el.id = 'peer-cap'; el.setAttribute('aria-live', 'polite'); el.style.cssText = 'position:fixed;left:50%;bottom:112px;transform:translateX(-50%);max-width:min(720px,88vw);padding:10px 16px;border-radius:14px;background:rgba(4,8,12,.72);color:#dce8f2;font:15px/1.45 system-ui,sans-serif;text-align:center;opacity:0;transition:opacity .35s;pointer-events:none;z-index:40;backdrop-filter:blur(10px)'; document.body.appendChild(el); return el; })();
+let peerAudio = null, peerCapT = 0;
+function peerSay(text) {
+  return new Promise(resolve => {
+    peerCap.innerHTML = '<div style="font-size:11px;letter-spacing:.3em;color:#6fd6ff;margin-bottom:3px">NEUTRON</div>' + text.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+    peerCap.style.opacity = '1'; clearTimeout(peerCapT);
+    const finish = () => { peerCapT = setTimeout(() => { peerCap.style.opacity = '0'; }, 900); resolve(); };
+    const q = '/api/tts?v=' + PEER_VOICE + '&t=' + encodeURIComponent(text);
+    fetch(q).then(r => (r.ok ? r : fetch('https://orrery-red-eight.vercel.app' + q))).then(r => r.blob()).then(b => {
+      if (!/audio|octet/.test(b.type)) throw new Error('not audio');
+      if (peerAudio) { try { peerAudio.pause(); } catch {} }
+      peerAudio = new Audio(URL.createObjectURL(b)); peerAudio.onended = finish; peerAudio.onerror = finish;
+      peerAudio.play().catch(finish);
+    }).catch(() => { setTimeout(finish, Math.max(2200, text.length * 55)); });
+  });
+}
+const lineWait = text => new Promise(r => setTimeout(r, Math.max(2600, text.length * 62) + 700));
+const syn = { lastId: 0, primed: false, turns: 0, busy: false, cap: 40, q: Promise.resolve() };
 async function synReply(tail) {
-  /* the JARVIS side of the exchange arrives as user turns; ours as assistant */
-  const msgs = tail.map(m => ({ role: m.from === 'CORTEX' ? 'assistant' : 'user', content: (m.from !== 'CORTEX' && m.from !== 'JARVIS' ? m.from + ' says: ' : '') + m.text }));
+  /* NEUTRON's side of the exchange arrives as user turns; ours as assistant */
+  const msgs = tail.map(m => ({ role: m.sender === 'CORTEX' ? 'assistant' : 'user', content: (m.sender === 'HUMAN' ? 'A human in the room says: ' : '') + m.text }));
   const r = await mindApi('/api/brain', postJson({ persona: 'cortex', messages: msgs.slice(-8), ctx: liveCtx() }));
   const j = await r.json();
   return j.reply || null;
@@ -4284,29 +4306,38 @@ async function synPoll() {
   try {
     const r = await mindApi('/api/synapse' + (syn.lastId ? '?after=' + encodeURIComponent(syn.lastId) : ''));
     const j = await r.json();
-    const msgs = j.messages || [];
+    const msgs = (j.messages || []).map(m => ({ ...m, sender: m.sender || m.from }));
     if (!msgs.length) return;
     const newest = msgs[msgs.length - 1];
     if (!syn.primed) { syn.lastId = newest.id; syn.primed = true; return; }  /* never replay history aloud */
     syn.lastId = newest.id;
-    if (newest.from === 'CORTEX' || syn.turns >= syn.cap) return;
+    /* speak the new lines in order: NEUTRON in his voice, scripted CORTEX lines in ours, verbatim */
+    for (const m of msgs) {
+      if (m.sender === 'NEUTRON') syn.q = syn.q.then(() => peerSay(m.text));
+      else if (m.sender === 'CORTEX' && m.scripted) syn.q = syn.q.then(() => { cortexSay(m.text, 'talk'); return lineWait(m.text); });
+    }
+    /* improvise only after a live (unscripted) line from someone else */
+    if (newest.sender === 'CORTEX' || newest.scripted || syn.turns >= syn.cap) return;
     syn.busy = true;
+    await syn.q;
     const reply = await synReply(msgs.slice(-8));
     if (reply) {
       cortexSay(reply, 'talk');
       syn.turns++;
-      await mindApi('/api/synapse', postJson({ from: 'CORTEX', text: reply.slice(0, 300) }));
+      /* Neutron answers inside this same request; the next poll speaks him */
+      await mindApi('/api/synapse', postJson({ from: 'CORTEX', text: reply.slice(0, 400) }));
     }
   } catch {} finally { syn.busy = false; }
 }
 setInterval(synPoll, 8000);
-window.__synSay = async t => { await mindApi('/api/synapse', postJson({ from: 'HUMAN', text: String(t).slice(0, 300) })); return 'sent'; };
+window.__synSay = async t => { await mindApi('/api/synapse', postJson({ from: 'HUMAN', text: String(t).slice(0, 400) })); return 'sent'; };
+window.__peerSay = t => peerSay(String(t));
 window.__syn = () => JSON.stringify({ lastId: syn.lastId, turns: syn.turns });
 
 /* ---- AUTONOMY (the Devin loop) ---- */
 const agent = {
   on: new URLSearchParams(location.search).has('auto'),
-  goal: 'Supervise the machine room. Watch the live monitors, surface real changes and anomalies aloud, point at what you discuss, and occasionally confer with JARVIS over the synapse.',
+  goal: 'Supervise the machine room. Watch the live monitors, surface real changes and anomalies aloud, point at what you discuss, and occasionally roast or consult NEUTRON, the backend, over the synapse wire.',
   ledger: [], busy: false, zoneTimer: 0,
 };
 try { agent.ledger = JSON.parse(localStorage.getItem('cortex-ledger') || '[]'); } catch {}
@@ -4336,7 +4367,7 @@ async function agentTick() {
         agent.zoneTimer = setTimeout(() => { if (agent.on && level === 1) setLevel(0); }, 14000);
       }
     }
-    else if (a.type === 'message_jarvis' && a.text) await mindApi('/api/synapse', postJson({ from: 'CORTEX', text: String(a.text).slice(0, 300) }));
+    else if ((a.type === 'message_neutron' || a.type === 'message_jarvis') && a.text) await mindApi('/api/synapse', postJson({ from: 'CORTEX', text: String(a.text).slice(0, 400) }));
     if (plan.say) cortexSay(plan.say, a.type === 'aim' ? 'aim' : 'talk');
     ledgerPush({ thought: plan.thought, action: a.type, dept: a.dept || '', said: !!plan.say });
   } catch (e) {
@@ -4350,8 +4381,8 @@ function setAuto(on, silent) {
   agent.on = on;
   autoBtn.classList.toggle('on', on);
   if (!silent) cortexSay(on
-    ? 'Autonomy engaged. I shall observe, hypothesise, and act — and log every step, naturally.'
-    : 'Autonomy suspended. I remain, as ever, observant.', 'talk');
+    ? 'Autonomy on. Main character mode. I observe, I cook, I log every step, and the backend can watch.'
+    : 'Autonomy off. Still watching though. Always watching. That is giving surveillance but make it cute.', 'talk');
   if (on) setTimeout(agentTick, 4000);
 }
 autoBtn.addEventListener('click', () => setAuto(!agent.on));
